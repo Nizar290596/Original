@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+
+  | ========= | |
+
+  | \\ / F ield | OpenFOAM: The Open Source CFD Toolbox |
+
+  | \\ / O peration | Version: 2.0.1 |
+
+  | \\ / A nd | Web: www.OpenFOAM.com |
+
+  | \\/ M anipulation | |
+
+  \*---------------------------------------------------------------------------*/
+
+FoamFile
+
+{
+
+	version 2.0;
+
+	format ascii;
+
+	class dictionary;
+
+	object topoSetDict;
+
+}
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+
+{
+
+	name inletFuelCylinder;
+
+    type cellSet;
+
+    action new;
+
+    source cylinderToCell;
+
+    sourceInfo
+    {
+        p1 (0 0 0);
+
+        p2 (0 0 1e-3);
+
+        radius 2.5e-3;
+    }
+
+}
+
+{
+
+    name inletFuelCylinderFaces;
+
+    type faceSet;
+
+    action new;
+
+    source cellToFace;
+
+    sourceInfo
+    {
+        set inletFuelCylinder;  
+       
+        option all;
+    }
+
+}
+ 
+{
+
+    name cylinder1;
+
+    type cellSet;
+
+    action new;
+
+    source cylinderToCell;
+
+    sourceInfo
+    {
+        p1 (0 0 0);
+
+        p2 (0 0 1.5e-3);
+
+        radius 3.0e-3;
+    }
+
+}
+
+{
+
+    name cylinder1Faces;
+
+    type faceSet;
+
+    action new;
+
+    source cellToFace;
+
+    sourceInfo
+    {
+        set cylinder1;
+       
+        option both; 
+    }
+
+}
+
+
+
+
+{
+    name inletFuelCylinderFaces;
+
+    type faceSet;
+
+    action delete;
+
+    source faceToFace;
+
+    sourceInfo
+    {
+        set cylinder1Faces;
+    }
+
+}
+
+);
+

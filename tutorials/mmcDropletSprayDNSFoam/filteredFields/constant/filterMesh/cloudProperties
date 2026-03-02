@@ -1,0 +1,182 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+
+  class           dictionary;
+  object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+
+// INTERPOLATION SCHEMES ======================================================
+// (cell/cellPoint/cellPointFace/cellPatchConstrained/cellPointWallModified/pointMVC)
+solution
+{
+    interpolationSchemes
+    {
+        UFiltered   cellPoint;
+        DEff        cellPoint;
+        rhoFiltered cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+
+
+// PARTICLE MANAGEMENT ========================================================
+particleManagement
+{
+    numCtlOn         true;  // Particle number control
+    Npc              1512;  // Number of particles per super cell
+    Nlo              1482;  // Minimum particle number per super cell
+    Nhi              1542;  // Maximum particle number per super cell
+}
+
+
+
+// SUBMODELS ==================================================================
+subModels
+{
+    InflowBoundaryModel                   NoInflow;  // FreeStream/NoInflow
+    compositionModel            singlePhaseMixture;  // singlePhaseMixture
+    radiationModel                            none;  // OpticallyThinRadiation/none
+    mixingModel                            MMCcurl;  // Curl/MMCcurl/none
+    synthesisModel                            none;  // unused
+    thermoPhysicalCouplingModel   KernelEstimation;  // FlameletCurves/KernelEstimation/none (density coupling)
+    printMoleFractions                       false;
+    reactionModel      finiteRateParticleChemistry;  // [finiteRateNewtonLinODEChemistry]/finiteRateParticleChemistry/flameSheetParticleChemistry/none
+    sootModel                                 none;
+
+
+
+
+
+
+    // MMCCurl mixing model
+    MMCcurlCoeffs
+    {
+        mixTimeScale               aISO;  // model for mixing time scale: none/inf/CK/aISO/aISO_var2
+        C_L                         0.5;  // Constant in the Cleary & Klimenko mixing time scale model
+        C_E                         0.1;  // Constant in the mixing time scale model (=Cf in Vo,CnF2017)
+        beta                          3;  // Constant in the Cleary & Klimenko mixing time scale model
+        ri                   4.2922e-04;  // Characteristic distance in physical space
+        Ximi
+        {
+          fm                     0.0120;  // Characteristic distance in reference mixture fraction space
+        }
+        localnessLimited          false;  // false = particles are mixed in whole domain, true = particles are mixed in super cell
+
+        fLowMixOnMaster             0.0;  // Minimum value for mixing
+        fHighMixOnMaster            1.0;  // Maximum value for mixing
+
+        fullSort                   true;  // Sort particles randomly
+        aISO                       true;
+        meanTimeScale             false;
+        
+        pairingMethod     global;
+    }
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower               0.0;  // Limits for solving for chemistry
+        zUpper               1.0;
+    }
+
+    KernelEstimationCoeffs
+    {
+        fLow                 0.0;  // lower limit
+        fHigh                1.0;  // upper limit
+        //inertSpecie           N2;  // inert species
+        fm                0.0120;  // same as in mixing model
+        //dfMax             0.0075;  // Maximum distance in f space allowed to do extrapolation
+        //C2                   0.0;  // parameter used for extrapolation -> if C2=0 then no extrapolation is done (recommended)
+        //kMin                20.0;  // minimum number of particles for density coupling
+
+        condVariable        f;
+        dfMax               0.0075; //Maximum distance in f space allowed to do extrapolation
+        C2                  0.1;    //used to control resolution
+
+
+    }
+
+}
+
+
+
+// THERMOPHYSICAL COUPLING MODEL (DENSITY COUPLING) ===========================
+thermophysicalCoupling
+{
+    enabled           true;
+
+    // List of species for which equivalent
+    // mass fraction solutions are obtained
+    // on the FV grid (should be around 99%
+    // of the total composition)
+    C2H5OH;
+    O2;
+    CO2;
+    H2O;
+    N2;
+
+    primarySpecies       T;  // from FlameletCurves, not used in KernelEstimation
+    condVariable         z;
+    tauRelax            10;  // tauRelax = 10*dt is recommended
+    tauUnits      timestep;
+    tauRelaxBlending false;
+    tauRelaxStart      100;
+    tauRelaxDelta        5;
+}
+
+
+
+// STATISTICS AND CO ==========================================================
+eulerianStatistics
+{
+    enabled          false;
+}
+
+particleSampling
+{
+    enabled             false;
+
+    collated            false;
+
+    fields              (H T);
+
+    // mixture fraction range of sampled particles
+    lowerBound          0.0;
+    upperBound          1.0;
+
+    condVariable         z;
+
+    particleSampleProbes
+    {
+        zD01
+        {
+            type        particleProbeBox;
+            p1          (-1 -1 -1);
+            p2          (1 1 1);
+        }
+    }
+
+}
+
+// ************************************************************************* //

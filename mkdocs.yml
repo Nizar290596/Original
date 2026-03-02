@@ -1,0 +1,26 @@
+site_name: mmcFoam 
+site_url: https://example.com
+
+nav:
+    - Home: README.md
+    - User Guide:
+        - How to contribute: howToContribute.md
+        - How to add a submodule: howToAddSubmodule.md
+        - Code structure: codeOverview.md
+    - About:
+        - Publication Log: publication_log.md
+
+theme: 
+    name: readthedocs 
+    favicon: img/mmcLogo.png
+    logo: img/mmcLogoLong.png
+
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

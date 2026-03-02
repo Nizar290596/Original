@@ -1,0 +1,26 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      flameletTableProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+  FLTFileName "$FOAM_CASE/chemistry/flameletTab.dat";
+
+  nCol      20;     // no. of FLT table columns (1...nCol)
+  nRow      201;    // no. of FLT table rows    (1...nRow)
+  pvDisc    200;    // no. of discretization points for c
+  pvSourceI 0;      // index of a column containing the progress variable source term
+  YCO2I     2;      // index of a column containing the CO2 mass fraction
+
+// ************************************************************************* //

@@ -1,0 +1,31 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//*********************** mainJet itvInflow ********************************/*/
+patchName       mainJet;  // patch name where to apply     
+
+lambda          166.67;  // 1/d a scaling factor
+
+divFree	        false;  // not implemented 
+
+Ubulk		6.3662;     // 
+
+integralLength  0.3;    //  integral length/D [-] 
+
+var (0.1 0.0 0.0 0.0 0.1 0.0 0.0 0.0 0.1);
+//**************************************************************************/*/
+
+

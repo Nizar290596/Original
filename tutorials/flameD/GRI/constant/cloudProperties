@@ -1,0 +1,176 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.x                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff        cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 10;
+    Nlo 8;
+    Nhi 14;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    radiationModel OpticallyThinRadiation;
+    OpticallyThinRadiationCoeffs
+    {
+        TRef     300;
+    }
+    // radiationModel none;
+
+    sootModel          none;
+
+    printMoleFractions false;
+    
+    thermoPhysicalCouplingModel FlameletCurves;
+    //thermoPhysicalCouplingModel KernelEstimation; // Under development
+    
+    KernelEstimationCoeffs
+    {
+        fLow                0.03;   //lower flamability limit
+        fHigh               0.19;   //upper flamability limit
+        fm                  0.01;   //same as in mixing model
+        
+        condVariable        f;
+        dfMax               0.0075; //Maximum distance in f space allowed to do extrapolation            
+        C2                  0.1;    //used to control resolution
+
+        pairingMethod     global;
+    }
+
+    mixingModel	    MMCcurl;
+    // mixingModel none;
+ 
+    MMCcurlCoeffs
+    {
+        //- Parameters ri and fm as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri                  6.7e-3;
+
+        Ximi
+        {
+            fm              0.03;    
+        }
+
+        localnessLimited    false;
+
+        fLowMixOnMaster     0.01;
+        fHighMixOnMaster    1;
+
+        fullSort            false;
+        aISO                true; 
+        meanTimeScale       true; //true:mean false:max
+    }
+
+    reactionModel finiteRateParticleChemistry;
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.1;
+        zUpper              0.9;
+    }
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled             true;
+
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+
+    condVariable        z;
+    
+    primarySpecies      CO2;
+
+    tauRelaxBlending    false;
+    tauRelaxStart       1000;
+    tauRelaxDelta       2;
+    tauRelax            10;
+    tauUnits            timestep;
+}
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled true;
+    axisymmetric false;
+    symmetryPlane zx;
+
+    z;
+    T;
+    CO2;
+}
+
+particleSampling
+{
+    enabled             true;
+
+    collated            false;
+
+    fields              (H T);
+
+    // mixture fraction range of sampled particles
+    lowerBound          0.0;
+    upperBound          1.0;
+
+    condVariable         z;
+
+    particleSampleProbes
+    {
+        zD01
+        {
+            type        particleProbeBox;
+            p1          (-1 -1 0);
+            p2          (1 1 1);
+        }
+    }
+}
+
+// ************************************************************************* //

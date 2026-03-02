@@ -1,0 +1,194 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application      mmcFoam;
+
+startFrom     latestTime;
+
+startTime              0;
+
+stopAt           endTime;
+
+endTime            2e-06;
+
+deltaT             1e-06;
+
+writeControl    timeStep;
+
+writeInterval          5;
+
+writeFormat        ascii;
+
+writePrecision        10;
+
+writeCompression     off;
+
+timeFormat         fixed;
+
+timePrecision          6;
+
+runTimeModifiable    yes;
+
+adjustTimeStep        no;
+
+libs 
+( 
+    "libOpenFOAM.so"
+    "libsampling.so"
+);
+
+functions
+{
+    fieldAverage
+    {
+        enabled                 false;
+
+        resetOnRestart          false;
+
+        type             fieldAverage;
+
+        writeControl       outputTime;
+
+        fields
+        (
+            U
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            f
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            T
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+        
+            rho
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            muSgs
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            nu
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            nut
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            epsilon
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+
+            k
+            {
+                mean               on;
+                prime2Mean         on;
+                base             time;
+            }
+        );
+    }
+
+    //#includeFunc surfaces
+
+    //surfaceSampling
+    //{
+    //    enabled                  true;
+
+    //    type                 surfaces;
+
+    //    outputControl        timeStep;
+
+    //    outputInterval             10;
+
+    //    interpolationScheme cellPoint;
+
+    //    surfaceFormat             vtk;
+
+    //    fields
+    //    (
+    //        U
+    //        T
+    //        f
+    //        OH
+    //    );
+
+    //    surfaces
+    //    (
+    //        interpolatedPlane
+    //        {
+    //            type            plane;  
+
+    //            basePoint     (0 0 0);
+    //            normalVector  (1 0 0);
+    //            interpolate     false;
+    //        }
+    //    );
+    //}
+
+    //patchMassFlow
+    //{
+    //    type patchExpression;
+
+    //    outputControlMode timeStep;
+    //    outputInterval 1;
+
+    //    accumulations
+    //    (
+    //        sum
+    //    );
+
+    //    patches
+    //    (
+    //        inletJet
+    //    );
+
+    //    expression "phi";
+    //    verbose true;
+    //}
+}
+
+// ************************************************************************* //

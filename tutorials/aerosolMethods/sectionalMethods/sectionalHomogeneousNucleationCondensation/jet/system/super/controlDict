@@ -1,0 +1,168 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pbeMmcFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          writeNow;
+
+endTime		 	1;
+
+deltaT          2e-06;
+
+writeControl	adjustableRunTime;
+
+writeInterval   0.01;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      fixed;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  no;
+
+maxCo           0.6;
+
+graphFormat	xmgr;
+
+libs ( 
+		"libOpenFOAM.so"
+//		"libtimeLeft.so" 
+		"libcompressibleDynamicSmagorinskyModel.so" 
+		"libsimpleSwakFunctionObjects.so"
+      	"libswakFunctionObjects.so"
+      	"libgroovyBC.so"
+	 );
+
+functions
+{
+  	probes
+    {
+        type            probes;
+        functionObjectLibs ("libsampling.so");
+        enabled         true;
+        outputControl   timeStep;
+        outputInterval  1;
+
+        fields
+        (
+			U
+        );
+
+        probeLocations
+        (
+            ( 0 0 0.00000 )
+            ( 0 0 0.00235 )
+            ( 0 0 0.00470 )
+            ( 0 0 0.00705 )
+            ( 0 0 0.00940 )
+            ( 0 0 0.01175 )
+            ( 0 0 0.01410 )
+			( 0 0 0.01645 )
+			( 0 0 0.01880 )
+			( 0 0 0.02115 )
+			( 0 0 0.02350 )
+        );
+    }
+
+	/*
+    fieldAverage
+    {
+        type            fieldAverage;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        enabled         true;
+        outputControl   outputTime;
+		cleanRestart    false;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+				prime2Mean 	off;
+                base        time;
+            }
+
+            f
+            {
+                mean        on;
+				prime2Mean  off;
+                base        time;
+            }
+
+			T
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+        );
+    }
+
+    surfaceSampling
+    {
+        // Sample near-wall velocity
+
+        type surfaces;
+
+        // Where to load it from (if not already in solver)
+		onObjectLibs ("libsampling.so");
+        enabled         true;
+        outputControl   timeStep;
+
+        outputInterval 25;
+
+        interpolationScheme cellPoint;
+
+        setFormat       vtk;
+        surfaceFormat   vtk;
+
+        // Fields to be sampled
+        fields
+        (
+            U
+			p
+			f
+			T
+        );
+
+        surfaces
+        (
+			interpolatedPlane
+            {
+                type            plane;  
+
+                basePoint       (0 0 0);
+                normalVector    (1 0 0);
+                interpolate     true;
+            }
+        );
+    }
+	*/
+}
+
+// ************************************************************************* //

@@ -1,0 +1,19 @@
+. ../../../etc/bashrc 
+
+blockMesh
+blockMesh -region super
+
+topoSet
+topoSet -region super
+
+createPatch -overwrite
+createPatch -overwrite -region super
+
+blockMesh -region exMesh
+
+cp system/itvInflowDict system/controlDict
+itvInflow
+
+cp system/mmcFoamDict system/controlDict
+
+mmcFoam${MMC_APPLICATION_EXTENSION}

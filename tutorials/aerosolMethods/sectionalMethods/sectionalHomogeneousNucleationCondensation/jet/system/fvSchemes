@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         backward;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+/*    grad(U)         cellLimited Gauss linear 1;*/
+/*    grad(p)         cellLimited Gauss linear 1;*/
+}
+
+divSchemes
+{
+    default         	Gauss linear;
+ 
+    div(phi,U)          Gauss limitedLinearV 1.0; //bounded Gauss limitedLinearV 1.0;
+    
+/*    div(phid,p)         Gauss limitedLinear 1.0;*/
+/*    div(phiHbyA)        Gauss limitedLinear 1.0;*/
+    
+    div(phi,z)      	Gauss limitedLinear01 1.0;
+/*    div(phi,z)      	bounded Gauss limitedLinear01 1.0;*/
+/*    div(phi,Xii)      	bounded Gauss limitedLinear01 1.0;*/
+/*    div(phi,Yi)     	bounded Gauss limitedLinear01 1.0;*/
+/*    div(phi,hEqvE)      bounded Gauss limitedLinear 1.0;*/
+    
+    div(phi,Xii)      	Gauss multivariateIndependent
+    {
+        f               limitedLinear01 1;
+        c               limitedLinear01 1;
+    };
+    
+    div(phi,Yi_h)      	Gauss multivariateSelection
+    {
+        O2                limitedLinear01 1;
+        C16H22O4          limitedLinear01 1;
+        N2                limitedLinear01 1;
+/*        H                 limitedLinear01 1;*/
+/*        O                 limitedLinear01 1;*/
+/*        OH                limitedLinear01 1;*/
+/*        HO2               limitedLinear01 1;*/
+/*        H2O2              limitedLinear01 1;*/
+/*        CH2               limitedLinear01 1;*/
+/*        CH2(S)            limitedLinear01 1;*/
+/*        CH3               limitedLinear01 1;*/
+/*        HCO               limitedLinear01 1;*/
+/*        CH2O              limitedLinear01 1;*/
+/*        CH3O              limitedLinear01 1;*/
+/*        C2H2              limitedLinear01 1;*/
+/*        C2H3              limitedLinear01 1;*/
+/*        C2H4              limitedLinear01 1;*/
+/*        C2H5              limitedLinear01 1;*/
+/*        C2H6              limitedLinear01 1; */
+        h                 limitedLinear 1;
+    };
+    
+
+}
+
+laplacianSchemes
+{
+    default                    Gauss linear corrected;
+/*    laplacian(rhorAUf,p)       Gauss linear corrected;*/
+}
+
+interpolationSchemes
+{
+    default         linear;    
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+
+// ************************************************************************* //

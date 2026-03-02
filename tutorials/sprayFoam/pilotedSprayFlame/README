@@ -1,0 +1,39 @@
+//-----------------------------
+ Tutorial Case for mmcSprayFoam
+//-----------------------------
+
+Description
+-----------
+Piloted spray flames of Gounder and Masri(2010).
+
+
+Reference
+---------
+A. R. Masri & J. D. Gounder (2010) Turbulent Spray Flames of Acetone and Ethanol Approaching Extinction, Combustion Science and Technology, 182:4-6, 702-715, DOI: 10.1080/00102200903467754
+
+https://doi.org/10.1080/00102200903467754
+
+
+MMC Publications on Spray
+-------------------------
+Nazmul Khan, Matthew J. Cleary, Oliver T. Stein, Andreas Kronenburg,
+A two-phase MMC–LES model for turbulent spray flames,
+Combustion and Flame,
+Volume 193,
+2018,
+Pages 424-439,
+ISSN 0010-2180,
+https://doi.org/10.1016/j.combustflame.2018.03.023.
+(http://www.sciencedirect.com/science/article/pii/S0010218018301330)
+
+
+
+-- 
+Eshan Sharma, 08.Feb.2020
+
+ #                           ____                        _____                     
+ #  _ __ ___  _ __ ___   ___/ ___| _ __  _ __ __ _ _   _|  ______   __ _ _ __ ___  
+ # | '_ ` _ \| '_ ` _ \ / __\___ \| '_ \| '__/ _` | | | | |_ / _ \ / _` | '_ ` _ \ 
+ # | | | | | | | | | | | (__ ___) | |_) | | | (_| | |_| |  _| (_) | (_| | | | | | |
+ # |_| |_| |_|_| |_| |_|\___|____/| .__/|_|  \__,_|\__, |_|  \___/ \__,_|_| |_| |_|
+ #                                |_|              |___/                           

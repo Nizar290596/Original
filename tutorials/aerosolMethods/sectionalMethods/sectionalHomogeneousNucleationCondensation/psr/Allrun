@@ -1,0 +1,34 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # run from this directory
+set -x
+
+# Source mmcFoam environment variables
+. ../../../../../etc/bashrc
+
+blockMesh
+
+blockMesh -region super
+
+rm -rf 0.000200 0.000020 postProcessing
+
+sed -i 's/endTime         0.0002;/endTime         0.00002;/g' system/controlDict
+sed -i 's/writeInterval   200;/writeInterval   20;/g'         system/controlDict
+sed -i 's/sampleInterval     200;/sampleInterval      20;/g'  constant/cloudProperties
+
+mmcPbeFoam${MMC_APPLICATION_EXTENSION}
+
+sed -i 's/endTime         0.00002;/endTime         0.0002;/g' system/controlDict
+sed -i 's/writeInterval   20;/writeInterval   200;/g'         system/controlDict
+sed -i 's/sampleInterval      20;/sampleInterval     200;/g'  constant/cloudProperties
+
+mmcPbeFoam${MMC_APPLICATION_EXTENSION}
+
+#postProcess -func sampleDictSizeBins01 -time 0.000020,0.000200 
+#postProcess -func sampleDictSizeBins02 -time 0.000020,0.000200 
+#postProcess -func sampleDictSizeBins03 -time 0.000020,0.000200 
+#postProcess -func sampleDictSizeBins04 -time 0.000020,0.000200
+
+rm -rf log
+rm -rf Ito* 
+
+# ----------------------------------------------------------------- end-of-file

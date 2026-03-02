@@ -1,0 +1,4 @@
+cp system/mmcMultiphaseFoamDict system/controlDict
+
+foamJob -p mmcMultiphaseFoam
+

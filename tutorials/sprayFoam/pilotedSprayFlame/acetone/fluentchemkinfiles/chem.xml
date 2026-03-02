@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!-- DOCTYPE chemistrydata SYSTEM "chemistrydata.dtd" -->
+<chemistryset date="2019/01/15" time="21:48:05" release="4.5.0">
+<workspace CKSTRT="   202" SKSTRT="   200" MCSTRT="    40"/>
+<gasphase>
+<reactions unit="MOLES CAL/MOLE">
+<reaction formula="=">
+<rate A=" 0.00000000E+000" B=" 0.00000000E+000" E=" 0.00000000E+000">
+</rate>
+</reaction>
+</reactions>
+<speciesset type="unused gas species in gas chemistry">
+<species name="H2">
+</species>
+<species name="H">
+</species>
+<species name="O">
+</species>
+<species name="O2">
+</species>
+<species name="OH">
+</species>
+<species name="H2O">
+</species>
+<species name="HO2">
+</species>
+<species name="H2O2">
+</species>
+<species name="C">
+</species>
+<species name="CH">
+</species>
+<species name="CH2">
+</species>
+<species name="CH2(S)">
+</species>
+<species name="CH3">
+</species>
+<species name="CH4">
+</species>
+<species name="CO">
+</species>
+<species name="CO2">
+</species>
+<species name="HCO">
+</species>
+<species name="CH2O">
+</species>
+<species name="CH2OH">
+</species>
+<species name="CH3O">
+</species>
+<species name="CH3OH">
+</species>
+<species name="C2H">
+</species>
+<species name="C2H2">
+</species>
+<species name="C2H3">
+</species>
+<species name="C2H4">
+</species>
+<species name="C2H5">
+</species>
+<species name="C2H6">
+</species>
+<species name="HCCO">
+</species>
+<species name="CH2CO">
+</species>
+<species name="HCCOH">
+</species>
+<species name="C3H7">
+</species>
+<species name="C3H8">
+</species>
+<species name="CH2CHO">
+</species>
+<species name="CH3CHO">
+</species>
+<species name="CH3COCH3">
+</species>
+<species name="CH3CO">
+</species>
+<species name="CH3COCH2">
+</species>
+<species name="N2">
+</species>
+</speciesset>
+</gasphase>
+</chemistryset>

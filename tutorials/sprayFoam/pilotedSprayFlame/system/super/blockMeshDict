@@ -1,0 +1,303 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+/// mainflow direction  z !!!!!!!!!!!!!1
+
+
+convertToMeters 0.001; // meters
+
+//GEOMETRY DATA
+  //length of domain
+  Length    367.5;
+  //0.188;
+
+  //square inside nozzle
+  innerSquare 3.0;
+  MinnerSquare -3.0;
+
+  //radius of nozzle
+  nozzle   5.25;
+  Mnozzle  -5.25;
+  //annular
+  annular 12.5;
+  Mannular -12.5;
+/*  // domain*/
+  domain   72.0;
+  Mdomain  -72.0;
+
+// interpolation coordinates for circular edges
+ // cos(45°) * radius
+  //  0.707106781 * nozzle;
+  H_nozzle    3.71;
+  MH_nozzle  -3.71;
+  //  0.707106781 * annular;
+  H_annular  8.84;
+  MH_annular -8.84;
+/*  //  0.707106781*domain;*/
+/*  domain  52.0;*/
+/*  Mdomain -52.0;*/
+
+
+vertices
+(
+
+// bottom centre 
+
+	(0 	0	0) // 0
+
+	
+
+   //bottom
+	   //inner square
+	    ($innerSquare   0.0            0.0)      // 1
+	    (0.0            $innerSquare   0.0)      // 2  
+	    ($MinnerSquare  0.0            0.0)      // 3
+	    (0.0            $MinnerSquare  0.0)      //4 
+
+
+	   // Jet
+	    ($nozzle   0.0       0.0)      // 5
+	    (0.0       $nozzle   0.0)      // 6  
+	    ($Mnozzle  0.0       0.0)      // 7
+	    (0.0       $Mnozzle  0.0)      // 8 
+	
+	    // annular 
+	    ($annular  0.0          0.0)      // 9
+	    (0.0          $annular  0.0)      // 10 
+	    ($Mannular 0.0          0.0)      // 11 
+	    (0.0          $Mannular 0.0)      // 12
+	
+	    // domain edge
+	    ($domain   0.0      0.0)          // 13
+	    (0.0       $domain  0.0)          // 14
+	    ($Mdomain  0.0      0.0)          // 15
+	    (0.0      $Mdomain  0.0)          // 16
+
+   //top centre
+
+	    ( 0  	0     $Length) // 17
+	
+	 //inner square
+	    ($innerSquare   0.0            $Length)      // 18
+	    (0.0            $innerSquare   $Length)      // 19  
+	    ($MinnerSquare  0.0            $Length)      // 20
+	    (0.0            $MinnerSquare  $Length)      // 21
+	   // inletJet
+	    ($nozzle   0.0       $Length)      // 22
+	    (0.0       $nozzle   $Length)      // 23  
+	    ($Mnozzle  0.0       $Length)      // 24
+	    (0.0       $Mnozzle  $Length)      // 25
+	
+	    // annular 
+	    ($annular  0.0          $Length)      // 26
+	    (0.0          $annular  $Length)      // 27 
+	    ($Mannular 0.0          $Length)      // 28 
+	    (0.0          $Mannular $Length)      // 29 
+	
+	    // domain
+	    ($domain  0.0      $Length)          // 30
+	    (0.0       $domain  $Length)          // 31
+	    ($Mdomain  0.0      $Length)          // 32
+	    (0.0      $Mdomain  $Length)          // 33
+
+);
+
+// forcircular shape - >  $variable * cos(45°)
+edges
+(
+
+    //bottom
+	// 4 round inletJet edges
+	arc 5 6 ($H_nozzle  $H_nozzle   0)
+	arc 6 7 ($MH_nozzle $H_nozzle   0)
+	arc 7 8 ($MH_nozzle $MH_nozzle  0)
+	arc 8 5 ($H_nozzle  $MH_nozzle  0)
+	// 4 round pilot edges
+	arc 9 10   ($H_annular  $H_annular   0)
+	arc 10 11  ($MH_annular $H_annular   0)
+	arc 11 12 ($MH_annular $MH_annular  0)
+	arc 12 9  ($H_annular  $MH_annular  0)
+/*	// 4 round domain edges*/
+/*	arc 12 13 ($domain  $domain  0)*/
+/*	arc 13 14 ($Mdomain $domain  0)*/
+/*	arc 14 15 ($Mdomain $Mdomain 0)*/
+/*	arc 15 12 ($domain  $Mdomain 0)*/
+    //top
+	// 4 round inletJet edges
+	arc 22 23 ($H_nozzle  $H_nozzle   $Length)
+	arc 23 24 ($MH_nozzle $H_nozzle   $Length)
+	arc 24 25 ($MH_nozzle $MH_nozzle  $Length)
+	arc 25 22 ($H_nozzle  $MH_nozzle  $Length)
+	// 4 round pilot edges
+	arc 26 27 ($H_annular  $H_annular   $Length)
+	arc 27 28 ($MH_annular $H_annular   $Length)
+	arc 28 29 ($MH_annular $MH_annular  $Length)
+	arc 29 26 ($H_annular  $MH_annular  $Length)
+/*	// 4 round domain edges*/
+/*	arc 28 29 (0.0707106781  0.0707106781   $Length)*/
+/*	arc 29 30 (-0.0707106781 0.0707106781   $Length)*/
+/*	arc 30 31 (-0.0707106781 -0.0707106781  $Length)*/
+/*	arc 31 28 (0.0707106781 -0.0707106781  $Length)*/
+
+
+);
+
+// MESH resolution and stretching
+
+Nradsqr 3;
+Ncent 3;
+Nax 64;
+Nradnoz 1;
+NradNozzledge 2;
+NradCoFlow 8;
+sgrad 1;
+sgradco 2;
+
+ 
+// block definitions
+blocks
+(
+    // Square Jet
+    hex ( 1 2 3 4 18 19 20 21 ) ($Nradsqr $Ncent $Nax) simpleGrading (1 1 1)  // jet
+ 
+    //  Circular Jet	
+       	// x+, y+         // radial  circumferential  axial   
+	    hex ( 1 5 6 2 18 22 23 19) ($Nradnoz $Ncent $Nax) simpleGrading (1 1 1)  
+	// x- y+   	
+	    hex (2 6 7 3 19 23 24 20) ($Nradnoz $Ncent $Nax) simpleGrading (1 1 1)  
+	// x- y-
+	    hex (3 7 8 4 20 24 25 21) ($Nradnoz $Ncent $Nax) simpleGrading (1 1 1)   
+	// x+ y-
+	    hex (4 8 5 1 21 25 22 18) ($Nradnoz $Ncent $Nax) simpleGrading (1 1 1)    
+    // pilot
+	// x+, y+         // radial  circumferential  axial
+	    hex (5 9 10 6 22 26 27 23)   ($NradNozzledge $Ncent $Nax) simpleGrading ($sgrad 1 1)  
+	// x- y+
+	    hex (6 10 11 7 23 27 28 24)  ($NradNozzledge $Ncent $Nax) simpleGrading ($sgrad 1 1)  
+	// x- y-
+	    hex (7 11 12 8 24 28 29 25) ($NradNozzledge $Ncent $Nax) simpleGrading ($sgrad 1 1)  
+	// x+ y-
+	    hex (8 12 9 5 25 29 26 22)  ($NradNozzledge $Ncent $Nax) simpleGrading ($sgrad 1 1)  
+
+
+    // coflow 
+	// x+, y+
+	   hex (9 13 14 10 26 30 31 27)   ($NradCoFlow $Ncent $Nax) simpleGrading ($sgradco 1 1)  
+	// x- y+
+	   hex (10 14 15 11 27 31 32 28)  ($NradCoFlow $Ncent $Nax) simpleGrading ($sgradco 1 1)  
+	// x- y-
+	   hex (11 15 16 12 28 32 33 29) ($NradCoFlow $Ncent $Nax) simpleGrading ($sgradco 1 1)  
+	// x+ y-
+   	   hex (12 16 13 9 29 33 30 26)  ($NradCoFlow $Ncent $Nax) simpleGrading ($sgradco 1 1)  
+
+
+
+
+);
+
+
+boundary
+(
+
+    inletJet
+    {
+    type patch;
+    physicalType noParticleOutflow;
+    faces
+    (
+        (1 2 3 4)
+	(1 5 6 2)
+	(2 6 7 3)
+	(3 7 8 4)
+	(4 8 5 1)
+    );
+
+   }
+
+    pilot
+    {
+	    type patch;
+	    physicalType noParticleOutflow;
+	    faces
+	    (
+		(5 9 10 6)
+		(6 10 11 7)
+		(7 11 12 8)
+		(8 12 9 5)
+	    );
+
+    }	
+
+    inletCoflow
+    {
+	    type patch;
+	    physicalType noParticleOutflow;
+	    faces
+	    (
+		(9 13 14 10)  
+		(10 14 15 11)
+		(11 15 16 12)
+		(12 16 13 9)
+	    );
+
+     }
+	
+    outlet
+    {
+	    type patch;
+	    physicalType particleOutflow;
+	    faces
+	    (
+		(18 19 20 21)
+
+		(18 22 23 19)
+		(19 23 24 20)
+		(20 24 25 21)
+		(21 25 22 18)
+
+		(22 26 27 23)
+		(23 27 28 24)
+		(24 28 29 25)
+		(25 29 26 22)
+
+		(26 30 31 27)
+		(27 31 32 28)
+		(28 32 33 29)
+		(29 33 30 26)
+	    );
+
+     }	
+
+    side
+    {
+	    type patch;
+	    physicalType particleOutflow;
+	    faces
+	    (
+		(13 30 31 14)
+		(14 31 32 15)
+		(15 32 33 16)
+		(16 33 30 13)
+	    );
+
+    }	
+
+);
+mergePatchPairs
+(
+);
+/// ************************************************************************* //

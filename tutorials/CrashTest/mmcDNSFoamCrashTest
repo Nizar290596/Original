@@ -1,0 +1,8 @@
+# source support functions
+source ../../etc/supportFunctions.sh
+
+basePath=${PWD}
+
+../mmcDNSFoam/mmcDNSFoam-runTests.sh
+
+

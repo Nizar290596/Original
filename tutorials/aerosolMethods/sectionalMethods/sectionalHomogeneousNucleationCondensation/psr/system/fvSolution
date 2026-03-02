@@ -1,0 +1,68 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFO         |
+|  \\    /   O peration     | Version:  2.1.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "(p|rho)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-10;
+        relTol          1e-04;
+    }
+
+    "(p|rho)Final"
+    {
+        $p;
+        tolerance       1e-12;
+        relTol          0;
+    }
+
+    "(U|h|k|Xii|f|hEqvE|Yi)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          1e-04;
+    }
+
+    "(U|h|k|Xii|f|hEqvE|Yi)Final"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-12;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor false;
+    nOuterCorrectors  0;
+    nCorrectors       0;
+    nNonOrthogonalCorrectors 0;
+}
+
+PDFMETHOD
+{
+  pdfMethodOn       on;
+  nSet              1;
+  pdfScatPlotOn     no;
+  pdfScatPlotSize   5000;  // No of scatter data on each processor
+}
+
+// ************************************************************************* //

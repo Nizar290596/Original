@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      sampleDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+interpolationScheme cellPoint;
+//interpolationScheme cellPointFace;
+//interpolationScheme cell;
+
+surfaceFormat       raw; //x,y,z coordiantes and field values
+//surfaceFormat       dx; //DX scalar or vector format
+//surfaceFormat       vtk; //VTK ASCII format
+//surfaceFormat       stl; //ASCII STL; just surface, no values
+
+//setFormat		raw;
+//setFormat		xmgr;
+//setFormat		gnuplot;
+
+// sets: the locations within the domain that the fields are line-sampled (1D)
+/*
+sets
+(
+	sample20mm //name of the set
+	{
+	type	uniform; //sampling method
+	axis	x; // y, z, distance
+	start 	(-54e-3 0.00 34e-3);
+	end 	(54e-3 0.00 34e-3);
+	nPoints	150; // number of points to be sampled
+}
+)
+*/
+
+
+//the locations within the domain that the fields are surface-sampled (2D)
+surfaces
+(
+       Plane_XZ
+    {
+        type            plane;    // always triangulated
+        basePoint       (0 0 0);
+        normalVector    (0 1 0);
+        interpolate     true;
+    }
+);
+
+fields          
+(
+ U
+ k
+ epsilon
+ mut
+ rho
+ p
+ T
+ f
+);
+
+
+// ************************************************************************* //

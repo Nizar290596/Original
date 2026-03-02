@@ -1,0 +1,294 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// mainflow direction z !!!!!!!!!!!!!
+
+convertToMeters 0.001; // mm
+
+// GEOMETRY DATA
+
+  // length of domain
+  ld 220;
+
+  // square inside nozzle
+  pis  1.2; //  1.414212562;
+  nis -1.2; // -1.414212562;
+
+  // radius of nozzle
+  pnr  3.0;
+  nnr -3.0;
+
+  // radius of pilot
+  ppr  3.5;
+  npr -3.5;
+
+  // edge of domain
+  // pdr  21.92031022;
+  // ndr -21.92031022;
+  pdr  80;
+  ndr -80;
+
+// interpolation coordinates for circular edges
+
+  // cos(45°) * radius
+  c45 0.707106781;
+
+  pci #calc "$pis*$c45";
+  nci #calc "$nis*$c45";
+
+  pni #calc "$pnr*$c45";
+  nni #calc "$nnr*$c45";
+
+  ppi #calc "$ppr*$c45";
+  npi #calc "$npr*$c45";
+
+  pdi #calc "$pdr*$c45";
+  ndi #calc "$ndr*$c45";
+
+// MESH resolution and stretching
+
+  level 4;
+  // # cells centerblock
+  ncc 9;
+
+  // # cells radius nozzle
+  ncrn 8;
+  // stretching
+  scrn 1;
+
+  // # cells radius pilot
+  ncrp 2;
+  //stretching
+  scrp 1;
+
+  // # cells radius coflow
+  // ncrc 24;
+  ncrc 80;
+  //stretching
+  scrc 0.1945525292;
+
+  // 1/5.14
+  // # cells axial
+  nca 640;
+  //mesh stretching
+  sca 1;
+
+vertices (
+   // bottom
+
+        // origin
+        (0.0 0.0 0.0)   // 0
+
+        // inner square
+        (0.0  $pis 0.0) // 1
+        ($nis 0.0  0.0) // 2
+        (0.0  $nis 0.0) // 3
+        ($pis 0.0  0.0) // 4
+
+        // NOZZLE
+        (0.0  $pnr 0.0) // 5
+        ($nnr 0.0  0.0) // 6
+        (0.0  $nnr 0.0) // 7
+        ($pnr 0.0  0.0) // 8
+
+        // pilot
+        (0.0  $ppr 0.0) // 9
+        ($npr 0.0  0.0) // 10
+        (0.0  $npr 0.0) // 11
+        ($ppr 0.0  0.0) // 12
+
+        // domain edge
+        (0.0  $pdr 0.0) // 13
+        ($ndr 0.0  0.0) // 14
+        (0.0  $ndr 0.0) // 15
+        ($pdr 0.0  0.0) // 16
+
+   // top
+        // inner square
+        (0.0  $pis $ld) // 17
+        ($nis 0.0  $ld) // 18
+        (0.0  $nis $ld) // 19
+        ($pis 0.0  $ld) // 20
+
+        // NOZZLE
+        (0.0  $pnr $ld) // 21
+        ($nnr 0.0  $ld) // 22
+        (0.0  $nnr $ld) // 23
+        ($pnr 0.0  $ld) // 24
+
+        // pilot
+        (0.0  $ppr $ld) // 25
+        ($npr 0.0  $ld) // 26
+        (0.0  $npr $ld) // 27
+        ($ppr 0.0  $ld) // 28
+
+        // domain edge
+        (0.0  $pdr $ld) // 29
+        ($ndr 0.0  $ld) // 30
+        (0.0  $ndr $ld) // 31
+        ($pdr 0.0  $ld) // 32
+);
+
+// forcircular shape ->  $variable * cos(45°)
+edges (
+
+    //bottom
+    // arc 1 2 ($nci $pci 0)
+    // arc 2 3 ($nci $nci 0)
+    // arc 3 4 ($pci $nci 0)
+    // arc 4 1 ($pci $pci 0)
+
+    // 4 round nozzle edges
+    arc 5 6 ($nni $pni 0)
+    arc 6 7 ($nni $nni 0)
+    arc 7 8 ($pni $nni 0)
+    arc 8 5 ($pni $pni 0)
+
+    // 4 round pilot edges
+    arc 9  10 ($npi $ppi 0)
+    arc 10 11 ($npi $npi 0)
+    arc 11 12 ($ppi $npi 0)
+    arc 12 9  ($ppi $ppi 0)
+
+    // 4 round domain edges
+    arc 13 14 ($ndi $pdi 0)
+    arc 14 15 ($ndi $ndi 0)
+    arc 15 16 ($pdi $ndi 0)
+    arc 16 13 ($pdi $pdi 0)
+
+    // top
+    // 4 round nozzle edges
+    // arc 17 18 ($nci $pci $ld)
+    // arc 18 19 ($nci $nci $ld)
+    // arc 19 20 ($pci $nci $ld)
+    // arc 20 21 ($pci $pci $ld)
+
+    arc 21 22 ($nni $pni $ld)
+    arc 22 23 ($nni $nni $ld)
+    arc 23 24 ($pni $nni $ld)
+    arc 24 21 ($pni $pni $ld)
+
+    // 4 round pilot edges
+    arc 25 26 ($npi $ppi $ld)
+    arc 26 27 ($npi $npi $ld)
+    arc 27 28 ($ppi $npi $ld)
+    arc 28 25 ($ppi $ppi $ld)
+
+    // 4 round domain edges
+    arc 29 30 ($ndi $pdi $ld)
+    arc 30 31 ($ndi $ndi $ld)
+    arc 31 32 ($pdi $ndi $ld)
+    arc 32 29 ($pdi $pdi $ld)
+);
+
+
+// block definitions
+blocks (
+    // center block
+    hex (1 2 3 4 17 18 19 20) ($ncc $ncc $nca) simpleGrading (1 1 $sca)  // jet
+
+    // nozzle
+    hex (5 1 4 8 21 17 20 24) ($ncrn $ncc $nca) simpleGrading ($scrn 1 $sca) // x+ y+
+    hex (6 2 1 5 22 18 17 21) ($ncrn $ncc $nca) simpleGrading ($scrn 1 $sca) // x- y+
+    hex (7 3 2 6 23 19 18 22) ($ncrn $ncc $nca) simpleGrading ($scrn 1 $sca) // x- y-
+    hex (8 4 3 7 24 20 19 23) ($ncrn $ncc $nca) simpleGrading ($scrn 1 $sca) // x+ y-
+
+    // pilot
+    hex (9 5 8 12 25 21 24 28)  ($ncrp $ncc $nca) simpleGrading ($scrp 1 $sca) // x+ y+
+    hex (10 6 5 9 26 22 21 25)  ($ncrp $ncc $nca) simpleGrading ($scrp 1 $sca) // x- y+
+    hex (11 7 6 10 27 23 22 26) ($ncrp $ncc $nca) simpleGrading ($scrp 1 $sca) // x- y-
+    hex (12 8 7 11 28 24 23 27) ($ncrp $ncc $nca) simpleGrading ($scrp 1 $sca) // x+ y-
+
+    // coflow
+    hex (13 9 12 16 29 25 28 32)  ($ncrc $ncc $nca) simpleGrading ($scrc 1 $sca) // x+ y+
+    hex (14 10 9 13 30 26 25 29)  ($ncrc $ncc $nca) simpleGrading ($scrc 1 $sca) // x- y+
+    hex (15 11 10 14 31 27 26 30) ($ncrc $ncc $nca) simpleGrading ($scrc 1 $sca) // x- y-
+    hex (16 12 11 15 32 28 27 31) ($ncrc $ncc $nca) simpleGrading ($scrc 1 $sca) // x+ y-
+);
+
+
+boundary (
+
+  mainJet {
+    type patch;
+    physicalType noParticleOutflow;
+    faces (
+        (1 2 3 4)
+        (5 1 4 8)
+        (6 2 1 5)
+        (7 3 2 6)
+        (8 4 3 7)
+    );
+  }
+
+  pilot {
+    type patch;
+    physicalType noParticleOutflow;
+    faces (
+        (9 5 8 12)
+        (10 6 5 9)
+        (11 7 6 10)
+        (12 8 7 11)
+    );
+  }
+
+  coflow {
+    type patch;
+    physicalType noParticleOutflow;
+    faces (
+        (13 9 12 16)
+        (14 10 9 13)
+        (15 11 10 14)
+        (16 12 11 15)
+    );
+  }
+
+  outlet {
+    type patch;
+    physicalType particleOutflow;
+    faces (
+        (17 18 19 20)
+
+        (21 17 20 24)
+        (22 18 17 21)
+        (23 19 18 22)
+        (24 20 19 23)
+
+        (25 21 24 28)
+        (26 22 21 25)
+        (27 23 22 26)
+        (28 24 23 27)
+
+        (29 25 28 32)
+        (30 26 25 29)
+        (31 27 26 30)
+        (32 28 27 31)
+    );
+  }
+
+  side {
+    type patch;
+    physicalType noParticleOutflow;
+    faces (
+        (16 13 29 32)
+        (13 14 30 29)
+        (14 15 31 30)
+        (15 16 32 31)
+    );
+  }
+);
+
+/// ************************************************************************* //

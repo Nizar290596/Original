@@ -1,0 +1,153 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     mmcFoam;
+
+startFrom       startTime;
+
+startTime		0;
+
+stopAt          endTime;
+
+endTime		    3e-06;
+
+deltaT          1e-06;
+
+writeControl	timeStep;
+
+writeInterval   2500;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      fixed;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+libs ( 
+		"libOpenFOAM.so"
+	 );
+
+functions
+{
+	fieldAverage
+    {
+        type            fieldAverage;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        enabled         false;
+        writeControl    outputTime;
+		cleanRestart    false;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+				prime2Mean 	on;
+                base        time;
+            }
+
+            f
+            {
+                mean        on;
+				prime2Mean  on;
+                base        time;
+            }
+
+			T
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+			
+			C16H22O4
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+
+            N2
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+
+
+            O2
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+        );
+    }
+
+    surfaceSampling
+    {
+        // Sample near-wall velocity
+
+        type surfaces;
+
+        // Where to load it from (if not already in solver)
+		onObjectLibs ("libsampling.so");
+        enabled         false;
+        writeControl    timeStep;
+
+        writeInterval   25;
+
+        interpolationScheme cellPoint;
+
+        setFormat       vtk;
+        surfaceFormat   vtk;
+
+        // Fields to be sampled
+        fields
+        (
+            U
+			f
+			T
+			rho
+			p
+        );
+
+        surfaces
+        (
+			interpolatedPlane
+            {
+                type            plane;  
+
+                basePoint       (0 0 0);
+                normalVector    (1 0 0);
+                interpolate     true;
+            }
+        );
+    }
+}
+
+// ************************************************************************* //

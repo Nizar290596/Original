@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Run all tests in this folder and store success or failure in 
+# a summary file called CrashTest_SUMMARY.txt
+
+SUMMARY="CrashTest_SUMMARY.txt"
+
+echo "Start CrashTest" > $SUMMARY
+
+
+./AerosolMethods >> $SUMMARY
+./BluffBodyCrashTest >> $SUMMARY
+./FlameDCrashTest >> $SUMMARY
+./LiftedFlameTest >> $SUMMARY
+./OneStepFlameSheetCrashTest >> $SUMMARY
+./ShearLayerCrashTest >> $SUMMARY
+./mmcDNSFoamCrashTest >> $SUMMARY
+
+
+

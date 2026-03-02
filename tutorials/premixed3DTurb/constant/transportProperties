@@ -1,0 +1,33 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+nu                          7.49304070205208E-05;
+SchmidtNumber                               0.70;
+TurbulentSchmidtNumber                      0.40;
+
+turbForcing
+{
+    forcedTurb                              true;
+    k0                                    8.4887;
+    uprime0                               2.3789;
+    lt0                                   0.0032;
+    Nx                                        64;
+    sL                                      0.94;
+    Xtarg                                   0.01;
+    TmaxL                                   1985;
+}
+
+// ************************************************************************* //

@@ -1,0 +1,10 @@
+. ../../etc/bashrc
+
+[[ ! -d 0 ]] && cp -r 0_orig 0
+
+blockMesh
+blockMesh -region super
+blockMesh -region filterMesh
+
+mmcDNSFoam${MMC_APPLICATION_EXTENSION}
+

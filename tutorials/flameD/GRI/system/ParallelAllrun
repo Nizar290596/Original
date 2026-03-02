@@ -1,0 +1,19 @@
+blockMesh
+blockMesh -region super
+
+topoSet
+topoSet -region super
+
+createPatch -overwrite
+createPatch -overwrite -region super
+
+cp system/itvInflowDict system/controlDict
+itvInflow
+
+cp system/mmcFoamDict system/controlDict
+
+decomposePar
+decomposePar -region super
+
+foamJob -p mmcFoam
+

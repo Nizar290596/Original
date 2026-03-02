@@ -1,0 +1,770 @@
+!linkfile.d
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SIH4W  MECHANISM
+!        base kinetics as of Suh et al.
+!        obtained directly from Zachariah
+!
+!        added reactions from Suh, Zachariah, Girshick, JVST 19 (2001)
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ELEMENTS
+AR SI H O N
+END
+
+SPECIES
+N2 O2 H2 H2O OH H O HO2 H2O2 AR 
+SIH4 SIH3 SIH2 SIH SI SI2 SI3 SI2H2 SI2H3 SI2H5 SI2H6 SI2H4
+H3SI2H SI3H8 SI3H7 SIHO SIH2O SIH2O-2 SIH3O
+HSIOOH HSIOOH-2 SIOOH SIH3OH H2SIOH HSIOH SIH3O2H SIH3O2 SI2H
+SIO SIO-2 SIO-3 SIO-4 SIO-5 SIO-6 SIO-7 SIO-8 SIO-9 SIO-10 SIO-11 SIO-12
+SIO2 SIO2-2 SIO2-3 SIO2-4 SIO2-5 SIO2-6 SIO2-7 SIO2-8 SIO2-9 SIO2-10 SIO2-11 
+SIO2-12 
+SIO2-S
+END
+
+REACTIONS
+!***** H2/O2 system: Combination, decomposition ***
+H    + H  +M   = H2 + M             1.00E18   -1.00      0.  !MBA139
+     H2/0/ H2O/0/
+H    + H  +H2  = 2H2                9.20E16   -0.60      0.  !MBA140
+H    + H  +H2O = H2   + H2O         6.00E19   -1.25      0.  !MBA141
+!H    + H  +CO2 = H2   + CO2         5.49E20   -2.00      0.  !MBA142
+!!!O    + O  +M   = O2   + M           1.89E13    0.00  -1788.  !MBA145 86TSA/HAM
+2O+M=O2+M                              1.200E+17   -1.000      0.00    !GRIMECH11
+H2/ 2.40/ H2O/15.40/ AR/0.83/ SIH4/ 2.00/ SIO/ 1.75/ SIO2/ 3.60/ SI2H6/ 3.00/
+!!!H    + OH +M   = H2O  + M           1.60E22   -2.00      0.  !MBA143
+!!!     H2O/5/
+H+OH+M=H2O+M                           2.200E+22   -2.000      0.00    !GRIMECH11
+       H2/0.73/ H2O/3.65/  AR/0.83/ SIH4/2.00/ SI2H6/3.00/
+!!!H    + O  +M   = OH   + M           6.20E16   -0.60      0.  !MBA144
+!!!     H2O/5/
+O+H+M=OH+M                             5.000E+17   -1.000      0.00    !GRIMECH11
+   H2/2.00/ H2O/6.00/  AR/0.7/ SIH4/2.00/ SIO/1.50/ SIO2/2.00/ SI2H6/3.00/
+
+!***** H2/O2 system: atom transfers ***
+O    + OH      = O2   + H           4.00E14   -0.50      0.  !MBA132 81HOW/SMIok
+!!H+O2=O+OH                              3.520E+16   -0.700  17074.00    !GRIMECH11
+O    + H2      = OH   + H           5.06E04    2.67   6290.  !MBA133 88SUT/MIC2ok
+!!!2OH            = O    + H2O         6.00E08    1.30      0.  !MBA138
+2OH            = O    + H2O         1.50E09    1.14     99.  !94BAU/COB
+H2   + O2      = 2OH                1.70E13    0.00  47780.  !MBA130 71JAC/HOUlm
+OH   + H2      = H2O  + H           1.17E09    1.30   3626.  !MBA131 79COH/WES
+
+!***** H2/O2 system: Peroxyl and peroxide ***
+H    + O2 + M  = HO2  + M           3.61E17   -0.72      0.  !MBA134
+     H2O/18.6/  H2/2.9/ N2/1.3/ SIO2/4.2/ SIO/2.1/ 
+H    + HO2     = H2   + O2          1.25E13    0.00      0.  !MBA146
+!!!H    + HO2     = H2   + O2          4.28E13    0.00      1410.  !94BAU/COB
+O    + HO2     = O2   + OH          1.40E13    0.00   1073.  !MBA137
+!!!OH   + HO2     = H2O  + O2          7.50E12    0.00      0.  !MBA135
+OH+HO2=O2+H2O                          2.900E+13    0.000   -500.00   !GRIMECH11
+!!!H2O2 + M       = 2OH  + M           1.30E17    0.00  45500.  !MBA148
+2OH(+M)=H2O2(+M)                       7.400E+13   -0.370      0.00   !GRIMECH11
+     LOW  /  2.300E+18   -0.900  -1700.00/   !GRIMECH1
+     TROE/  0.7346   94.00  1756.00  5182.00 /   !GRIMECH1
+H2/2.00/ H2O/6.00/ AR/0.7/ SIH4/2.00/ SIO/1.50/ SIO2/2.00/ SI2H6/3.00/
+!!!H    + HO2     = 2OH                1.40E14    0.00   1073.  !MBA136
+H    + HO2     = 2OH                1.69E14    0.00    874.  !94BAU/COB
+HO2   +     H    = H2O   +   O       3.01E13    0.      1721.   !92BAU/COB
+!2HO2           = H2O2 + O2          2.00E12    0.00      0.  !MBA147 84WAR    up
+!2HO2          = H2O2 + O2          1.31E11    0.00   -1192. !92ATK/BAU
+2HO2=O2+H2O2                           1.300E+11    0.000  -1630.00   !GRIMECH1
+ DUPLICATE
+2HO2=O2+H2O2                           4.200E+14    0.000  12000.00   !GRIMECH1
+ DUPLICATE
+!!!HO2  +  HO2   = H2O2 + O2          1.86E12    0.00     1530. !92BAU/COB
+!H2O2 + H       = HO2  + H2          1.60E12   0.00    3800.  !MBA149
+H2O2  +     H    = H2O   +   OH      1.00E13    0.      3590.  !!92EGO/DU
+H2O2  +     H    = H2    +  HO2      4.79E13    0.      7950.  !!92EGO/DU
+H2O2 + OH      = H2O  + HO2         1.00E13   0.00    1800.  !MBA150
+O+H2O2=OH+HO2                          9.630E+06    2.000   4000.00    !GRIMECH11
+!
+!********* SI - H - O reactions
+!
+!***** Decomposition, recombination, association *****
+!SIH2         = SI      + H2                  1.06E14  -0.88  45000. !R8 89COL/KEE, 1atm
+!SIH2 +M = SI + H2 + M                        9.10E20   0.     30200.   !96TAK/HAG
+SIH2 +M = SI + H2 + M                        9.90E20   -1.76     38240.   !94MIC/ROT3 1200-1700
+!SI + H2 = SIH2                              1.15E14    0.        2000.   !84COL/KEE 86COL/KEE,1atm?
+!SIH2         = SI      + H2                 1.13E13   0.    1.513 eV/RT  !88AGR/THO,high pressure limit
+!SIH2         = SIH + H                      5.89E13   0.    3.28 eV/RT   !88AGR/THO,high pressure limit
+!
+!SIH4         = SIH2 + H2                     1.09E25  -3.37  61200. !R1
+!SIH4         = SIH2 + H2                    5.00E12   0.    52200.  !90BRI/TON
+!SIH4 +M= SIH2 + H2 (+M)                      9.9E15    0.    48000.  !96TAK/HAG
+SIH4 (+M)= SIH2 + H2 (+M)                     3.12E9     1.7   54710.  !94HO/COL
+   LOW /5.21E30   -3.54   57550./     !5.21E30 : 93HOU/GRC, original E29
+   TROE /-0.4984  888.3  209.4  2760./
+  SIH4/4./ SI2H6/4./
+!SiH4 (+M)= SiH2 + H2 (+M)                   1.28E12    .68   58030.  !94MIC/ROT3 1200-1700
+!   LOW /3.68E30   -3.95     58026./                                  !94MIC/ROT3 1200-1700
+!   TROE /-0.4984  888.3  209.4  2760./                               !94HO/COL
+!  SIH4/4./ SI2H6/4./                                                 !94HO/COL
+!(M, bi) SiH2 + H2 = SiH4   (?)4.57E9   0.   -5902.   !94MIC/ROT4 1090-1400, bi, Ar
+!
+SI2H6 (+M)  = SIH4 + SIH2 (+M)                1.81E10   1.7   50203. !94HO/COL
+   LOW/5.09E53   -10.37  56034./
+   TROE/4.375E-5   438.5   2726.  438.2/
+  SIH4/4./ SI2H6/4./
+!SI2H6        = SIH4 + SIH2                   3.24E29  -4.24  58000. !R3
+!Si2H6 = SiH4 + SiH2   8.51E14   0.   50342.   !85WHI/ESP  640-703
+!Si2H6 = SiH4 + SiH2   6.03E15   0.   52100.   !92MOF/JEN
+!SiH2 + SiH4 = Si2H6    7.41E13   0.    787.   !95BEC/FRE  298-665
+!SiH2 + SiH4 = Si2H6    5.01E12   0.   1290.   !87COL/KEE, 1atm?
+SI2H6 (+ M) = H3SI2H  + H2 (+M)               9.09E9  1.8  54197.  !94HO/COL
+   LOW/1.94E44  -7.77  59023./
+   TROE/-0.1224  793.3  2400. 11.39/
+  SIH4/4./ SI2H6/4./
+!SI2H6        = H3SI2H  + H2                  7.94E15   0.0   56400. !R15 n-MRZ 89COL/KEE, 1atm?
+!Si2H6 = H3SiSiH + H2    2.00E15   0.   55300.  !82DZA/RIC  850-1000
+!H3SiSiH + H2 = Si2H6     1.58E14   0.    2200.   !90MAR/ONE  559-586
+!
+!SI2H6 = SI2H5 + H
+!
+!SI2H6 = SI2H4 + H2       2.51E14   0.    52200.  !86COL/KEE, 1atm?
+!SI2H4 + H2 = SI2H6       9.81E12   0.     2000.  !84COL/KEE
+!
+!H3SI2H       = H2SI2H2                       1.15E20  -3.06   6630. !R26 89COL/KEE, 1atm
+H3SI2H (+M) = SI2H4 (+M)                    2.54E13   -0.2  5381.  !94HO/COL
+   LOW/1.1E33  -5.76  9152./
+   TROE/-0.4202  214.5  103.  136.3/
+  SIH4/4./ SI2H6/4./
+!H3SiSiH = SiH2=SiH2   5.50E12   0.    5568.  !91DIC/ONE  583-670
+!SiH2=SiH2 = H3SiSiH    2.63E13   0.   19389.   !91DIC/ONE  583-770
+!
+SI2H4 = SIH2 + SIH2  1.00E16  0.   59000.   !86COL/KEE, 1atm?
+!SIH2 + SIH2 = SI2H4          lgA=11.2  0.   0.    !85WHI/ESP
+!SI2H4      = SI2H2   + H2                  3.16E14   0.0   53000. !R14 MRZ 89COL/KEE, 1atm?
+!SiH2=SiH2 = H2 + HSi=SiH  2.29E12   0.   20190.    !91DIC/ONE  583-670
+SI2H4 = SI2H2 + H2               3.0E16  0.  34990.     !?MIC/ROT3, 1 atm? check SI(H2)SI
+!SI2H4 = SI(H2)SI + H2               3.0E16  0.  34990.     !?MIC/ROT3, 1 atm? check
+!
+SI3H8 (+M) = SIH2 + SI2H6 (+M)               6.97E12   1.0   52677.  !94HO/COL
+    LOW/1.73E69  -15.07  60491./
+    TROE/-3.47E-5  442.  2412.  128.3/
+    SIH4/4./ SI2H6/4./
+!SI2H6 + SIH2 = SI3H8                         1.81E14   0.0       0. !R24 89COL/KEE, 1atm?
+!SiH2 + Si2H6 = Si3H8    3.92E14     0.    0.    !90BAG/FRE  295
+!SiH2 + Si2H6 = Si3H8    4.07E12     0.  400.    !85WHI/ESP
+!Si3H8 = SiH2 + Si2H6     7.76E14   0.   50900.    !85WHI/ESP  640-703
+!SI3H8 = SIH4 + SI2H4      2.5E14    0.   51170.    !94MIC/ROT4, 1 atm?
+!
+SI3H8 (+M) = H3SI2H + SIH4 (+M) 3.73E12  1.0  50850.  !94HO/COL
+    LOW/4.36E76  -17.26  59303./
+    TROE/0.4157  365.3  3102.  9.72/
+    SIH4/4./ SI2H6/4./
+!SIH4  + H3SI2H = SI3H8                       3.31E13   0.0       0. !R23
+!SIH4  + H3SI2H = SI3H8                      6.02E13   0.        0.  !89COL/KEE, 1atm?
+!SIH4  + H3SI2H = SIH2 + SI2H6    ?
+!SIH4  + H3SI2H = SIH3SIH2SIH + H2   ?
+!SI3H8 = H3SISIH + SIH4     2.51E16   0.   52520.   !90MAR/ONE  532-586
+!
+!     *****  H atom reactions  *****
+!SIH4  + H    = SIH3 + H2                     1.46E13   0.0    2500. !R4 MZ*10 89COL/KEE
+SIH4  + H    = SIH3 + H2                    1.5E13   0.     2500. !90BRI/TON 83JAC/MCL
+!H + SiH4 = H2 + SiH3   1.40E13  0.    2780.   !89ART/POT  300-487K
+!H + SiH4 = H2 + SiH3   1.70E13  0.    2500.   !87MAT/YUU  290-306
+!H + SiH4 = H2 + SiH3   2.2E4    3.     410.   !94MIC/ROT3
+!
+H + SIH2 = SIH + H2                         1.39E13   0.     2000. !89COL/KEE
+H + SIH2 = SIH3                             3.81E13   0.     2000. !89COL/KEE 1 atm?
+SI2H2 + H    = SI2H3                         8.63E14   0.0    2000. !84COL/KEE 89COL/KEE ,1atm?
+!SIH2O + H     = SIHO  + H2                   2.50E13   0.0    4175. !CHI .33e15,10.5
+!SIH2O + H     = SIHO  + H2                   3.30E14   0.0    10500. !96TAK/HAG
+SIH2O + H     = SIHO  + H2                  5.40E11   0.58   7230.   !95ZAC/TSA
+SIH2O + H = H2SIOH                          6.50E24    -3.6   8230.   !95ZAC/TSA
+!SIH3OH + H    = H2SIOH + H2                  6.00E13   0.0    5300. !.3e14
+!SIH3OH + H    = SIH3O + H2                   1.00E12   0.0    2000. !DB estimate
+!SIH3OH + H    = SIH3O + H2                  3.00E13   0.     5300.  !90BRI/TON
+SIH3OH + H    = H2SIOH + H2                 1.74E8    1.77   1430.   !95ZAC/TSA
+SIH3OH + H    = SIH3O + H2                   2.20E7    1.89   8880.   !95ZAC/TSA
+!SIH3O + H     = SIH2O  + H2                  1.50E13   0.0    2000. !should be *2
+SIH3O + H     = SIH2O  + H2                  1.58E18  -1.37   1400.   !95ZAC/TSA
+SIH3O + H = HSIOH + H2                       1.63E18  -1.33   1360.   !95ZAC/TSA
+SIH3O + H = SIH2 + H2O                       9.56E13  -0.34   500.    !95ZAC/TSA
+SIH3O + H = SIH3OH                           1.23E12   0.52   160.    !95ZAC/TSA
+!
+!HSIOOH + H    = SIOOH + H2                   1.00E12   0.0    2000. !DB estimate
+HSIOOH + H = SIOOH + H2                    9.86E7   1.83   1510.     !95ZAC/TSA
+H + SIO2 = SIOOH                              8.5E24   -4.  5660.   !95ZAC/TSA
+!HSIOOH + H = HOSIO + H2                    9.86E7   1.83   1510.     !95ZAC/TSA
+!H + SIO2 = HOSIO                              8.5E24   -4.  5660.   !95ZAC/TSA
+SIHO  + H     = SIO   + H2                   2.00E14   0.0       0. !83JAC/MCL 85CHI .1e15,2 90BRI/TON 90TOK/HOR
+!(HOSIO)>SIOOH + H     = SIO2  + H2                   1.00E12   0.0    9000. !90BRI/TON
+!SIOOH + H     = SIO2  + H2                   1.00E12   0.0    9000. !90BRI/TON
+SIOOH + H = SIO2 + H2                        1.E13     0.0    5000.
+!H2SIOH + H    = SIH2O  + H2                  3.00E02   0.0    2000. !
+H2SIOH + H    = SIH2O  + H2                  3.31E20   -2.04  3540.   !95ZAC/TSA
+H2SIOH + H = HSIOH + H2                      6.16E20   -1.98  3600.   !95ZAC/TSA
+H2SIOH + H = SIH2 + H2O                      2.24E15   -0.65  4190.   !95ZAC/TSA
+!
+!H + Si2H6 = SiH4 + SiH3    6.70E11   0.   0.    !73POL/SAN  298
+!H + SI2H6 = SIH4 + SIH3     1.E13     0. 1600.
+H + SI2H6 = H2 + SI2H5   6.98E13   0.    2635.    !89ART/POT 294-408
+!
+!H + SIH3 = SIH4       1.34E14   0.    278.        !94TAK/MOM  300-2000
+!SIH4 = SIH3 + H   3.69E15   0.  93000.        !84COL/KEE
+SIH3 + H = SIH2 +H2   1.50E13   0.   2500.        !83JAC/MCL 90TOK/HOR
+!
+SIH3O2H + H = SIH3O2 + H2        4.8E13  0.  7950.  !90BRI/TON
+SIH3O2 + H = SIH3O + OH        1.0E13  0.     0.   !>>>?
+!
+H + SI2 = SIH + SI               5.15E13  0.  5300. !89COL/KEE
+H + SI2H2 = SI2H + H2         1.5E14   0.     0. !94MIC/ROT3
+!H + SI(H2)SI = SI2H + H2         1.5E14   0.     0. !94MIC/ROT3
+H + SI2H = SI2 + H2              1.5E14   0.     0. !94MIC/ROT3
+!
+H + SI2H4 = SI2H5               1.0E13   0.     0.
+H + SI3H8 = H2 + SI3H7          1.0E14   0.  1000.
+!H + SI4H10 = H2 + SI4H9
+!H+H3SI2H =
+!
+!    *****  O atom reactions *****
+!SIH4  + O     = SIH3  + OH                   4.00E11   0.0    1580. !ATK 90BRI/TON
+!SIH4  + O     = SIH3  + OH                  4.20E12   0.     1600.  !83JAC/MCL 90TOK/HOR
+O + SIH4 = OH + SIH3                          2.00E13   0.    2762.   !94BUC/STU2 298-773
+!SIH3  + O     = SIH2O + H                    7.00E13   0.0       0. !CHI .13e15,2
+SIH3  + O     = SIH2O + H                    1.30E14   0.0    2000. !83JAC/MCL 90TOK/HOR 85CHI
+!SIH3  + O     = SIH   + H2O                  5.00E14   0.0       0. !MAR
+SIH   + O     = SIO   + H                    4.00E13   0.0       0. !MAR .4e13
+SI2H + O     = SIO   + SIH                  1.00E13   0.0    2000. !
+!SIO   + O + M  = SIO2  + M                    2.50E14   0.0    4370. !CHI ?
+SIO   + O + M  = SIO2  + M                   2.50E15   0.     4370. !90TOK/HOR
+!SIO   + O + M  = SIO2(solid)  + M                   2.50E15   0.     4370. !96TAK/HAG
+!SIO + O + M = SIO2 + M                    2.50E15   0.     4370. !83JAC/MCL 90BRI/TON 85CHI
+!SIH2O + O     = SIHO  + OH                   3.50E12   0.0    3675. !CHI .18e14,3.1
+SIH2O + O     = SIHO  + OH                   1.80E13  0.0  3080. !83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!SIHO  + O     = SIO   + OH                   3.00E13   0.0       0. !CHI .1e15,2 90BRI/TON
+SIHO  + O     = SIO   + OH                  1.00E14   0.        0. !83JAC/MCL 90TOK/HOR 85CHI
+SIH3OH + O    = H2SIOH + OH                  1.70E12   0.0    1730. !90BRI/TON
+O + SI2H6 = OH + SI2H5                      1.7E13    0.     2500. !>>?anal. 94BUC/STU3
+!O + SI2H6 = OH + SI2H5                     3.61E12  0.   0.    !93TAY/MAR  295
+O + SI2H4 = SIH3 + SIHO                     1.0E13  0. 1500.
+!?O + SI2H5 = SIH3SIHO + H                   1.0E14   0.   0.  !.SIH3SIHO
+!?O + SI2H5 = SIH2O + SIH3                   2.0E13   0.   0.
+!?O + SI2H3 = SISIH2O + H                    3.0E13   0.   0.  !.SISIH2O
+!?O + SI2H2 = SIO + SIH2                    2.0E13   0. 3000.
+!?O + SI2H2 = HSISIO + H                    2.0E13   0. 3000. !.HSISIO
+O + SIH2 = SIO + H2                           5.0E13   0.   0.  !check
+!
+!    *****  OH radical reactions *****
+!SIO   + OH    = SIO2  + H                    4.40E06   1.5    -775. !CHI .4e13,0
+SIO   + OH    = SIO2  + H                     1.8E10   0.78    1220.  !95ZAC/TSA, 1 atm
+!SIO   + OH    = SIO2  + H                  4.00E12  0.      5700.  !83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!SIO   + OH    = SIO2(solid)  + H                  4.00E12  0.      5700.  !96TAK/HAG
+SIO   + OH    = SIOOH                        2.10E23   -3.6   1900. !95ZAC/TSA
+!SIO   + OH    = HOSIO                        2.10E23   -3.6   1900. !95ZAC/TSA
+!SIH2O + OH    = SIHO  + H2O                  3.00E13   0.0    1250. !CHI .76e13
+SIH2O + OH    = SIHO  + H2O                 7.5E12   0.      170. !83JAC/MCL 90TOK/HOR 85CHI
+!>SIH2O + OH    = HSIOOH + H                   1.00E13   0.0       0. !90BRI/TON delete, tstdd(tstj4)
+SIH3OH + OH   = H2SIOH + H2O                 4.00E12   0.0    1500. !90BRI/TON
+!SIH3OH + OH   = H2SIOH + H2O                1.E14     0.0       0. !95ZAC/TSA
+SIH4  + OH    = SIH3  + H2O                  8.70E12   0.0      95. !78ATK/PIT5, 90BRI/TON
+!OH + SIH4 = H2O + SIH3   8.59E12  0.   95.    !84KHA/MKR  280-549 = !85CHI
+!SIH3  + OH    = SIH2O + H2                   5.00E12   0.0    2000. !CHI E=2
+SIH3  + OH    = SIH2O + H2                  5.00E12   0.0       0.  !83JAC/MCL 90TOK/HOR 85CHI
+!SI    + OH    = SIO   + H                    1.00E13   0.0    2000. !guess*2
+SI    + OH    = SIO   + H                    2.00E14   .0       0.  !94MIC/ROT
+!?SI    + OH + M = SIHO >SIOH  + M                    1.00E13   0.0    2000. !guess*2
+!SIHO  + OH    = SIO   + H2O                  5.00E13   0.0       0. !CHI .1e15,2
+SIHO  + OH    = SIO   + H2O                  1.00E14   0.        0. !83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!
+OH + SIH2 = SIH2O + H                         1.0E13    0.        0.
+!OH + SIH =
+OH + SI2H6 = SI2H5 + H2O                    5.0E12    0.        0.
+!?OH + SI2H4 = SI2H3 +H2O                     2.0E13    0.     1000. !HOSIH2SIH2
+OH + SI2H5 = SI2H4 + H2O                    2.0E13    0.        0.
+!?OH + SI2H3 = SI2H2 + H2O                   2.0E13    0.        0. !SIH3SIHO
+!?OH + SI2H2 = SI2H + H2O                     1.0E13    0.     5000. !SIHSIHOH
+OH + SI2H = SIH2 + SIO                      1.0E13    0.        0.
+!OH + SI2H = SI2H2 + O                       1.0E13    0.        0.
+!
+!    *****  HO2 radical reactions *****
+!SIH4  + HO2   = SIH3  + H2O2                 3.00E12   0.0    5600. !si +si1.m;83JAC/MCL 90TOK/HOR 85CHI
+SIH4  + HO2   = SIH3  + H2O2                 1.00E13   0.0    14000.    !si3.m
+!SIH4  + HO2   = SIH3  + H2O2                 1.00E13   0.0    16000.    !
+!SIH4  + HO2   = SIH3  + H2O2                2.00E12   0.0   10000.  !90BRI/TON
+!SIH2O + HO2   = HSIOOH + OH                  1.00E11   0.0       0. !90BRI/TON
+!SIH2O + HO2   = SIHO + H2O2                  1.00E11  0.     8000. !83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!SIH2O + HO2   = HSIOOH + OH                  1.00E11   0.0     8000. !
+SIH2O + HO2   = HSIOOH + OH                  1.00E11   0.0     7000. !
+!SIH2O + HO2   = SIHO + H2O2                  1.50E12  0.     10500. !
+!SIH2O + HO2   = SIHO + H2O2                  1.00E12  0.     14000. !
+SIH2O + HO2   = SIHO + H2O2                  1.00E12  0.     12000.
+SIH3OH + HO2  = H2SIOH + H2O2                6.30E12   0.0   14000. !90BRI/TON
+!SIH3O2 + HO2 = SIH3O2H + O2                  4.0E10    0.        0.  !90BRI/TON
+SIH3O2 + HO2 = SIH3O2H + O2                  1.0E12    0.        0.
+!
+HO2 + SIH3 = SIH3O + OH                     1.0E13    0.        0.
+HO2 + SIH2 = SIH2O + OH                     1.0E13    0.        0.
+SIH3O + HO2 = SIH2O + H2O2                  1.E12     0.        0.
+!SIHO + HO2 =
+!
+!    *****  SIH3 radical reactions *****
+SIH4  + SIH3 = SI2H5 + H2                    1.77E12   0.0    4400. !R5 89COL/KEE
+!SIH3  + SIH3 = SIH4 + SIH2                   2.00E13   0.0       0. !CHHEM MRZ
+SIH3 + SIH3 = SIH2 + SIH4                  1.80E13   0.   0.     !87MAT/YUU 298K
+SIH3 + SIH3 = SI2H6                        4.75E13   0.   0.    !91LOH/JAS 298,branching
+!ratio, channel to H3SI2H may be something 10%: ratio Si2H6/(SIH2+SIH4 and SI2H6)=0.59
+!according 96MAT/KOS from Reiman
+SIH3 + SIH2 = SI2H5                         6.58E12   0.     2000. !89COL/KEE, 1atm?
+SI2H5 + SIH3 = SI3H8                         3.31E13   0.0       0. !R25 n-MRZ 89COL/KEE, 1atm?
+SIH3OH + SIH3 = H2SIOH + SIH4                1.80E11   0.0    7400. !90BRI/TON
+!
+!
+!SIH3  + O2    = SIH2O + OH                   8.60E14   0.0   11400. !83JAC/MCL 90TOK/HOR
+!SIH3  + O2    = SIH2O + OH                  1.72E14   0.    11430.  !85CHI
+!SIH3  + O2    =products         7.6E12 at 298K branching ratios:HSIOOH + H :SIH3O + O :SIH2O + OH=0.6: 0.16: 0.24 !91KOS/MIY
+!SIH3  + O2 =products; SIH3O+O : SIH2O+OH : SIH2OO+H = 0.1 : 0.3 : 0.6, k=7.8E12 !94DAR/SCH
+!SIH3  + O2 =products; SIH3O+O : SIH2O+OH : SIH2OO+H = 0.1 : 0.25 : 0.65  !93KOS/NIS, 293K,30 Torr
+!SIH3  + O2    = SIH3O + O
+!SIH3  + O2    = HSIOOH + H
+!SIH3  + O2 + M = SIH3O2 + M
+!SIH3  + O2    =HSIOOH+H=SIOOH+H+H                                   !87HAR/FAM
+!SIH3 + O2 = HO2 + SIH2
+!SIH3  + O2    =products                      3.E12     0.    -550.  !88SLA/BER ?-66., 296-500K
+!SIH3  + O2    =products                      1.24E12   0.    -930.  !93QUA/HER, 235-512K
+!SIH3  + O2  = overall                        2.0E12    0.    -760.
+!SIH3  + O2  = HSIOOH +H                       1.2E12    0.    -760.
+!SIH3  + O2  = SIH2O + OH                      0.6E12    0.    -760.
+!SIH3  + O2  = H + H + SIOOH                       0.2E12    0.    -760.
+SIH3  + O2  = HSIOOH +H                       .8E12    0.    -760.
+SIH3  + O2  = SIO +H+H2O                       .4E12    0.    -760.
+SIH3  + O2  = SIH2O + OH                      0.6E12    0.    -760.
+SIH3  + O2  = H + H + SIOOH                       0.2E12    0.    -760.
+!
+!************
+!SIH3+O2=SIH3O2*                              7.6E12    0.          0. !96TAK/HAG
+!SIH3O2*+M=SIH3O2+M                           1.E14     0.          0.  !96TAK/HAG
+!SIH3O2*=SIH3O+O                              1.E13     0.       14200.  !96TAK/HAG
+!SIH3O2*=SIH2O+OH                             7.5E8     0.          0.   !96TAK/HAG
+!SIH3O2*=SIH2OO+H                             1.95E8    0.          0.   !96TAK/HAG
+!******************
+!
+SIH3 + O2 + M = SIH3O2 + M                    1.0E14    0.          0.  !test
+!SIH3  + H2O   = SIH3O + H2                 ?  1.00E01   0.0    2000. !should be *2
+!SIH3  + H2O   = SIH3OH + H                 ?  5.00E01   0.0    2000. !guess .002
+SIH3 + SI2H4 = SI3H7                        1.E13        0.        0.
+!SIH3 + SI2H6 = SIH4 + SI2H5                    -        -     5000.  !73POL/SAN
+SIH3 + SI2H6 = SIH4 + SI2H5                  1.0E13      0.     5000.
+!SIH3 + SI3H8 = SIH4 + SI3H7
+!SIH3 + SI3H7 = SI4H10
+!SIH3 + SI4H10 = SIH4 + SI4H9
+!SIH3 + SI4H9 = SI5H12
+!SIH3 = SIH2 + H
+SIH3 + SIHO = SIH4 + SIO                    1.E13       0.        0.  !SIH3SIHO
+SIH3 + SIH2O = SIH4 + SIHO                  4.0E12      0.     4000.
+!
+!    *****  SIH2 radical reactions *****
+!SIH2  + H2O   = SIH2O + H2                   1.24E11   0.41  10817. !New abinitio
+!SIH2  + H2O   = SIH3OH                       3.48E41  -9.42  18154. !New abinitio
+SIH2  + H2O   = SIH3OH                      2.80E31  -6.37  16140. !95ZAC/TSA
+!SIH2  + O2    = SIO2  + H + H              ?  5.00E04   0.0   15500. !MAR  !87HAR/FAM,mention
+!SIH2  + O2    = SIO   + H2O                ?  5.00E04   0.0   15500. !MAR x100,n=*1
+SIH2  + O2    = SIHO  + OH                   1.00E14   0.0    3700. !83JAC/MCL 90BRI/TON 90TOK/HOR
+!SIH2  + O2    = SIHO  + OH     !products   7.23E11   86ELE/ROW, 298K and 1988=>4.63E12
+!SIH2  + O2    = SIO + H2O                  !Jasinski, Chem.Rev.,1995, 95, 1203.
+!SIH2  + H2O   = H2SIOH + H                ?   1.00E02   0.0    2000. !guess
+!SIH2  + H2O   = H2SIOH + H                  6.1E6     1.95  21460.   !95ZAC/TSA, reverse
+SIH2  + H2O   = SIH2O + H2                   3.84E10   -.61   9720. !95ZAC/TSA
+SIH2  + H2O   = HSIOH + H2                   2.15E10   0.73   9820. !95ZAC/TSA
+!SIH2  + H2O   = SIH3OH                   ?    1.00E09   0.0   11550. !abinitio/15
+!
+SIH2 + SI = SI2H2                            7.24E12   0.     2000.  !84COL/KEE, 1atm ?
+SIH2 + SI = SI2H + H                         1.5E14    0.        0.  !94MICK/ROT3
+SIH2 + SI = SI2 + H2                         1.5E14    0.        0.  !94MICK/ROT3
+SIH2 + SIH = SI2H3                           1.26E13   0.     2000. !84COL/KEE, 1atm ?
+SIH2 + SIH2 = SI2H2 + H2   6.50E14   0.   0.    !95MIC/MAR 1070-1381
+!SIH2 + SIH2 = SI2H2 + H2   1.50E14   0.   0.    !94MIC/ROT3
+!SIH2 + SIH4 = H3SI2H + H2    1.30E13   0.   0.  !95MIC/MAR 1070-1381
+!SIH2 + SIH4 = SI2H4 + H2     3.0E14    0. 7000.  !94MIC/ROT3
+!SIH2 + SIH4 = SI2H4 + H2      1.0E14    0. 6000.  !94MIC/ROT4
+H3SI2H + H2  = SIH2 + SIH4     9.41E13  0. 4092.3  !94HO/COL
+! REV/9.43E10  1.1  5790.3/
+!SI2H4 + H2 = SIH4 + SIH2       6.22E16   0.   2000. !84COL/KEE
+H3SI2H + SIH4 = SIH2 + SI2H6   1.73E14  0.4  8898.7  !94HO/COL
+! REV/ 2.65E15  0.1  8473.4/
+!
+!SI3H8 + SIH2 = products       !90MAR/ONE
+!SI3H8 + SIH2 = SI4H10
+!SIH2  + M  =  SIH + H  +M
+!SIH2 + SI4H10=SI5H12
+SI2  + SIH2  = SI3     + H2                  3.55E11   0.0    2000. !R12 MZ*100 89COL/KEE
+SI3  + SIH2  = SI2     + SI2H2               1.43E11   0.0   16200. !R14 MZ nEA 89COL/KEE
+!SI3  + SIH2  = SI2     + SI2H2             1.43E11   0.    18800. !84COL/KEE
+!SIH2 + SIH3OH = SIH3H2SIOH
+!SIH2 + SIH2O = SIH3SIHO
+SIH2 + SIH3O2 = SIH2O + SIH3O               1.0E13    0.        0.
+!SIH2 + SIH3O2H = H2SIOH + SIH3O             1.0E13    0.        0.
+!
+!   *****  SIH radical reactions *****
+!SIH   + H2   = SIH3                          3.45E13   0.0    2000. !R16 n-MRZ 84COL/KEE, 1atm?
+!SIH + H2 = SIH3   (?)  7.23E9   0.   0.   !89BEG/DRE(?)  298
+SIH3 (+M) = SIH + H2 (+M)   4.48E14   -0.55   44690.  !94MIC/ROT3 1200-1700
+      LOW /1.98E26   -3.05     44690./                 !94MIC/ROT3 1200-1700
+SIH4  + SIH  = SI2H3 + H2                    1.45E12   0.0    2000. !R6 89COL/KEE
+SIH4  + SIH  = SI2H5                         1.43E13   0.0    2000. !R7 89COL/KEE, 1atm
+!SIH4  + SIH  = SI2H5                       2.93E12   0.     2000. !84COL/KEE
+!SIH4  + SIH  = products 2.59E14 !89BEG/DRE(?) 298K and 1.69E14 89NEM/SUZ, 298K
+SIH4  + SIH  = SIH3 + SIH2                  1.38E12   0.       11200.  !84COL/KEE
+!SIH   + O2    = SIO   + OH                   2.00E13   0.0       0. !WAR
+SIH   + O2    = SIO + OH                     1.02E14    0.        0. !89NEM/SUZ, 298K,channel SIO2+H
+!SIH   + H2O   = SIH2O + H         ?           1.00E02   0.0    2000. !guess .1e13
+SIH   + H2O   = SIH2O + H                    3.0E12   0.0    3000.
+!SIH + M = SI + H + M
+SIH + SIH2O = SIH2 + SIHO                    1.E13    0.     8000.
+!
+!   *****  SI atom reactions *****
+SI3   + SI   = SI2     + SI2                 2.06E12   0.0   24100. !MRZ = 84COL/KEE
+!
+!SIH4  + SI   = SI2H2   + H2                  9.31E12   0.0    2000. !S8T n-MRZ
+!SIH4  + SI   = SIH2 + SIH2                  9.31E12   0.     2000. !87COL/KEE,
+!SI + SIH4 =                        2.11E14    0.     0.   !94TAN/HIR, 298K, bi
+SI + SIH4 = SI2H2 + H2            1.5E14     0.  7290.   !MIC/ROT3
+!SI + SIH4 = SI(H2)SI + H2            1.5E14     0.  7290.   !MIC/ROT3
+!
+!SI clusters
+!SI    + SI + M  = SI2     + M                  2.60E16   0.0    1200. !MRZ
+!SI    + SI + M  = SI2     + M                  1.9E14 - 2.9E14   0.0    -0.028.!200-300K,86MAR/THO
+!nSI    + SI + M  = SI2     + M                 6.3E13 - 9.5E13   (300K) E=470 cal !87GAI/THO
+!nSI + SI2 = SI3                             1.E15 negative T dependence 200K     !87GAI/THO
+SI    + SI + M = SI2     + M                 2.47E16   0.    1180. !90MAR/RAF
+SI    + SI2 + M = SI3     + M                 2.60E16   0.0    1200. !MRZ
+!SI    + O2    = SIO   + O                    1.00E13   0.0    2000. !guess*2
+SI    + O2    = SIO   + O                    2.00E13   0.0        0.
+!SI    + O2    = SIO   + O                    1.64E14   0.0        0.  !96TAK/HAG
+!SI    + O2    = products            1.63E14 !78HUS/NOR, 300K and 78SWE/DAV 5.9E12 at 350K
+!SI    + H2O   = SIOH  + H        ?            1.00E02   0.0    4000. !guess/10,ea*2
+SI    + H2O   = SIHO  + H                   5.E12   0.     7000.
+SI + SI2H6 = SIH2 + H3SI2H                  1.3E15   0.    12600.    !94HO/COL
+SI + H2 = SIH + H                            4.E14    0.    35990.    !94MIC/ROT3
+!SI + SI2H2 = SI3H + H                     1.5E14   0.        0.    !94MIC/ROT3
+!SI + SI(H2)SI = SI3H + H                     1.5E14   0.        0.    !94MIC/ROT3
+!SI + SIH2O =
+!
+!      ***** SIH4 reactions *****
+SIH4  + O2    = SIH3  + HO2                  7.60E13   0.0   44000. !WES 90BRI/TON
+!SIH4  + O2    = SIH3  + HO2                  8.E14    0.    41700.  !96TAK/HAG
+!SIH4  + O2    = SIH3  + HO2                2.00E11   0.    44000. !90TOK/HOR 83JAC/MCL
+SIH4  + O2    = SIH2O + H2O                  7.60E13   0.0   44000. !WES
+!SIH4  + O2    = SIH2O + H2O                2.E14     0.    19600.  !85CHI
+SIH4 = SIH3 + H                              3.91E15   0.   89356.  !94TAK/MOM 300-3000,1atm ?,rev
+!SIH4 = SIH3 + H                            3.69E15  0.   93000.    !90BRI/TON
+!SIH4 + SIH3 = SIH3 + SIH3 + H              7.76E11  0.  6980.  !85CHI
+!SIH3 + H = SIH4    1.21E13 !298K and 1.34E14 0. 280. Check
+!
+!      ***** SIO reactions *****
+SIO   + M     = SI + O + M                    1.00E13   0.0  189000. !guess*2
+!SIO   + O2    = SIO2  + O                    2.50E12   0.0   47846. !CHI .1e14,6.5
+!SIO   + O2    = SIO2  + O                   1.00E13   0.    6500.  !83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!SIO   + O2    = SIO2  + O                   1.00E13   0.    15000. !tstc.m
+!SIO   + O2    = SIO2  + O                   1.00E13   0.    10000. !tstddx
+!SIO   + O2    = SIO2(solid)  + O                   1.00E13   0.    6500.  !96TAK/HAG
+SIO   + O2    = SIO2  + O                    5.00E12   0.    30000.
+!SIO   + H2O   = SIO2  + H2        ?           5.00E00   0.0    2000. !guess e13,shutoff
+!SIO   + H2O   = SIHO + OH
+!SIO   + H2O   = SI(OH)2
+!
+!       ***** SIO2 reactions *****
+SIO2  + M     = SI    + O2 + M                1.00E16   0.0  182000. !guess*2
+!
+!       ***** SIHO reactions *****
+!SIHO  + M     = SIO + H + M                   1.50E15   0.0   16000. !CHI .5e14,29
+SIHO + M = H + SIO + M                       5.0E14    0.   29000. !:83JAC/MCL 90BRI/TON 90TOK/HOR 85CHI
+!>SIHO = SIO + H                               2.00E20   -1.2   21460.   !95ZAC/TSA, 1atm ?
+!SIHO  + O2    = SIO   + HO2                  3.00E12   0.0       0. !83JAC/MCL CHI .1e15,3.8 90BRI/TON
+SIHO  + O2    = SIO   + HO2                  1.2E14    0.     3975. !90TOK/HOR 85CHI
+SIH3O + SIHO  = SIH3OH + SIO                 1.00E12   0.0       0. !90BRI/TON
+SIHO + SIH3OH = SIH2O + H2SIOH              5.0E12    0.    12000.
+
+!       ***** SIOH reactions  *****
+!SIOH  + M     = SIO   + H + M                1.00E16   0.0   29000. !guess
+!HSIO + O2, SIH4, H, SIH3, SIH2, SIH2O, O, OH, ...
+!SIOH + M = SIHO + M
+!
+!       ***** HSIOH reactions *****
+HSIOH = SIO + H2                             9.40E28  -3.8   38550.   !95ZAC/TSA
+!reactions SIH4, SIH3, H, SIH2, SIH2O, O, OH, HO2, O2, ...
+!HSIOH = SIH2O
+!
+!       ***** H2SIOH reactions *****
+H2SIOH + O2   = HSIOOH + OH                  1.00E13   0.0    7000. !90BRI/TON
+H2SIOH = SIHO + H2                           9.60E27   -3.4   59820.  !95ZAC/TSA
+!H2SIOH = SIH2O + H                           -         -     58000.  !95ZAC/TSA
+H2SIOH + SIH3 = SIH4 +SIH2O                 2.0E12    0.        0.  !SI2H5OH
+!H2SIOH + SIH2 = SI2H4 + OH                  1.0E13    0.        0.
+H2SIOH + SIH2 = SIH2O + SIH3                1.0E12    0.        0.
+H2SIOH + O = SIH2O + OH                     1.0E13    0.        0.
+H2SIOH + OH = SIH2O + H2O                   1.0E13    0.        0.
+H2SIOH + HO2 = SIH2O + H2O2                 1.0E13    0.        0.
+!H2SIOH + SIH4 = SIH3OH + SIH3               3.0E12    0.     3000.
+!
+!       ***** SIH3O reactions *****
+SIH2O + SIH3O = SIHO  + SIH3OH               1.20E11   0.0     971. !90BRI/TON
+SIH4  + SIH3O = SIH3  + SIH3OH               2.00E11   0.0    5300. !90BRI/TON
+SIH3O + O2    = SIH2O  + HO2                 1.00E12   0.0    4500. !90BRI/TON
+SIH3OH + SIH3O = H2SIOH + SIH3OH             1.50E12   0.0    5300. !
+! DUPLICATE
+SIH3O = H2SIOH                               1.50E24   -2.6  15420.  !95ZAC/TSA
+! DUPLICATE
+SIH3O + O = SIH2O + OH                      5.0E12    0.        0.
+SIH3O + OH = SIH2O + H2O                    1.0E13    0.        0.
+SIH3O + SIO = SIO2 +SIH3                    1.0E13    0.    17000.
+!SIH3O = SIH2O + H                            -              25000.   !95ZAC/TSA
+!SIH3O = SIHO + H2                            -              27500.   !95ZAC/TSA
+!
+!       ***** SIH3O2 reactions  *****
+SIH3O2 = SIH2O + OH       8.60E14  0. 40000.     !90BRI/TON
+SIH4 + SIH3O2 = SIH3 + SIH3O2H  1.1E13  0.  18500.  !90BRI/TON
+SIH3O2 + SIH2O = SIH3O2H + SIHO  1.3E11  0.  6800.  !90BRI/TON
+!SIH3O2 + SIH2O = SIH3O2H + SIHO  1.3E11  0.  8600.  !96TAK/HAG
+SIH3OH + SIH3O2 = H2SIOH + SIH3O2H  6.3E12  0.  14500.  !90BRI/TON
+SIH3O2 + O = SIH3O + O2            1.0E13  0.      0.
+SIH3O2 + OH = SIH3OH + O2          1.0E13  0.      0.
+!SIH3O2 + SIH2 = SIH2O + SIH3O      1.0E13  0.      0.
+!SIH3O2 + SIH3O2 =
+SIH3O2 + SIH3 = SIH3O + SIH3O      1.0E13  0.      0.
+!
+!       ***** .SIH2OO. reactions ******
+!.SIH2OO. + SIH4 = SIH3OOSIH3                          !87HAR/FAM
+!SIH2OO = H2O + SIO                        1.E8    0.     0.  !96TAK/HAG
+!       ***** SIH3O2H reactions *****
+SIH3O2H = SIH3O + OH                       6.5E14  0. 48700.  !90BRI/TON
+SIH3O2H + H = SIH3O + H2O                  1.0E12  0.     0.
+SIH3O2H + OH = SIH3O2 + H2O                5.0E12  0.     0.
+SIH3O2H + O = SIH3O + HO2                  1.0E13  0.  2000.    !?
+SIH3O2H + SIH3 = SIH3OH + SIH3O            3.0E12  0.  2000.
+SIH3O2H + SIH2 = SIH3O + H2SIOH            5.0E12  0.  4000.
+!
+!       ***** HSIOOH reactions *****
+!HSIOOH        = SIOOH + H                    5.00E14   0.0   65000. !90BRI/TON
+HSIOOH        = SIOOH + H                    5.00E14   0.0   90000. !delH
+HSIOOH        = SIO   + H2O                  2.64E35  -6.70  79158. !New abinitio
+!HSIOOH      = SI(OH)2                       1.04E33   -4.7   56840.  !95ZAC/TSA
+HSIOOH        = SIO2  + H2                   1.00E10   0.0   54000. !DB est (CH)
+!HSIOOH + O2   = SIOOH + HO2                  1.70E13   0.0   16000. !90BRI/TON
+!HSIOOH + O2   = SIOOH + HO2                  1.70E13   0.0   41200. !96TAK/HAG
+SIOOH + HO2 = HSIOOH + O2                  1.0E13   0.0        0.    !
+!HSIOOH + OH, O, HO2
+!HSIOOH + H = SIOOH + H2                     1.0E13    0.     4000.
+HSIOOH + OH = SIOOH + H2O                  3.0E12    0.     2000.
+HSIOOH + O = SIOOH + OH                  3.0E12    0.     2000.
+!HSIOOH + SIH3 = SIOOH + SIH4               3.0E12    0.     2000.
+!HSIOOH + SIH3 = SIOOH + SIH4                3.E12    0.     8000.
+HSIOOH + SIH3 = SIOOH + SIH4               3.E12     0.     9000.
+!HSIOOH + SIH2 = SIOOH + SIH3               3.0E12    0.    18000.
+HSIOOH + SIH2 = SIOOH +SIH3               3.E12     0.     20000.
+!
+!       ***** SIOOH reactions *****
+!SIOOH         = SIO2  + H                    4.00E15   0.0   84000. !90BRI/TON
+!SIOOH         = SIO2(solid)  + H             4.00E15   0.0   84000. !96TAK/HAG
+!SIOOH         = HSIO2
+!SIOOH + O2    = SIO2  + HO2                  1.00E12   0.0   14300. !90BRI/TON >COOH=1.E12at 300K
+SIOOH + O2    = SIO2  + HO2                  1.00E13   0.0   14300.
+!>SIOOH + O2    = SIO2  + HO2                  2.00E13   0.0   10000.   !tstddx.m
+!SIOOH + O2    = SIO2(solid)  + HO2          1.00E12   0.0   14300. !96TAK/HAG
+!SIOOH + M     = SIO + OH + M                 1.00E16   0.0   93400.
+SIOOH + M     = SIO + OH + M                 1.00E16   0.0   61000.
+!SIOOH + H, OH, O, HO2, SIH2, SIH3, SIH4
+!SIOOH + SIH4 = HSIOOH + SIH3                                       !97AIV
+!
+!       ***** SI(OH)2 reactions *****
+!SI(OH)2 = SIO + H2O                          1.50E31   -4.4   41730.   !95ZAC/TSA
+!SI(OH)2 + H2O =
+!SI(OH)2 + H, OH, O, SIH4, SIH2, O2
+!
+!       ***** SIH2O reactions *****
+SIH2O         = SIO   + H2                   1.00E12   0.0   60800. !TAC 86KUD/NAG
+!SIH2O         = SIO   + H2                   1.00E7   0.0   0.     !96TAC/HAG
+!SIH2O + H2O   = HSIOOH + H2                  3.60E09   0.45  12427. !New abinitio
+SIH2O + H2O   = HSIOOH + H2                 3.60E9    0.43   7690. !95ZAC/TSA
+!SIH2O + H2O   = H2SI(OH)2                                         !95ZAC/TSA
+!SIH2O + H2O   = HSIOOH + H2                 1.E13    0.        0. !96TAK/HAG
+SIH2O + M     = SI + H2O + M                 1.00E16   0.0   77500. !TAC 87
+!SIH2O + M     = SIHO  + H +M                 5.00E16   0.0   80000. !CHI .5e17,76
+SIH2O + M     = SIHO  + H +M                5.00E16   0.0   76600. !90TOK/HOR 85CHI
+!SIH2O = HSIOH
+!SIH2O + O2    = SIHO  + HO2                  4.00E14   0.0   29500. !85CHI  90BRI/TON
+!SIH2O + O2    = SIHO  + HO2                  4.00E14   0.0   33000.
+SIH2O + O2    = SIHO  + HO2                  4.00E14   0.0   35500. !96TAK/HAG
+!SIH2O + SIH2O = (HSIO)2 +H2                   2.00E23   -3.1   11130.   !95ZAC/TSA
+!
+!       ***** SIH3OH reactions *****
+!SIH3OH        = SIH2O  + H2                  4.97E33  -6.25  73731. !New abinitio
+SIH3OH        = SIH2O  + H2                 2.01E27  -4.3   68160. !95ZAC/TSA
+SIH3OH        = HSIOH + H2                   2.20E26  -4.2   66570. !95ZAC/TSA
+SIH3OH + O2   = H2SIOH + HO2                 4.00E13   0.0   45000. !90BRI/TON
+!
+!       ***** SI2 reactions *****
+SI2 + H2 = SIH + SIH                        1.54E13   0.    40000.  !89COL/KEE
+SI2   + H2   = SI2H2                         1.54E13   0.0    2000. !R17 MRZ 84COL/KEE 89COL/KEE
+!
+!       ***** SI2H5 radical reactions *****
+!2SI2H5 = SI4H10
+!SI2H5 + SI3H7 =SI5H12
+!SI2H5 + SI2H4 = SI4H9
+!SI2H5 + SIH4 = SI2H6 + SIH3                  5.0E11    0.   8000.  !rev
+!SI2H5 + H2 = SI2H6 + H                       2.0E12    0.   8000.   !rev
+!SI2H5 + H = SI2H6
+!SI2H5 + H = SIH3 + SIH3
+!SI2H5 + O2 = SI2H5O2
+!SI2H5 + O2 = SI2H4 + HO2
+!SI2H5 + HO2 =
+!
+!       *****  H3SI2H reactions *****
+!H3SiSiH + SiH4 = Si3H8    9.64E9   0.  0. !91DIE/CHI  550
+!source unknown, H3SI2H + SIH4 = SIH2 + SI2H6     9.41E13  0. 4092.3  ! ?94HO/COL
+!REV/ 2.65E15  0.1  8473.4/
+!H3SiSiH + Si2H6 = Si4H10    2.95E8   0.    0.    !91DIE/CHI  550
+!H3SiSiH + SI3H8 = products   3.16E14   !90MAR/ONE, 576K
+H3SI2H (+M) = SI + SIH4 (+M) 1.42E13  0.54  57548.  !94HO/COL
+   LOW/2.35E42  -7.42  60957./
+   TROE/0.5336  629.2 2190. 626.5/
+  SIH4/4./ SI2H6/4./
+!H3SI2H + H2 = SI2H6             1.58E14  0.  2200.   !90MAR/ONE
+!SI + SIH4 = H3SI2H             1.E12    0.  5000.   !94HO/COL =>DB
+!H3SiSiH = SI2H2 + H2 = SI(H2)SI + H2    -  -  50000.  !94HO/COL
+!H3SiSiH = H2SISI + H2 = SI(H2)SI + H2   -  -  >24000.  !94HO/COL
+!H3SiSiH + O2, H, OH, O, HO2, SIH3, SIH2
+!
+!       ***** Si2H3 reactions *****
+!SI2H3 + H2 = SI2H5                    2.96E13  0.  2000.  !84COL/KEE
+SI2H5        = SI2H3 + H2                    3.16E14   0.0   53000. !R20 89COL/KEE
+!SI2H3 + H, O, OH, HO2, O2, H2O, SIH4
+!
+!       ***** SI2H reactions *****
+!
+!
+!       ***** SI2H4 reactions *****
+!SI2H4 = SI2H2 + H2               3.16E14  0.  53000.  !85WHI/ESP
+!SI2H4 = SI2H2 + H2 = SI(H2)SI + H2  -     -    73000.      !86HO/COL
+!$      = H2SISI + H2 = SI(H2)SI + H2 -   -    48000.      !86HO/COL
+!H2 + SI2H2 = SI2H4                  2.45E14  0.  2000.   !84COL/KEE
+!
+!
+!       ***** Si2H2 reactions *****
+SI2H2 + H2O   = SIH2O + SIH2                 1.00E10   0.0   10000. !guess
+!SI2H2 + H2O   = SIH2O + SIH2                 1.00E03   0.0    2000. !guess always zero
+SI2H2 + H2O   = SIO   + SIH4                 1.00E09   0.0   10000. !guess
+!SI2H2 + M = SI2 + H2 + M
+!SI2H2 + H, O, OH, HO2
+!
+!       ***** SIO-2 reactions *****
+!>SIO-2 + H2O = Si2O2H(OH)                     2.70E1     3.2   16410.   !95ZAC/TSA
+!SIO-2 = SIO + SIO                            1.3E34    -6.56  55050.   !95ZAC/TSA
+!SIO-2 + H, O, OH
+!
+!       ***** SIH2O-2 reactions *****
+!SIH2O-2 = SIH2O + SIH2O                     3.60E38   -6.8   11230.   !95ZAC/TSA
+SIH2O-2 = SIH2O + SIH2O                     3.60E30   -6.8   11230.   !95ZAC/TSA !GN
+!
+!       ***** HSIOOH-2 reactions ******
+!HSIOOH-2 = HSIOOH + HSIOOH            1.70E49   -9.6   12300.   !95ZAC/TSA
+HSIOOH-2 = HSIOOH + HSIOOH            1.70E30   -9.6   12300.   !95ZAC/TSA !GN
+!
+!       ***** SIH3OOSIH3 reactions *****
+!SIH3OOSIH3 = 2SIH3O                                                   !87HAR/FAM
+!
+!       ***** SI3 reactions *****
+!SI3  + H2    = SI      + SI2H2               9.79E11   0.    47200. !R19/10 mZ*100
+SI3  + H2    = SI      + SI2H2              9.79E12   0.    47200. !89COL/KEE
+!SI3  + H2    = SI      + SI2H2              9.79E12   0.    42000. !86COL/KEE
+!
+!       ***** SI3H7 reactions *****
+!2SI3H7 = SI2H14
+!
+!       ***** SI3O3 reactions *****
+!>SI3O3 = SIO-2 + SIO                          2.70E51   -11.3  64590.   !95ZAC/TSA
+!>SI3O3 +H2O = SI3O3H(OH)                      9.25E1     3.    17550.   !95ZAC/TSA
+!
+!       ***** SI4H10 reactions *****
+!Si4H10 = Si2H6 + H3SiSiH    (?) 3.40E-5  0.   0.  !90MAR/ONE  575
+!
+!       ***** SI4O4 reactions *****
+!>SI4O4 = SI3O3 + SIO                          3.22E42   -8.9   45710.   !95ZAC/TSA
+!
+!       ***** particle formation *****
+!SIO2=SIO2s                             1.E8      0.       0.
+!SI=SIs                                 1.E8      0.       0.
+!SIO + SIO => SIOs + SIOs               1.E13      0.     3000.
+
+!
+!--------------------------------------- add reaction from Suh's paper ----------------------
+! --- SIO self clustering 
+
+SIO-2  = SIO   + SIO                          1.04E+15    0.0    49580.0      
+SIO-3  = SIO-2 + SIO                          3.78E+15    0.0    53160.0      
+SIO-4  = SIO-3 + SIO                          1.49E+14    0.0    36670.0      
+SIO-5  = SIO-4 + SIO                          2.73E+14    0.0    51020.0
+SIO-6  = SIO-5 + SIO                          2.88E+14    0.0    46920.0
+SIO-7  = SIO-6 + SIO                          2.88E+14    0.0    46920.0
+SIO-8  = SIO-7 + SIO                          2.88E+14    0.0    46900.0
+SIO-9  = SIO-8 + SIO                          2.88E+14    0.0    46950.0
+SIO-10 = SIO-9 + SIO                          2.88E+14    0.0    46920.0
+
+! -- irreversible SIO clustering by (SIH2O)m
+
+SIO   + SIH2O   => SIO-2  +  H2               2.00E+13    0.0        0.0
+SIO   + SIH2O-2 => SIO-3  + 2H2               2.00E+13    0.0        0.0
+SIO-2 + SIH2O   => SIO-3  +  H2               2.00E+13    0.0        0.0
+SIO-2 + SIH2O-2 => SIO-4  + 2H2               2.00E+13    0.0        0.0
+SIO-3 + SIH2O   => SIO-4  +  H2               3.00E+13    0.0        0.0
+SIO-3 + SIH2O-2 => SIO-5  + 2H2               3.00E+13    0.0        0.0
+SIO-4 + SIH2O   => SIO-5  +  H2               1.00E+14    0.0        0.0
+SIO-4 + SIH2O-2 => SIO-6  + 2H2               1.00E+14    0.0        0.0
+SIO-5 + SIH2O   => SIO-6  +  H2               1.00E+14    0.0        0.0
+SIO-5 + SIH2O-2 => SIO-7  + 2H2               1.00E+14    0.0        0.0
+SIO-6 + SIH2O   => SIO-7  +  H2               1.00E+14    0.0        0.0
+SIO-6 + SIH2O-2 => SIO-8  + 2H2               1.00E+14    0.0        0.0
+SIO-7 + SIH2O   => SIO-8  +  H2               1.00E+14    0.0        0.0
+SIO-7 + SIH2O-2 => SIO-9  + 2H2               1.00E+14    0.0        0.0
+SIO-8 + SIH2O   => SIO-9  +  H2               1.00E+14    0.0        0.0
+SIO-8 + SIH2O-2 => SIO-10 + 2H2               1.00E+14    0.0        0.0
+SIO-9 + SIH2O   => SIO-10 +  H2               1.00E+14    0.0        0.0
+SIH2O + SIH2O-2 => SIO-3  + 3H2               3.00E+13    0.0        0.0
+
+! --- SIO2 self-clustering
+
+SIO2-2  = SIO2   + SIO2                       1.91E+16    0.0    85670.0
+SIO2-3  = SIO2-2 + SIO2                       4.97E+17    0.0    95810.0
+SIO2-4  = SIO2-3 + SIO2                       1.25E+17    0.0    94550.0
+SIO2-5  = SIO2-4 + SIO2                       6.10E+17    0.0    94780.0
+SIO2-6  = SIO2-5 + SIO2                       5.78E+17    0.0    94570.0
+SIO2-7  = SIO2-6 + SIO2                       3.32E+17    0.0    92050.0
+SIO2-8  = SIO2-7 + SIO2                       3.83E+17    0.0    93530.0
+SIO2-9  = SIO2-8 + SIO2                       3.33E+17    0.0    93530.0
+SIO2-10 = SIO2-9 + SIO2                       3.74E+17    0.0    93530.0
+
+! --- irreversible SIO2 clustering by (HSIOOH)m
+
+SIO2   + HSIOOH   => SIO2-2  +  H2            2.00E+13    0.0        0.0
+SIO2   + HSIOOH-2 => SIO2-3  + 2H2            2.00E+13    0.0        0.0
+SIO2-2 + HSIOOH   => SIO2-3  +  H2            2.00E+13    0.0        0.0
+SIO2-2 + HSIOOH-2 => SIO2-4  + 2H2            2.00E+13    0.0        0.0
+SIO2-3 + HSIOOH   => SIO2-4  +  H2            3.00E+13    0.0        0.0
+SIO2-3 + HSIOOH-2 => SIO2-5  + 2H2            3.00E+13    0.0        0.0
+SIO2-4 + HSIOOH   => SIO2-5  +  H2            1.00E+14    0.0        0.0
+SIO2-4 + HSIOOH-2 => SIO2-6  + 2H2            1.00E+14    0.0        0.0
+SIO2-5 + HSIOOH   => SIO2-6  +  H2            1.00E+14    0.0        0.0
+SIO2-5 + HSIOOH-2 => SIO2-7  + 2H2            1.00E+14    0.0        0.0
+SIO2-6 + HSIOOH   => SIO2-7  +  H2            1.00E+14    0.0        0.0
+SIO2-6 + HSIOOH-2 => SIO2-8  + 2H2            1.00E+14    0.0        0.0
+SIO2-7 + HSIOOH   => SIO2-8  +  H2            1.00E+14    0.0        0.0
+SIO2-7 + HSIOOH-2 => SIO2-9  + 2H2            1.00E+14    0.0        0.0
+SIO2-8 + HSIOOH   => SIO2-9  +  H2            1.00E+14    0.0        0.0
+SIO2-8 + HSIOOH-2 => SIO2-10 + 2H2            1.00E+14    0.0        0.0
+SIO2-9 + HSIOOH   => SIO2-10 +  H2            1.00E+14    0.0        0.0
+HSIOOH + HSIOOH-2 => SIO2-3  + 3H2            3.00E+13    0.0        0.0
+
+! --- irreversible particle formation - Suh, Zachariah, Girshick
+
+SIO-10  + SIO      => SIO-11                  1.6000e+13    0.0        0.5
+SIO-10  + SIH2O    => SIO-11  +  H2           1.6000e+13    0.0        0.5
+SIO-9   + SIH2O-2  => SIO-11  + 2H2           1.6000e+13    0.0        0.5
+SIO-10  + SIH2O-2  => SIO-12  + 2H2           1.6000e+13    0.0        0.5
+
+SIO2-10 + SIO2     => SIO2-11                 1.6000e+13    0.0        0.5
+SIO2-10 + HSIOOH   => SIO2-11 +  H2           1.6000e+13    0.0        0.5
+SIO2-9  + HSIOOH-2 => SIO2-11 + 2H2           1.6000e+13    0.0        0.5
+SIO2-10 + HSIOOH-2 => SIO2-12 + 2H2           1.6000e+13    0.0        0.5
+END

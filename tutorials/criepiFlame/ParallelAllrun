@@ -1,0 +1,15 @@
+blockMesh
+blockMesh -region super
+
+blockMesh -region exMesh
+
+cp system/itvInflowDict system/controlDict
+itvInflow
+
+cp system/mmcMultiphaseFoamDict system/controlDict
+
+decomposePar -latestTime
+decomposePar -latestTime -region super
+
+foamJob -p mmcMultiphaseFoam
+

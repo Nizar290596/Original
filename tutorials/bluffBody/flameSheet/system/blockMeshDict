@@ -1,0 +1,218 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 0.001;
+
+mergeType points;
+
+L 200;
+W 106.1;
+mW -106.1;
+Rbb 25;
+mRbb -25;
+Rj 1.8;
+mRj -1.8;
+
+Rbbcos45 17.68;
+mRbbcos45 -17.68;
+Rjcos45 1.27;
+mRjcos45 -1.27;
+
+
+vertices
+(
+// centre
+    (0      0       0  ) //0
+    (0      0       $L ) //1
+    
+// jet
+    // xP
+    ($Rj   0       0  ) //2
+    ($Rj   0       $L ) //3
+
+    // yP
+    (0      $Rj    0  ) //4
+    (0      $Rj    $L ) //5
+
+    // xM
+    ($mRj  0       0  ) //6
+    ($mRj  0       $L ) //7
+
+    // yM
+    (0      $mRj   0  ) //8
+    (0      $mRj   $L ) //9
+    
+// bluff body
+    // xP
+    ($Rbb   0       0  ) //10
+    ($Rbb   0       $L ) //11
+
+    // yP
+    (0      $Rbb    0  ) //12
+    (0      $Rbb    $L ) //13
+
+    // xM
+    ($mRbb  0       0  ) //14
+    ($mRbb  0       $L ) //15
+
+    // yM
+    (0      $mRbb   0  ) //16
+    (0      $mRbb   $L ) //17
+    
+// coflow
+    // xP
+    ($W     0       0  ) //18
+    ($W     0       $L ) //19
+
+    // yP
+    (0      $W      0  ) //20
+    (0      $W      $L ) //21
+
+    // xM
+    ($mW    0       0  ) //22
+    ($mW    0       $L ) //23
+
+    // yM
+    (0      $mW     0  ) //24
+    (0      $mW     $L ) //25   
+);
+
+blocks
+(
+// jet
+    hex (2 4 0 0 3 5 1 1) (8 4 400) simpleGrading (1 1 1) //PP
+    hex (4 6 0 0 5 7 1 1) (8 4 400) simpleGrading (1 1 1) //MP
+    hex (6 8 0 0 7 9 1 1) (8 4 400) simpleGrading (1 1 1) //MM
+    hex (8 2 0 0 9 3 1 1) (8 4 400) simpleGrading (1 1 1) //PM
+
+// bluff body
+    hex (10 12 4 2 11 13 5 3) (8 32 400) simpleGrading (1 1 1) //PP
+    hex (12 14 6 4 13 15 7 5) (8 32 400) simpleGrading (1 1 1) //MP
+    hex (14 16 8 6 15 17 9 7) (8 32 400) simpleGrading (1 1 1) //MM
+    hex (16 10 2 8 17 11 3 9) (8 32 400) simpleGrading (1 1 1) //PM
+
+// coflow
+    hex (18 20 12 10 19 21 13 11) (8 24 400) simpleGrading (1 0.08 1) //PP
+    hex (20 22 14 12 21 23 15 13) (8 24 400) simpleGrading (1 0.08 1) //MP
+    hex (22 24 16 14 23 25 17 15) (8 24 400) simpleGrading (1 0.08 1) //MM
+    hex (24 18 10 16 25 19 11 17) (8 24 400) simpleGrading (1 0.08 1) //PM
+);
+
+edges
+(
+// jet
+    arc 2 4 ($Rjcos45     $Rjcos45      0  ) //PP
+    arc 3 5 ($Rjcos45     $Rjcos45      $L )
+    arc 4 6 ($mRjcos45    $Rjcos45      0  ) // MP
+    arc 5 7 ($mRjcos45    $Rjcos45      $L )
+    arc 6 8 ($mRjcos45   $mRjcos45      0  ) // MM
+    arc 7 9 ($mRjcos45   $mRjcos45      $L )
+    arc 8 2 ($Rjcos45    $mRjcos45      0  ) // PM
+    arc 9 3 ($Rjcos45    $mRjcos45      $L ) 
+
+// bluff body
+    arc 10 12 ($Rbbcos45     $Rbbcos45      0  ) //PP
+    arc 11 13 ($Rbbcos45     $Rbbcos45      $L )
+    arc 12 14 ($mRbbcos45    $Rbbcos45      0  ) // MP
+    arc 13 15 ($mRbbcos45    $Rbbcos45      $L )
+    arc 14 16 ($mRbbcos45   $mRbbcos45      0  ) // MM
+    arc 15 17 ($mRbbcos45   $mRbbcos45      $L )
+    arc 16 10 ($Rbbcos45    $mRbbcos45      0  ) // PM
+    arc 17 11 ($Rbbcos45    $mRbbcos45      $L )
+    
+);
+
+boundary
+(
+    inletJet
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (2 4 0 0)
+            (4 6 0 0)
+            (6 8 0 0)
+            (8 2 0 0)
+        );
+    }
+    
+    faceBluffBody
+    {
+        type wall;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (10 12 4 2)
+            (12 14 6 4)
+            (14 16 8 6)
+            (16 10 2 8)
+        );
+    }
+    
+    inletCoflow
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (18 20 12 10)
+            (20 22 14 12)
+            (22 24 16 14)
+            (24 18 10 16)
+        );
+    }
+    
+    outlet
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (3 5 1 1)
+            (5 7 1 1)
+            (7 9 1 1)
+            (9 3 1 1)
+            (11 13 5 3)
+            (13 15 7 5)
+            (15 17 9 7)
+            (17 11 3 9)
+            (19 21 13 11)
+            (21 23 15 13)
+            (23 25 17 15)
+            (25 19 11 17)
+        );
+    }
+    
+    side
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (18 20 21 19)
+            (20 22 23 21)
+            (22 24 25 23)
+            (24 18 19 25)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

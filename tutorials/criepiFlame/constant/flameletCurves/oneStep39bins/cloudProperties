@@ -1,0 +1,150 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+
+  root            "";
+ case            "";
+ instance        "";
+ local           "";
+
+ class           dictionary;
+ object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff	    cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f		    cellPoint;
+        p		    cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 11;
+    Nlo 10;
+    Nhi 13;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    synthesisModel  none;
+
+    // radiationModel OpticallyThinRadiation;
+    radiationModel none;
+
+    mixingModel		MMCcurl;
+    // mixingModel none;
+ 
+    MMCcurlCoeffs
+    {
+        //- Parameters r_i and f_m as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        r_i 				6.9e-3;
+        f_m 				0.03;
+        localnessLimited    false;
+        fLowMixOnMaster     0.01;
+        fHighMixOnMaster    1;
+    }
+
+    reactionModel flameSheetParticleChemistry;
+/*    reactionModel finiteRateParticleChemistry;*/
+/*    reactionModel none;    */
+
+    flameSheetParticleChemistryCoeffs
+    {
+        fSLU                (0.06165 0 1); //(0.05  0.03  0.07);
+        Tquench             0; //1358;
+        
+        CH4                 (0      0       1.0	);
+        O2                  (0.233  0       0  	);
+        N2                  (0.767  0.720   0  	);
+        CO2                 (0      0.111   0   );
+        H2O                 (0      0.124   0   );
+		H2					(0		0.00139	0	);
+		CO					(0		0.0374	0	);
+    }
+
+
+    
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.00;
+        zUpper              0.3;
+    }
+    
+
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled             true;
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+	N2;
+	CO; 
+	H2;
+    
+    primarySpecies  T;
+
+    tauRelaxBlending false; 
+    
+    tauRelax        10;
+    tauRelaxStart   1;
+    tauRelaxDelta   1;
+
+    tauUnits timestep;
+}
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled false;
+
+    z;
+    T;
+    CO2;
+}
+
+sectionalMethodProperties
+{
+    nSections 0;
+}
+
+
+particleSampling
+{
+    enabled             false;
+}
+
+// ************************************************************************* //

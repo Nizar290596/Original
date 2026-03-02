@@ -1,0 +1,18 @@
+rm *e-* -rf
+rm -rf ItoPopeCloudOutFile.txt
+rm -rf postProcessing
+rm -rf constant/boundaryData
+
+cd constant/polyMesh
+
+rm -rf boundary faces neighbour owner points cellZones  faceZones  pointZones  sets/
+
+cd ../super/polyMesh
+
+rm -rf boundary faces neighbour owner points cellZones  faceZones  pointZones  sets
+
+cd ../../../
+
+rm -rf dynamicCode
+
+rm -rf 0.000020 0.000200

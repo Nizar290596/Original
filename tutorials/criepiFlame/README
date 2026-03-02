@@ -1,0 +1,56 @@
+To run the CIREPI coal flame: 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Step-1. Run the simulation with one-step flame sheet chemistry without injecting
+ fuel particles. 
+    -- Turn on the flame sheet particle chemitry. 
+        Modifying /CASE/constant/cloudProperties:
+        reactionModel    flameSheetParticleChemistry;
+
+Step-2. When the "fast" flame is nicely developed (a complete flow through is 
+recommended), switch to finite rate chemistry with pilot only. 
+    -- Pause the simulation. 
+        Modifying /CASE/system/controlDict:
+        stopAt    endTime;
+    -- Reconstruct the latest time step and delete all the processors. 
+        calling ./ReconstructLatestTime
+    -- Turn on the finite rate particle chemistry. 
+        Modifying /CASE/constant/cloudProperties:
+        reactionModel    finiteRateParticleChemistry;
+    -- Delete the folder "/CASE/[latest_timestep]/lagrangian/popePaticlesSet_1/"
+    -- Decompose the latest time step. 
+        calling ./DecomposeLatestTime
+    -- Resume the simulation.
+        calling ./ResumeParallelRun
+
+Step-3. Continue with Step-2 for 10~50 time steps, and start the injection of 
+    -- Pause the simulation. 
+        Modifying /CASE/system/controlDict:
+        stopAt    endTime;
+    -- Change the start of injection for fuel particle to the latest time. 
+        Modifying /CASE/constant/fuelCloudProperties:
+        SOI    [latest_timestep];
+    -- Resume the simulation. 
+        calling ./ResumeParallelRun
+
+
+
+To run the CRIEPI coal flame with inert fuel particles (kinematic): 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Following changes have to ba made to mmcMultiphaseFoam solver. 
+In the directory: 
+../mmcFoam-4.x/applications/solvers/mmc/mmcMultiphaseFoam
+
+Modify: 
+    createFuelCloud.H:: comment out line no. 1-16, and uncomment line no. 18-26. 
+
+Delete/Comment out: 
+    rhoEqn.H:39://      + fuelCloud.SM(rho)
+    XiEqn.H:58://              + fuelCloud.SM(Xii)
+    UEqn.H:11://      + fuelCloud.SuMass(U)
+    mmcMultiphaseFoam.C:123://        #include "checkParticles.H" 
+
+Recompile the source code and solver: 
+    calling ./multiMake from ../mmcFoam-4.x/
+
+

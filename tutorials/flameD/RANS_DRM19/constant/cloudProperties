@@ -1,0 +1,142 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+
+  root            "";
+ case            "";
+ instance        "";
+ local           "";
+
+ class           dictionary;
+ object          cloudProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff	    cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f		    cellPoint;
+        p		    cellPoint;
+	tauTurb		cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 70;
+    Nlo 60;
+    Nhi 80;
+}
+
+
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    sootModel       none;
+
+    //radiationModel OpticallyThinRadiation;
+    radiationModel none;
+    OpticallyThinRadiationCoeffs
+    {
+        TRef     300;
+    }
+ 
+    printMoleFractions false;
+
+    thermoPhysicalCouplingModel     ParticleInCell;
+
+    synthesisModel          none;
+
+
+    mixingModel		ransMMCcurl;
+    // mixingModel none;
+ 
+    ransMMCcurlCoeffs
+    {
+        C_phi             2.0;
+        b_o              0.71;
+	r_t		0.935; // mixing time-scale constant
+        Xim_i
+        {
+            fm  0.03;
+        }
+        localnessLimited    false;
+        fLowMixOnMaster     0.0;
+        fHighMixOnMaster    1;
+        fullSort            false;
+        aISO                true;        //added for the implementation of a-ISO model
+        meanTimeScale       true; //true:mean false:max
+    }
+
+
+    reactionModel finiteRateParticleChemistry;
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.05;
+        zUpper              0.95;
+    }
+}
+
+
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+    
+    primarySpecies  CO2;
+
+    condVariable        z;
+    
+    tauRelax 10;
+    tauUnits timestep;
+}
+
+
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled false;
+}
+
+particleSampling
+{
+    enabled             false;
+}
+
+
+
+// ************************************************************************* //

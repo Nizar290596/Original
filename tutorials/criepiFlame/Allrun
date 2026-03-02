@@ -1,0 +1,11 @@
+blockMesh
+blockMesh -region super
+
+blockMesh -region exMesh
+
+cp system/itvInflowDict system/controlDict
+itvInflow
+
+cp system/mmcMultiphaseFoamDict system/controlDict
+
+mmcMultiphaseFoam

@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit   # Run from this directory
+
+# source support functions 
+source ../../etc/supportFunctions.sh
+
+
+basePath=${PWD}
+
+tutorialDir=$(dirname $basePath)
+
+__bannerByFilePath "${tutorialDir}/oneStepFlameSheet"
+cd ../oneStepFlameSheet
+./Allrun > log.run
+if [[ $? == 0 ]]; then
+    echo "    Success"
+else
+    echo "    Failure"
+fi
+
+

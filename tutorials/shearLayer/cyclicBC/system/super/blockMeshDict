@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.0.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 0.001;
+mergeType points;
+
+vertices
+(
+    (-4.32 -5.0325 -2.88)   // 1
+    ( 4.32 -5.0325 -2.88)   // 2
+    ( 4.32  5.0325 -2.88)    // 3
+    (-4.32  5.0325 -2.88)   // 4
+    (-4.32 -5.0325 2.88)
+    ( 4.32 -5.0325 2.88)
+    ( 4.32  5.0325 2.88)
+    (-4.32  5.0325 2.88) 
+/*
+   (-0.5 -0.5 -0.01)
+    (0.5 -0.5 -0.01)
+    (0.5  0.5 -0.01)
+    (-0.5 0.5 -0.01)
+    (-0.5 -0.5 0.01)
+    (0.5 -0.5 0.01)
+    (0.5 0.5 0.01)
+    (-0.5 0.5 0.01)
+ */
+
+ 
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (6 7 6) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    left
+    {
+        type cyclic;
+        neighbourPatch right;
+        matchTolerance 0.00001;
+        faces
+        (
+            (0 4 7 3)
+        );
+        physicalType periodic;
+    }
+    right
+    {
+        type cyclic;
+        neighbourPatch left;
+        matchTolerance 0.00001;
+        faces
+        (
+            (1 2 6 5)
+        );
+        physicalType periodic;
+    }
+
+    front
+    {
+        type cyclic;
+        neighbourPatch back;
+        matchTolerance 0.00001;
+        faces
+        (
+            (6 7 4 5)
+        );
+        physicalType periodic;
+    }
+    back
+    {
+        type cyclic;
+        neighbourPatch front;
+        matchTolerance 0.00001;
+        faces
+        (
+            (0 3 2 1)
+        );
+        physicalType periodic;
+    }
+
+    top  
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (2 3 7 6)
+        );
+    }
+    bottom
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (0 1 5 4)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

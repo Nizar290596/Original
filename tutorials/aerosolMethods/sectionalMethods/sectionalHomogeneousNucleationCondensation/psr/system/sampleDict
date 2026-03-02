@@ -1,0 +1,138 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      sampleDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+setFormat             raw;
+surfaceFormat         raw;
+
+interpolationScheme cell;
+
+fields
+(
+    UMean
+    UPrime2Mean
+
+    TMean
+    TPrime2Mean
+
+    TAv
+    TStdDev
+
+    fMean
+    fMeanCirc
+    fPrime2Mean
+
+        SMeanCirc
+    SMeanOverbar
+        //SPrime2Mean
+
+        BMeanCirc
+    BMeanOverbar
+        //BPrime2Mean
+
+        GMeanCirc
+    GMeanOverbar
+        //GPrime2Mean
+
+    zAv
+    zStdDev
+    
+    C16H22O4Mean
+    C16H22O4Av
+/*
+    dxAv
+    dfAv
+*/    
+        saturationAv
+    nucleationRateAv
+    condensationRateAv
+
+    moment0
+    moment1
+/*
+    moment2
+    moment3
+    moment4
+    moment5
+*/
+);
+
+sets
+(
+    centerline
+    {
+        type        midPoint;
+        axis        z;
+
+        start       ( 0 0 0 );
+        end         ( 0 0 0.164 );
+    }
+
+    nozzleline
+    {
+        type        midPoint;
+        axis        z;
+
+        start       ( 0 0.001175 0 );
+        end         ( 0 0.001175 0.164 );
+    }
+
+    radialzD05
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0 -0.05 0.01175 );
+        end         ( 0  0.05 0.01175 );
+    }
+
+    radialzD10
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0 -0.05 0.0235 );
+        end         ( 0  0.05 0.0235 );
+    }
+
+    radialzD20
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0 -0.05 0.0470 );
+        end         ( 0  0.05 0.0470 );
+    }
+
+    radialzD30
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0 -0.05 0.0705 );
+        end         ( 0  0.05 0.0705 );
+    }
+
+    pointzD20
+    {
+        type    cloud;
+        axis    z;
+        points  (
+                    (0 0 0.0470)
+                );
+    }    
+);
+
+// *********************************************************************** //

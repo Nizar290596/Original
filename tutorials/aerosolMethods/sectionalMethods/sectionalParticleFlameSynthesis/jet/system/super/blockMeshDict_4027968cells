@@ -1,0 +1,171 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters      1; 
+
+pi                   3.141592653589793;
+rad                  #calc "2.0*$pi/360.0";
+
+D                    0.00457;
+
+nCircumveratialCells 15;
+
+// positions * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+inlet                0.0;
+
+outlet               #calc "25*$D";
+
+domain               #calc "0.05";
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+alpha1               #calc "360/$nCircumveratialCells*$rad";
+alpha2               #calc "$alpha1+($nCircumveratialCells-1)/2*360/$nCircumveratialCells*$rad";
+alpha3               #calc "$alpha2+($nCircumveratialCells-1)/2*360/$nCircumveratialCells*$rad";
+
+domainx1             #calc  "$domain*cos($alpha1)";
+domainy1             #calc  "$domain*sin($alpha1)";
+
+domainx2             #calc  "$domain*cos($alpha2)";
+domainy2             #calc  "$domain*sin($alpha2)";
+
+domainx3             #calc  "$domain*cos($alpha3)";
+domainy3             #calc  "$domain*sin($alpha3)";
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+vertices
+(
+    ($domainx1  $domainy1  $inlet)   // 0
+    ($domainx2  $domainy2  $inlet)   // 1
+    ($domainx3  $domainy3  $inlet)   // 2
+    
+    ($domainx1  $domainy1  $outlet)  // 3
+    ($domainx2  $domainy2  $outlet)  // 4
+    ($domainx3  $domainy3  $outlet)  // 5
+    
+    (0.0        0.0        $inlet)   // 6
+    (0.0        0.0        $outlet)  // 7
+);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+nCircumveratialPoints1 #calc "($nCircumveratialCells-1)/2";
+nCircumveratialPoints2 #calc "$nCircumveratialPoints1";
+nCircumveratialPoints3 #calc "$nCircumveratialCells-2*$nCircumveratialPoints1";
+
+// radial resolution
+nRadialPoints          10;
+sRadialInlet           0.3;
+sRadialOutlet          1;
+
+// axial resolution
+//nDomain                32;
+//sDomain                2.9149504013154113;
+
+//sDomainLES             3.0;
+//nLESCellsPerLayer      4.0; //8.0;
+//nLESDomain             384;
+//nDomain                48; //24;
+//nLESCellsPerLayer      #calc  "$nLESDomain/$nDomain";
+//sDomain                #calc  "pow($sDomainLES,($nLESCellsPerLayer*($nDomain-1))/($nLESCellsPerLayer*$nDomain-1))";
+
+nDomain                48;
+nDomain_dbl            48.0;
+sDomain_LES            3.0;
+nDomain_LES            576.0;
+nRatio                 #calc "$nDomain_LES/$nDomain_dbl";
+exponent               #calc "$nRatio*($nDomain_dbl-1)/($nRatio*$nDomain_dbl-1)";
+sDomain                #calc "pow($sDomain_LES,$exponent)";
+
+blocks
+(
+    // nozzle
+    hex ( 0  1  6  6  3  4  7  7) ($nCircumveratialPoints1 $nRadialPoints $nDomain)  edgeGrading (1 1 1 1 $sRadialInlet $sRadialInlet $sRadialOutlet $sRadialOutlet $sDomain $sDomain $sDomain $sDomain)  
+    hex ( 1  2  6  6  4  5  7  7) ($nCircumveratialPoints2 $nRadialPoints $nDomain)  edgeGrading (1 1 1 1 $sRadialInlet $sRadialInlet $sRadialOutlet $sRadialOutlet $sDomain $sDomain $sDomain $sDomain)  
+    hex ( 2  0  6  6  5  3  7  7) ($nCircumveratialPoints3 $nRadialPoints $nDomain)  edgeGrading (1 1 1 1 $sRadialInlet $sRadialInlet $sRadialOutlet $sRadialOutlet $sDomain $sDomain $sDomain $sDomain)
+);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+beta1  #calc "360/$nCircumveratialCells*$rad+$rad";
+beta2  #calc "3/2*$beta1+($nCircumveratialCells-1)/2*360/$nCircumveratialCells*$rad";
+beta3  #calc "$beta2+($nCircumveratialCells-1)/2*360/$nCircumveratialCells*$rad";
+
+// domain
+circDomainx1           #calc "$domain*cos($beta1)";
+circDomainy1           #calc "$domain*sin($beta1)";
+circDomainx2           #calc "$domain*cos($beta2)";
+circDomainy2           #calc "$domain*sin($beta2)";
+circDomainx3           #calc "$domain*cos($beta3)";
+circDomainy3           #calc "$domain*sin($beta3)";
+
+edges
+(    
+    arc  0  1 ($circDomainx1  $circDomainy1  $inlet)
+    arc  1  2 ($circDomainx2  $circDomainy2  $inlet)
+    arc  2  0 ($circDomainx3  $circDomainy3  $inlet)
+        
+    arc  3  4 ($circDomainx1  $circDomainy1  $outlet)
+    arc  4  5 ($circDomainx2  $circDomainy2  $outlet)
+    arc  5  3 ($circDomainx3  $circDomainy3  $outlet)
+);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundary
+(   
+    inlet
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            ( 0  1  6  6)
+            ( 1  2  6  6)
+            ( 2  0  6  6)
+        );
+    }
+    
+    outlet
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            ( 3  4  7  7)
+            ( 4  5  7  7)
+            ( 5  3  7  7)
+        );
+    }
+    
+    side
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (0  3  4  1)
+            (1  4  5  2)
+            (2  5  3  0)
+        );   
+    }
+);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

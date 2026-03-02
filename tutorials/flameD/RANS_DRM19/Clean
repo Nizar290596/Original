@@ -1,0 +1,7 @@
+
+rm *e-* -rf
+rm -rf processor*
+rm ItoPopeCloudOutFile.txt
+rm log
+
+

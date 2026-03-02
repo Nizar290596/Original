@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 1;
+
+mergeType points;
+
+vertices
+(
+    (0.0       0            0.0)
+    (0.15      0            0.0)
+    (0.15      0.005       -0.0005)
+    (0.15      0.01        -0.001)
+    (0.15      0.05        -0.005)
+    (0.0       0.05        -0.005)
+    (0.0       0.01        -0.001)
+    (0.0       0.005       -0.0005)
+    (0.15      0.005        0.0005)
+    (0.15      0.01         0.001)
+    (0.15      0.05         0.005)
+    (0.0       0.05         0.005)
+    (0.0       0.01         0.001)
+    (0.0       0.005        0.0005)
+);
+
+blocks
+(
+    hex (0 1 2 7 0 1 8 13) (80 6 1) simpleGrading (1 1 1)
+    hex (7 2 3 6 13 8 9 12) (80 6 1) simpleGrading (1 1 1)
+    hex (6 3 4 5 12 9 10 11) (80 15 1) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    zaxis
+    {
+	type empty;
+    physicalType noParticleOutflow;//Rebound
+	faces
+	(
+	    (0 1 1 0)
+	);
+    }
+    outlet
+    {
+        type patch;
+        physicalType particleInflowOutflow; //particle leaving the domain
+        faces
+        (
+            (1 2 8 1)
+            (2 3 9 8)
+            (3 4 10 9)
+            (4 5 11 10)
+        );
+    }
+    inletCoflow
+    {
+        type patch;
+        physicalType noParticleOutflow;//Rebound
+        faces
+        (
+            (12 6 5 11)
+        );
+    }
+    pilot
+    {
+        type patch;
+        physicalType noParticleOutflow;//Rebound
+        faces
+        (
+            (13 7 6 12)
+        );
+    }
+    inletFuel
+    {
+        type patch;
+        physicalType noParticleOutflow;//Rebound
+        faces
+        (
+            (0 7 13 0)
+        );
+    }
+ //    WALL
+ //    {
+	// type wall;
+	// faces
+	// (
+ //            (4 5 11 10)
+	// );
+ //    }
+    front
+    {
+        type wedge;
+        physicalType noParticleOutflow;//Rebound
+        faces
+        (
+            (0 1 2 7)
+            (7 2 3 6)
+            (6 3 4 5)
+	);
+    }        
+    back
+    {
+ 	type wedge;
+    physicalType noParticleOutflow;//Rebound
+	faces  
+	(
+	    (0 13 8 1)
+            (13 12 9 8)
+	    (12 11 10 9)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

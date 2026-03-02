@@ -1,0 +1,14 @@
+set key t r
+set key font ",12"
+set title font ",20"
+set ylabel 'Parameter'
+set ylabel font ",18"
+set ytics font ",12"
+set grid
+show grid
+set yrange [0.0:1.2]
+set xtics font ",10"
+set xlabel 'Iteration'
+set xlabel font ",18"
+plot "dynamicRelaxOut_popeParticlesSet_1.dat" using 0:1 with lines title "relaxationFactor" lc rgb "red" lw 3, "dynamicRelaxOut_popeParticlesSet_1.dat" using 0:3 with lines title "{/Symbol f}_c^p(c^p_r_l_x = 0.5)" lc rgb "dark-cyan" lw 1
+pause 10

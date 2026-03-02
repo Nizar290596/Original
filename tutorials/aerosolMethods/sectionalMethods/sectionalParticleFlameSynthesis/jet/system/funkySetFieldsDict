@@ -1,0 +1,296 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      funkySetFieldsDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+expressions
+(
+    H
+    {
+        field H;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialH.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    H2
+    {
+        field H2;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialH2.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    H2O
+    {
+        field H2O;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialH2O.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    HO2
+    {
+        field HO2;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialHO2.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    N2
+    {
+        field N2;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialN2.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    O
+    {
+        field O;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialO.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    O2
+    {
+        field O2;
+
+        expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialO2.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+
+    OH
+    {
+    	field OH;
+
+    	expression "species(Temperature)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables    
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+            {
+                name            species;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialOH.dat";
+                outOfBounds     clamp;
+            }
+        );
+        
+        keepPatches 1;
+    }
+
+    T
+    {
+        field T;
+
+        expression "temperature(r)";
+
+        variables
+        2
+        (
+        "r=sqrt(sqr(pos().x)+sqr(pos().y));"
+        "Temperature=temperature(r);"
+        )
+        ;
+
+        lookuptables
+        (
+            {
+                name            temperature;
+                fileName        "$FOAM_CASE/constant/boundaryData/radialTemperatureProfile.dat";
+                outOfBounds     clamp;
+            }
+        );
+
+        keepPatches 1;
+    }
+);
+

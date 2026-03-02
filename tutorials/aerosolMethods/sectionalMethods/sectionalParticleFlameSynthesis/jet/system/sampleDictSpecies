@@ -1,0 +1,155 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      sampleDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+setFormat             raw;
+surfaceFormat         raw;
+
+interpolationScheme cellPointFace;
+
+fields
+(
+    OHAv    
+    SIOAv
+    //SIO-2Av
+    //SIO-3Av
+    SIO2Av
+    //SIO2-2Av
+    //SIO2-3Av
+    //SIO2-4Av
+    //SIO2-5Av
+    //SIO2-6Av
+    //SIO2-7Av
+    //SIO2-8Av
+    //SIO2-9Av
+    //SIO2-10Av
+    //SIO2-S5Av
+    SIO2-SAv
+);
+
+sets
+(
+    centerline
+    {
+        type        midPoint;
+        axis        z;
+
+        start       ( 0 0 0    );
+        end         ( 0 0 0.1828 );
+    }
+
+    nozzleline
+    {
+        type        midPoint;
+        axis        z;
+
+        start       ( 0 0.002285 0.00 );
+        end         ( 0 0.002285 0.1828 );
+    }
+
+    zD00
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      1e-08 );
+        end         ( 0  0.0457 1e-08 );
+    }
+
+    zD01
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      0.00457 );
+        end         ( 0  0.0457 0.00457 );
+    }
+
+    zD05
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      0.02285 );
+        end         ( 0  0.0457 0.02285 );
+    }
+    
+    zD10
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      0.04570 );
+        end         ( 0  0.0457 0.04570 );
+    }
+
+    zD15
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      0.06855 );
+        end         ( 0  0.0457 0.06855 );
+    }
+
+    zD20
+    {
+        type        midPoint;
+        axis        y;
+
+        start       ( 0  0      0.09140 );
+        end         ( 0  0.0457 0.09140 );
+    }
+
+    //zD25
+    //{
+    //    type        midPoint;
+    //    axis        y;
+
+    //    start       ( 0  0      0.11425 );
+    //    end         ( 0  0.0457 0.11425 );
+    //}
+
+    //zD30
+    //{
+    //    type        midPoint;
+    //    axis        y;
+
+    //    start       ( 0  0      0.13710 );
+    //    end         ( 0  0.0457 0.13710 );
+    //}
+
+    //zD35
+    //{
+    //    type        midPoint;
+    //    axis        y;
+
+    //    start       ( 0  0      0.15995 );
+    //    end         ( 0  0.0457 0.15995 );
+    //}
+
+    //zD40
+    //{
+    //    type        midPoint;
+    //    axis        y;
+
+    //    start       ( 0  0      0.18280 );
+    //    end         ( 0  0.0457 0.18280 );
+    //}
+);
+
+// *********************************************************************** //

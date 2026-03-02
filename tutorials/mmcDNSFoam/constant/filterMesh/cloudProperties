@@ -1,0 +1,143 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+
+  class           dictionary;
+  object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+//- FV fields to particle interpolation
+solution
+{
+    interpolationSchemes
+    {
+        UFiltered   cellPoint;
+        DEff        cellPoint;
+        rhoFiltered cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+
+//- Particle number control
+particleManagement
+{
+    numCtlOn          false;
+    Npc                1512;
+    Nlo                1512;
+    Nhi                1512;
+}
+
+
+//- Submodels
+subModels
+{
+
+    InflowBoundaryModel                  NoInflow;
+    compositionModel           singlePhaseMixture;
+    radiationModel                           none;
+    mixingModel                           MMCcurl;
+
+    sootModel   none;
+
+    MMCcurlCoeffs
+    {
+        ri                0.22e-03; // rm=0.38mm (see Tab. 2 in CNF2017 paper)
+        Ximi
+        {
+            fm                0.03;
+        }
+        localnessLimited     false;
+        fLowMixOnMaster        0.0;
+        fHighMixOnMaster       1.0;
+        fullSort              true;
+        aISO                  true;
+        meanTimeScale         true;
+    }
+
+    thermoPhysicalCouplingModel  KernelEstimation;
+
+    KernelEstimationCoeffs
+    {
+        fLow                 0.0;  // lower limit
+        fHigh                1.0;  // upper limit
+        inertSpecie           N2;  // inert species
+        fm                  0.03;  // same as in mixing model
+        dfMax             0.0075;  // Maximum distance in f space allowed to do extrapolation
+        C2                   0.0;  // parameter used for extrapolation -> if C2=0 then no extrapolation is done (recommended)
+    }
+
+    printMoleFractions                      false;
+
+    reactionModel     finiteRateParticleChemistry;
+
+    // Dynamic load balancing (finiteRateChem Only)
+    balanceReactionLoad     false;
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower               0.0;
+        zUpper               1.0;
+    }
+}
+
+
+//- Thermophysical coupling
+thermophysicalCoupling
+{
+    enabled          true;
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    O2;
+    CO2;
+    H2O;
+    N2;
+    CO;
+    H2;
+    
+    primarySpecies  T;
+    condVariable    z;
+
+    tauRelax 30;
+    tauUnits timestep;
+}
+
+
+//- Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled     false;
+}
+
+
+//- Particle sampling
+  particleSampling
+{
+    enabled               false;
+    numParticlesToStore       0;
+    particleSampleProbes
+    {
+    }
+}
+
+// ************************************************************************* //

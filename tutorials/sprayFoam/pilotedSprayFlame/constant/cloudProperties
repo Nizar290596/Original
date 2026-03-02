@@ -1,0 +1,216 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+
+  root            "";
+ case            "";
+ instance        "";
+ local           "";
+
+ class           dictionary;
+ object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff	    cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f	        cellPoint;
+        fN          cellPoint;
+        p	        cellPoint;
+    }
+}
+
+
+particleManagement
+
+{
+    //- Particle number control
+    numCtlOn         on;
+    Npc 15;
+    Nlo 13;
+    Nhi 16;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    /*radiationModel OpticallyThinRadiation;*/
+    radiationModel none;
+    OpticallyThinRadiationCoeffs
+    {
+        TRef     300;
+    }
+	
+    printMoleFractions   false;	
+
+    thermoPhysicalCouplingModel KernelEstimation;
+   
+    density coupling model  kernelEstimation;	 
+    KernelEstimationCoeffs
+    {
+        fLow                0.01;   //lower flamability limit
+        fHigh               0.3;   //upper flamability limit
+        fm                  0.03;   //same as in mixing model
+        
+	    condVariable        f;
+	    dfMax               0.0075; //Maximum distance in f space allowed to do extrapolation
+        C2                  0.1;    //used to control resolution
+    }    
+
+    //-Mixing model
+    mixingModel		MMCcurl;
+    
+    MMCcurlCoeffs
+    {
+        //- Parameters r_i and f_m as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri 			2.15025e-4;
+        Ximi
+        {
+            fm                 0.03;
+        }
+        localnessLimited    false;
+        fLowMixOnMaster     0.01;
+        fHighMixOnMaster    0.3;
+
+        fullSort            true;
+        aISO                true; 
+        meanTimeScale       false;
+    }
+
+   
+    //-ReactionModel
+    reactionModel finiteRateParticleChemistry;
+    //reactionModel odeParticleChemistry;
+    //reactionModel flameSheetParticleChemistry;
+ 
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.001;
+        zUpper              0.3;
+    }
+
+    flameSheetParticleChemistryCoeffs
+    {
+        fSLU                (0.095  0.0  1.0); //(0.05  0.03  0.07);
+        Tquench             0; //1358;
+        
+        CH3COCH3            (0       0        1.0);
+        O2                  (0.233   0        0.0);
+        N2                  (0.767  0.693    0.0);
+        H2O                 (0      0.089    0.0);
+        CO2                 (0      0.218    0.0);
+                      
+    }
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled        true;
+
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+        C2H2;
+        C2H4;
+        C2H6;
+        CH2CO;
+        CH2O;
+        CH3;
+        CH3CHO;
+        CH3COCH3; 
+        CH4;
+        CO;
+        CO2;
+        H2;
+        H2O;
+        N2;
+        O2;
+        
+
+    condVariable   z;	
+    
+    primarySpecies   T;
+    tauRelaxBlending false;
+    tauRelax         10;
+    tauRelaxStart    1000;
+    tauRelaxDelta    2;    
+    tauUnits         timestep;
+}
+
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled           false;
+    sampleInterval    10;
+    axisymmetric      true;
+    symmetryPlane     zy;
+    
+    z;
+    T;
+    df;
+    dx;
+    H2;
+    O2;
+    H2O;
+    CO2;
+    CO;
+    OH;
+    CH2O;
+    C2H5OH;
+}
+
+particleSampling
+{
+
+    enabled             false;
+    sampleInterval	    10;
+
+    particleSampleProbes
+    {
+        zD10
+        {
+            origin      (0 0 0.105);
+            normal      (0 0 1);
+        }
+
+        zD20
+        {
+            origin      (0 0 0.21);
+            normal      (0 0 1);
+        }
+
+	    zD30
+        {
+            origin      (0 0 0.315);
+            normal      (0 0 1);
+        }
+
+    }
+}
+
+
+
+// ************************************************************************* //

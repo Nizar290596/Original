@@ -1,0 +1,67 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    location    "constant";
+    object      chemistryProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+chemistryType
+{
+    chemistrySolver              ode;
+    chemistryThermo              psi;
+}
+
+chemistry                         on;
+
+initialChemicalTimeStep        1e-10;
+
+odeCoeffs
+{
+    solver                    seulex;
+}
+
+reduction
+{
+    active                       off;
+    method                      pDAC;
+    initialSet
+    {
+    }
+    automaticSIS                 off;
+    fuelSpecies
+    {
+        H2  1;
+    }
+}
+
+tabulation
+{
+    active                       off;
+    method                     pISAT;
+    maxNLeafs                   1000;
+    chPMaxLifeTime                10;
+    maxGrowth                   1000;
+    checkEntireTreeInterval      500;
+    maxDepthFactor                 2;
+    minBalanceThreshold           30;
+    MRURetrieve                false;
+    maxMRUSize                     0;
+    growPoints                  true;
+    maxNumNewDim                  10;
+    max2ndSearch                   0;
+    cleanAfterFull             false;
+    TestSwitch                 false;
+}
+
+
+// ************************************************************************* //

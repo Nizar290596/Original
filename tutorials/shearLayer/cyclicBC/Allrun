@@ -1,0 +1,7 @@
+. ../../../etc/bashrc
+
+blockMesh
+blockMesh -region super
+
+mmcFoam${MMC_APPLICATION_EXTENSION}
+

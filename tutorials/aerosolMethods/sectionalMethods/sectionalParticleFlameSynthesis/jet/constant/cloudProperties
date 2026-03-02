@@ -1,0 +1,203 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    
+    class           dictionary;
+    object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    //- FV fields to particle interpolation
+    
+    interpolationSchemes
+    {
+        U       cellPoint;
+        D       cellPoint;
+        Dt      cellPoint;
+        DEff    cellPoint;
+        rho     cellPoint;
+        gradRho cellPoint;
+        f       cellPoint;
+        p       cellPoint;
+    }
+}
+
+particleManagement
+{
+    numCtlOn         on;
+
+    Npc 40;
+    Nlo 20;
+    Nhi 40;
+}
+
+subModels
+{
+    InflowBoundaryModel      FreeStream;
+    
+    compositionModel singlePhaseMixture;
+    
+    radiationModel                 none;
+
+    thermoPhysicalCouplingModel    none;
+    
+    mixingModel                 MMCcurl;
+
+    sootModel                      none;
+
+    MMCcurlCoeffs
+    {
+        //- Parameters ri and fm as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri                        0.001;
+
+        Ximi
+        {
+          fm                       0.03;
+        }
+        
+        localnessLimited          false;
+
+        fLowMixOnMaster               0;
+        fHighMixOnMaster              1;
+
+        fullSort                   true;
+
+        aISO                       true;
+
+        meanTimeScale              true;
+
+        pairingMethod            global;
+    }
+    
+    reactionModel  finiteRateParticleChemistry;
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower                        0;
+        zUpper                        1;
+    }
+
+    synthesisModel sectionalParticleFlameSynthesis;
+
+    sectionalParticleFlameSynthesisCoeffs
+    {
+        nSections                    50;
+        d0              9.472133125e-10;
+        growth                        2;
+ 
+        Df                          1.8;
+        kf                            1;
+
+        coalescenceDiameter         0.0;
+        dLimit                        1;
+        DfLimit                       3;
+        ELSnorm                       1;
+
+        coagulationSubSteps           1;
+
+        precursorSpecies
+        {
+            SIO-11;
+            SIO-12;
+            SIO2-11;
+            SIO2-12;
+        }
+
+        solidSpeciesName         SIO2-S;
+
+        solidDensity               2196; // [kg/m^3] amorphous density
+
+        inception                  true;
+
+        surfaceGrowth              true;
+
+        surfaceReactionEfficiency   1.0;
+
+        depositingSpecies
+        {
+            SIO; 
+            SIO-2; 
+            SIO-3; 
+            SIO-4; 
+            SIO-5;
+            SIO-6;
+            SIO-7;
+            SIO-8;
+            SIO-9;
+            SIO-10;
+            SIO2;
+            SIO2-2;
+            SIO2-3;
+            SIO2-4;
+            SIO2-5;
+            SIO2-6;
+            SIO2-7;
+            SIO2-8;
+            SIO2-9;
+            SIO2-10;
+        }
+
+        coagulation                true;
+
+        turbCoagulation            true;
+
+        coagulationModel FuchsSutuginCollisionKernel;
+    }
+
+    printMoleFractions            false;
+}
+
+thermophysicalCoupling
+{
+    enabled      false;
+
+    // List of species for which equivalent mass fraction solutions are obtained on the FV grid
+    SIH4;
+    //H;
+    //H2;
+    H2O;
+    //HO2;
+    N2;
+    //O;
+    O2;
+    //OH;
+    
+    primarySpecies   T;
+    condVariable     z;
+   
+    tauRelax        10;
+
+    tauUnits  timestep;
+}
+
+// Calculate stochastic field statistics on the fly
+stochasticFieldStats    on;
+
+eulerianStatistics
+{
+    enabled          false;
+}
+
+particleSampling
+{
+    enabled          false;
+}
+
+// ************************************************************************* //

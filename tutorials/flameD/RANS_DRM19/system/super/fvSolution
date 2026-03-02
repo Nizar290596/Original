@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solvers
+{
+    "(p|rho)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0.0;
+    }
+
+    "(p|rho)Final"
+    {
+        $p;
+        tolerance       1e-06;
+        relTol          0;
+    }
+
+    "(U|h|enthalpy|k|epsilon|f)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-05;
+        relTol          0.0;
+    }
+
+    "(U|h|enthalpy|k|epsilon|f)Final"
+    {
+        $U;
+        tolerance       1e-05;
+        relTol          0;
+    }
+
+    Yi
+    {
+        $hFinal;
+    }
+
+}
+
+// Refer CFDonline post called 'All about the PIMPLE algorithm'
+PIMPLE
+{
+    nOuterCorrectors 2; //(PISO mode for nOuterCor=1)
+    nCorrectors     2; // Ideal value is 2. Don't change
+    nNonOrthogonalCorrectors 2;
+    momentumPredictor on; // ALWAYS on. Otherwise, it won't calculate velocity
+    turbOnFinalIterOnly false; // false for highly turbulent flows=>includes turbulence in every interation
+				// (default=true: turbulence is included only at last iteration of nOuterCorr loop)
+    
+    rhoMin          rhoMin [ 1 -3 0 0 0 ] 0.5;
+    rhoMax          rhoMax [ 1 -3 0 0 0 ] 2.0;
+
+    // residualControl matters only for PIMPLE, i.e nOuterCorr > 1    
+    residualControl
+    {
+        "(U|h|enthalpy|k|epsilon|Yi)"
+        {
+                tolerance  1e-5;
+                relTol     0;
+        }
+        "(p|rho)"
+        {
+                tolerance  1e-6;
+                relTol     0;
+        }
+     }
+}
+
+relaxationFactors
+{
+    "(p|rho)"               0.3;
+    "(p|rho)Final"			1.0;
+	
+    "(U|h|enthalpy|k|epsilon|Yi|f)"   0.7;
+    "(U|h|enthalpy|k|epsilon|Yi|f)Final" 1.0;
+}
+
+PDFMETHOD
+{
+  pdfMethodOn       yes;
+  nSet              1;
+  pdfScatPlotOn     no;
+  pdfScatPlotSize   5000;  // No of scatter data on each processor
+}
+
+// ************************************************************************* //

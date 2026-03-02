@@ -1,0 +1,186 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     mmcPbeFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         5e-6;
+
+deltaT          1e-06;
+
+writeControl    timeStep;
+
+writeInterval   200;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      fixed;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+graphFormat    xmgr;
+
+libs ( 
+        "libOpenFOAM.so"
+        "libsampling.so"
+        "libfieldFunctionObjects.so"
+        "libsimpleSwakFunctionObjects.so"
+        "libswakFunctionObjects.so"
+        "libgroovyBC.so"
+     );
+
+functions
+{
+    fieldAverage
+    {
+        enabled         false;
+
+        cleanRestart    false;
+
+        type            fieldAverage;
+        
+        outputControl   outputTime;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            f
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            T
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+            
+            C16H22O4
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            N2
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+
+            O2
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            S
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            B
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            G
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            muSgs
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+        );
+    }
+
+    surfaceSampling
+    {
+        enabled         false;
+
+        outputControl   timeStep;
+
+        outputInterval     25;
+
+        type             surfaces;
+
+        interpolationScheme cellPoint;
+
+        setFormat       vtk;
+        surfaceFormat   vtk;
+
+        fields
+        (
+            U
+            f
+            T
+            rho
+            p
+        );
+
+        surfaces
+        (
+            interpolatedPlane
+            {
+                type            plane;  
+
+                basePoint       (0 0 0);
+                normalVector    (1 0 0);
+                interpolate     true;
+            }
+        );
+    }
+}
+
+// ************************************************************************* //

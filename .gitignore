@@ -1,0 +1,23 @@
+# OpenFOAM build files
+Make/linux*
+*.dep
+*.o
+*.so
+*.log
+
+# Time directories
+[0-9]*
+processor*
+postProcessing/
+constant/polyMesh/
+
+# HPC files
+*.tar.gz
+*.out
+*.err
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db

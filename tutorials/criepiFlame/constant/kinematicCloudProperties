@@ -1,0 +1,205 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.2                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      kinematicCloudProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         true;
+    transient       yes;
+    cellValueSourceCorrection on;
+
+    sourceTerms
+    {
+        schemes
+        {
+            rho             explicit 1;
+            U               explicit 1;
+            Yi              explicit 1;
+            h               explicit 1;
+            radiation       explicit 1;
+        }
+    }
+
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+/*        muEff           cell;*/
+        thermo:mu       cell;
+        T               cell;
+        p               cell;
+        f               cell;
+        fGradSqr        cell;
+    }
+
+    integrationSchemes
+    {
+        U               Euler;
+        T               Euler;
+        M               Euler;
+    }
+}
+
+
+constantProperties
+{
+    rho0            1200.00; // kg/m3
+    T0              297.00;
+    CpD             1254.00; // J/kgK    // Fragmentation and diffusion model for coal pyrlysis
+    epsilon0        1.0; 
+    f0              0.5;
+    Le                1.0; 
+    Sc                0.7;
+    latentHeat        0.0; // J/kg // very small
+
+    constantVolume  false;
+
+
+    rho0            1200.00; // [1] [kg/m3]
+    T0              298.00;
+    CpD             1254.00; // [1] [J/kgK]    // Fragmentation and diffusion model for coal pyrlysis
+    epsilon0        1.0; 
+    f0              0.5;
+    Le              1.0; 
+    Sc              0.7;
+    latentHeat      0.0; // [J/kg] // very small
+
+    constantVolume  false;
+}
+
+
+// Calculate fuel particle statistics on the fly
+eulerianStatistics
+{
+    enabled true;
+    
+    axisymmetric false;
+    symmetryPlane zx;
+    
+/*    U|d_x*/
+/*    (*/
+/*        (0e-06      5e-6)*/
+/*    (5e-06      10e-6)*/
+/*    (10e-06     15e-6)*/
+/*    (15e-06     20e-6)*/
+/*    (20e-06     25e-6)*/
+/*    (25e-06     30e-6)*/
+/*    (30e-06     35e-6)*/
+/*    (35e-06     40e-6)*/
+/*    (40e-06     45e-6)*/
+/*    (45e-06     50e-6)*/
+/*    (50e-06     55e-6)*/
+/*    (55e-06     60e-6)*/
+/*    );*/
+
+/*    U|d_y*/
+/*    (*/
+/*        (0e-06      5e-6)*/
+/*    (5e-06      10e-6)*/
+/*    (10e-06     15e-6)*/
+/*    (15e-06     20e-6)*/
+/*    (20e-06     25e-6)*/
+/*    (25e-06     30e-6)*/
+/*    (30e-06     35e-6)*/
+/*    (35e-06     40e-6)*/
+/*    (40e-06     45e-6)*/
+/*    (45e-06     50e-6)*/
+/*    (50e-06     55e-6)*/
+/*    (55e-06     60e-6)*/
+/*    );*/
+    
+
+    U|d_z
+    (
+    (0e-6       60e-6)
+    );
+}
+
+
+
+
+subModels
+{
+    particleForces
+    {
+/*        sphereDrag;*/
+/*        gravity;*/
+    }
+
+    injectionModels
+    {
+        model1
+        {
+            type            patchInjection;        // injection type
+            SOI             0.070782;            // second
+            massTotal       1.49;            // kg
+            parcelBasisType mass;            // unit: mass
+            patchName       mainJet;            // patch of injection
+            duration        10000;            // second
+            parcelsPerSecond 1e7;            // number of parcel per second
+            U0              (0 0 6.3662);        // metres/second
+            flowRateProfile constant 1;            // 
+            sizeDistribution                // parcel diameter distribution
+            {
+                type        general;
+                generalDistribution
+                {
+                    distribution            // size distribution of particle
+                    (
+                        ( 5e-06      0.2408)
+                        (10e-06      15.0883)
+                        (15e-06      15.8106)
+                        (20e-06      17.8170)
+                        (25e-06      11.7978)
+                        (30e-06      11.7978)
+                        (35e-06      11.3162)
+                        (40e-06      8.8283)
+                        (45e-06      2.4880)
+                        (50e-06      2.8090)
+                        (55e-06      0.7223)
+                        (60e-06      1.2841)
+                    );
+                }
+            }
+        }
+    }
+
+    dispersionModel none;
+    patchInteractionModel none;
+    surfaceFilmModel none;
+
+
+    pyrolysisModel    ArrheniusModel;
+
+    ArrheniusModelCoeffs
+    {
+        gamma                4.474E3;         //- pre-exponential factor
+        Ta                    2307.0;        //- activation temperature (k)
+
+        initial                0.3;         //- initial mass fraction of pyrolysis product within the fuel particle 
+
+        CH4                    1.0;        //- composition of immediate pyrolysis product [2]
+    }
+
+}
+
+// ************************************************************************* //
+// ************************************************************************* //
+//EFERENCES
+// [1] Chen et al., 2010, Journal of Analytical and Applied Pyrolysis. 
+// [2] Hara et al., 2015, Combustion and Flame. 
+// [3] Stein et al., 2013, Flow, Turbulence and Combustion. 

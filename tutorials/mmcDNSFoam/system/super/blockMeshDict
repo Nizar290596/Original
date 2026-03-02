@@ -1,0 +1,108 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.0.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 0.001;
+
+vertices
+(
+    (-4.32 -5.04 -2.88)
+    ( 4.32 -5.04 -2.88)
+    ( 4.32  5.04 -2.88)
+    (-4.32  5.04 -2.88)
+    (-4.32 -5.04  2.88)
+    ( 4.32 -5.04  2.88)
+    ( 4.32  5.04  2.88)
+    (-4.32  5.04  2.88)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (2 6 2) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    left
+    {
+        type cyclic;
+        neighbourPatch right;
+        faces
+        (
+            (0 4 7 3)
+        );
+        physicalType periodic;
+    }
+    right
+    {
+        type cyclic;
+        neighbourPatch left;
+        faces
+        (
+            (1 2 6 5)
+        );
+        physicalType periodic;
+    }
+
+    front
+    {
+        type cyclic;
+        neighbourPatch back;
+        faces
+        (
+            (6 7 4 5)
+        );
+        physicalType periodic;
+    }
+    back
+    {
+        type cyclic;
+        neighbourPatch front;
+        faces
+        (
+            (0 3 2 1)
+        );
+        physicalType periodic;
+    }
+
+    top  
+    {
+        type patch;
+        physicalType particleInflowOutflow;
+        faces
+        (
+            (2 3 7 6)
+        );
+    }
+    bottom
+    {
+        type patch;
+        physicalType particleInflowOutflow;
+        faces
+        (
+            (0 1 5 4)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

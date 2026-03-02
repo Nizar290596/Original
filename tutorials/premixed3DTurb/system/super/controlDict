@@ -1,0 +1,65 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.2                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     mmcPremixedFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.7;
+
+deltaT          1.75e-06;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.01;
+
+/*writeControl    timeStep;
+
+writeInterval   5;*/
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  12;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   7;
+
+runTimeModifiable true;
+maxCo           0.2;
+adjustTimeStep  false;
+
+CompressiblePISO true;
+
+libs (
+     "libsyntheticTurbulenceUMeanControl_modif.so"
+     );
+
+functions
+{
+}
+
+
+// ************************************************************************* //

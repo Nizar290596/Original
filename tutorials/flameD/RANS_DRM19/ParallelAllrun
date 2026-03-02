@@ -1,0 +1,13 @@
+#!/bin/sh
+
+blockMesh
+blockMesh -region super
+
+cp system/controlDict.1 system/controlDict
+
+decomposePar
+decomposePar -region super
+
+foamJob -p mmcRansFoam
+
+

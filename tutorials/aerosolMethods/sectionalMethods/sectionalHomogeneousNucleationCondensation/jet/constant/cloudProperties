@@ -1,0 +1,210 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.x                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    
+    class           dictionary;
+    object          cloudProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    //- FV fields to particle interpolation
+    
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff        cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+// Particle number control
+particleManagement
+{
+    numCtlOn    on;
+    
+    Npc         15;
+    Nlo         12;
+    Nhi         17;
+}
+
+subModels
+{
+    InflowBoundaryModel         FreeStream;
+    
+    compositionModel            singlePhaseMixture;
+    
+    radiationModel              none;
+
+    thermoPhysicalCouplingModel none;
+    
+    mixingModel                 MMCcurl;
+
+    sootModel                   none;
+
+    MMCcurlCoeffs
+    {
+        //- Parameters ri and fm as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri                 2e-04;
+
+        Ximi
+        {
+            fm              0.03;
+        }
+
+        localnessLimited   false;
+
+        fLowMixOnMaster     0.01;
+
+        fHighMixOnMaster       1;
+
+        fullSort            true;
+
+        aISO                true;
+
+        meanTimeScale       true;
+    }
+    
+    reactionModel               none;
+    
+    synthesisModel              sectionalHomogeneousNucleationCondensation;
+    
+    sectionalHomogeneousNucleationCondensationCoeffs
+    {
+        nSections       90;
+        d0              1e-09;
+        volGrowthFactor 1.7280002100845353;
+
+        nucleatingSpecies       C16H22O4;
+        inertSpecies                  N2;
+
+        liquidDensityModelCoeffs
+        {
+            //- density [kg/m^3] = m*T + n
+            m    -0.8;
+            n    1200;
+        }
+
+        surfaceTensionModelCoeffs
+        {
+            //- sigma [kg/s^2] = m*T + n
+            m   -0.0002;
+            n    0.1100;
+        }
+
+        saturationPressureModelCoeffs
+        {    
+            //- Psat [Pa] = 10^(a*T^2 + b*T + c);
+            a   -0.00012;
+            b    0.12;
+            c   -30;
+        }
+
+        nucleationRateModel     veroli;
+        condensationRateModel   FuchsSutugin;
+    }
+
+    printMoleFractions false;
+}
+
+thermophysicalCoupling
+{
+    // List of species for which equivalent mass fraction solutions are obtained on the FV grid    
+    N2;
+    O2;
+    C16H22O4;
+
+    condVariable        z;
+    
+    primarySpecies      C16H22O4;
+   
+    tauRelax            10;
+    tauUnits            timestep;
+}
+
+eulerianStatistics
+{
+    enabled          false;
+    axisymmetric     true;
+    symmetryPlane    zx;
+    
+    z;
+    f;
+    T;
+    wt;
+    df;
+    dx;
+
+    C16H22O4;
+    N2;
+    O2;
+
+    saturation;
+    nucleationRate;
+    condensationRate;
+
+    section00;
+    section01;
+    section02;
+    section03;
+    section04;
+    section05;
+    section06;
+    section07;
+    section08;
+    section09;
+    section10;
+    section11;
+    section12;
+    section13;
+    section14;
+    section15;
+    section16;
+    section17;
+    section18;
+    section19;
+    section20;
+    section21;
+    section22;
+    section23;
+    section24;
+    section25;
+    section26;
+    section27;
+    section28;
+    section29;
+    section30;
+    section31;
+}
+
+
+particleSampling
+{
+    enabled             false;
+
+
+    particleSampleProbes
+    {
+    }
+}
+
+// ************************************************************************* //

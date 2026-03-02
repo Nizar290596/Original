@@ -1,0 +1,9 @@
+# Source mmcFoam environment variables
+. ../../../../../etc/bashrc
+
+blockMesh
+
+blockMesh -region super
+
+mmcPbeFoam${MMC_APPLICATION_EXTENSION}
+

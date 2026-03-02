@@ -1,0 +1,123 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.x                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff	    cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f		    cellPoint;
+        p		    cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 10;
+    Nlo 8;
+    Nhi 14;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    sootModel           none;
+
+    radiationModel OpticallyThinRadiation;
+    OpticallyThinRadiationCoeffs
+    {
+        TRef     300;
+    }
+    //radiationModel none;
+
+    printMoleFractions false;
+    
+    thermoPhysicalCouplingModel FlameletCurves;
+
+    mixingModel		Curl;
+    // mixingModel none;
+ 
+    CurlCoeffs
+    {
+        //- Parameters for standard Curl's mixing model
+        CL                  0.50;      // inverse of standard factor equivalent to tau_phi=k/eps / 2 <=> chi=2*(phi')2/tau_turb
+        CE                  0.10;      // standard coefficient for LES variance
+    }
+
+    reactionModel finiteRateParticleChemistry;
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.1;
+        zUpper              0.9;
+    }
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled             true;
+
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+    N2;
+
+    condVariable        z;
+    
+    primarySpecies      CO2;
+    
+    tauRelaxBlending    false;
+    tauRelaxStart       1000;
+    tauRelaxDelta       2;
+    tauRelax            10;
+    tauUnits            timestep;
+}
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled false;
+}
+
+particleSampling
+{
+    enabled             false;
+}
+// ************************************************************************* //

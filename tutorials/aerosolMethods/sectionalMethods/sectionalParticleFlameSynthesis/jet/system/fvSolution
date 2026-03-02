@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "(p|pd|rho)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-08;
+        relTol          1e-02;
+    }
+
+    "(p|pd|rho)Final"
+    {
+        $p;
+        tolerance       1e-10;
+        relTol          0;
+    }
+
+    "(U|h|k|f|Xii|hEqvE|Yi)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-08;
+        relTol          1e-02;
+    }
+
+    "(U|h|k|f|Xii|hEqvE|Yi)Final"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor            yes;
+    nOuterCorrectors               2;
+    nCorrectors                    1;
+    nNonOrthogonalCorrectors       1;
+    rhoMin rhoMin [ 1 -3 0 0 0 ] 0.1;
+    rhoMax rhoMax [ 1 -3 0 0 0 ] 2.0;
+}
+
+PDFMETHOD
+{
+  pdfMethodOn        yes;
+  nSet                 1;
+  pdfScatPlotOn       no;
+  pdfScatPlotSize   5000;  // No of scatter data on each processor
+}
+
+// ************************************************************************* //

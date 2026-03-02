@@ -1,0 +1,171 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.1                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          cloudProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff        cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 10;
+    Nlo 8;
+    Nhi 14;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    // radiationModel OpticallyThinRadiation;
+    OpticallyThinRadiationCoeffs
+    {
+        TRef     300;
+    }
+    radiationModel none;
+
+    printMoleFractions false;
+    
+    thermoPhysicalCouplingModel FlameletCurves;
+    //thermoPhysicalCouplingModel KernelEstimation; // Under development
+
+    sootModel       none;
+
+    KernelEstimationCoeffs
+    {
+        fLow                0.03;   //lower flamability limit
+        fHigh               0.19;   //upper flamability limit
+        fm                  0.03;   //same as in mixing model
+        
+        condVariable        f;
+        dfMax               0.0075; //Maximum distance in f space allowed to do extrapolation            
+        C2                  0.1;    //used to control resolution
+    }
+
+    mixingModel		MMCcurl;
+    // mixingModel none;
+ 
+    MMCcurlCoeffs
+    {
+        //- Parameters ri and fm as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri                  2.5e-3;
+
+        Ximi
+        {
+            fm              0.04;
+        }
+
+        localnessLimited    false;
+
+        fLowMixOnMaster     0.01;
+        fHighMixOnMaster    1;
+
+        fullSort            false;
+        aISO                true; 
+        meanTimeScale       true; //true:mean false:max
+
+        pairingMethod       global;
+    }
+
+    //reactionModel odeParticleChemistry;
+    reactionModel flameSheetParticleChemistry;
+    
+    flameSheetParticleChemistryCoeffs
+    {
+        fSLU                (0.05 0 1); //(0.05  0.03  0.07);
+        Tquench             0; //1358;
+        
+        CH4                 (0      0       1.0);
+        O2                  (0.233  0       0  );
+        N2                  (0.767  0.725   0  );
+        CO2                 (0      0.151   0    );
+        H2O                 (0      0.124   0    );
+    }
+
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled    true;
+
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+
+    condVariable        z;
+    
+    primarySpecies      CO2;
+    
+    tauRelaxBlending    false;
+    tauRelaxStart       1000;
+    tauRelaxDelta       2;
+    tauRelax            10;
+    tauUnits            timestep;
+}
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled true;
+
+    z;
+    T;
+    CO2;
+}
+
+particleSampling
+{
+    enabled             false;
+
+    parallelSampling    false;
+
+    numParticlesToStore  1000;
+
+    particleSampleProbes
+    {
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,112 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.0.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 0.001;
+
+vertices
+(
+(0 0 0) // 0
+(32 0 0) // 1
+(32 16 0) // 2
+(0 16 0) // 3
+(0 0 16) // 4
+(32 0 16) // 5
+(32 16 16) // 6
+(0 16 16) // 7
+
+);
+
+blocks
+(
+hex (0 1 2 3 4 5 6 7) (32 16 16) simpleGrading (1 1 1) // block 0
+);
+
+edges
+(
+);
+
+boundary
+(
+	BOTTOM // name of the patch
+	{
+	  type cyclic; // type of the patch
+	  neighbourPatch TOP;
+	  faces
+	  (
+	   (0 1 5 4) // list of vertices
+	  );
+          physicalType periodic;
+	}
+	
+	TOP // name of the patch
+	{
+	  type cyclic; // type of the patch
+	  neighbourPatch BOTTOM;
+	  faces
+	  (
+	   (2 3 7 6) // list of vertices
+	  );
+	  physicalType periodic;
+	}
+	
+	SOUTH // name of the patch
+	{
+	  type cyclic; // type of the patch
+	  neighbourPatch NORTH;
+	  faces
+	  (
+	   (4 5 6 7) // list of vertices
+	  );
+          physicalType periodic;
+	}
+	
+	NORTH // name of the patch
+	{
+	  type cyclic; // type of the patch
+	  neighbourPatch SOUTH;
+	  faces
+	  (
+	   (0 3 2 1) // list of vertices
+	  );
+          physicalType periodic;
+	}
+	 
+	INLET // name of the patch
+	{
+	  type patch; // type of the patch
+	  faces
+	  (
+	   (0 4 7 3) // list of vertices
+	  );
+          physicalType particleInflowFreeOutflow;
+	}
+	
+	OUTLET // name of the patch
+	{
+	  type patch; // type of the patch
+	  faces
+	  (
+	   (1 2 6 5) // list of vertices
+	  );
+          physicalType particleOutflow;
+	}
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

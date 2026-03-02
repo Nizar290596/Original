@@ -1,0 +1,8 @@
+rm *e-* -rf
+rm -rf ItoPopeCloudOutFile.txt
+rm -rf postProcessing
+rm -rf constant/boundaryData
+
+rm -r constant/polyMesh
+rm -r constant/super
+rm -r constant/exMesh

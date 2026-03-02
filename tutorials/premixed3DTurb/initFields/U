@@ -1,0 +1,90 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField uniform (0.94 0 0);
+
+boundaryField
+{
+
+     BOTTOM                                                                                      
+     {
+         type            cyclic;
+     }
+     TOP
+     {
+         type            cyclic;
+     }
+     SOUTH 
+     {
+         type            cyclic;
+     }
+     NORTH
+     {
+         type            cyclic;
+     }
+     OUTLET
+     {
+         type            zeroGradient;
+     }
+     INLET
+     {
+        type            syntheticTurbulenceInletUMeanControl;
+        minfbl          0.1;
+        deltaIn         0.1;
+        bScaling        0.1;
+        kName           k;
+        omegaName       omega;
+        UrefName        Uref;
+        distType        uniform;
+        betaStar        0.09;
+        A               8.2841;
+        ft              1;
+        fampl           1;
+        fk              2;
+        fSpect          1;
+        nModes          100;
+        minK            0.0001;
+        tolerance       1e-06;
+        kwMin           1963.49541;
+        kwMax           31415.92654;
+        UControl        1;
+        lamControl      0;
+        Nx              64;
+        tauAF           100;
+        sL              0.94;
+        Rt              101.59367;
+        Ttarg           1000;
+        Xtarg           0.01;
+        dtRatio         1;
+        L               
+{
+        type            uniformLengthScale;
+        value           0.0032;
+}
+        value           uniform (0.94 0 0);
+     }
+     defaultFaces
+     {
+         type            empty;
+     }
+
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,174 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          sprayProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+solution
+{
+    //- FV fields to particle interpolation
+    interpolationSchemes
+    {
+        U           cellPoint;
+        DEff        cellPoint;
+        rho         cellPoint;
+        gradRho     cellPoint;
+        f           cellPoint;
+        p           cellPoint;
+    }
+}
+
+particleManagement
+{
+    //- Particle number control
+    numCtlOn         on;
+
+    Npc 15;
+    Nlo 10;
+    Nhi 20;
+}
+
+subModels
+{
+    InflowBoundaryModel          FreeStream;
+    //InflowBoundaryModel          NoInflow;
+
+    compositionModel singlePhaseMixture;
+    // compositionModel none;
+
+    radiationModel OpticallyThinRadiation;
+//    radiationModel none;
+
+/*    thermoPhysicalCouplingModel FlameletCurves;*/
+    thermoPhysicalCouplingModel KernelEstimation; // Under development
+    
+    KernelEstimationCoeffs
+    {
+        fLow                0.03;   //lower flamability limit
+        fHigh               0.9;   //upper flamability limit
+        fm                  0.03;   //same as in mixing model
+        
+        condVariable        f;
+        dfMax               0.0075; //Maximum distance in f space allowed to do extrapolation            
+        C2                  0.1;    //used to control resolution
+    }
+
+    mixingModel     MMCcurl;
+ 
+    MMCcurlCoeffs
+    {
+        //- Parameters ri and fm as per Eq.(29) Cleary & Klimenko, Phys Fluids 23, 115102, 2011
+        ri                  6.9e-3;
+
+        Ximi
+        {
+            fm              0.01;
+        }
+
+        localnessLimited    false;
+
+        fLowMixOnMaster     0.01;
+        fHighMixOnMaster    1;
+
+        fullSort            false;
+        aISO                true;
+        meanTimeScale       true; //true:mean false:max
+    }
+
+    printMoleFractions false;
+
+/*    reactionModel flameSheetParticleChemistry;*/
+    reactionModel finiteRateParticleChemistry;
+/*    reactionModel none;    */
+
+    flameSheetParticleChemistryCoeffs
+    {
+        fSLU                (0.055 0 1); //(0.05  0.03  0.07);
+        Tquench             0; //1358;
+        
+        CH4                 (0      0       1.0 );
+        O2                  (0.233  0       0   );
+        N2                  (0.767  0.720   0   );
+        CO2                 (0      0.111   0   );
+        H2O                 (0      0.124   0   );
+        H2                  (0      0.00139 0   );
+        CO                  (0      0.0374  0   );
+    }
+
+    finiteRateParticleChemistryCoeffs
+    {
+        zLower              0.03;
+        zUpper              0.19;
+    }
+    
+
+}
+
+//- ThermophysicalModel coupling
+thermophysicalCoupling
+{
+    enabled             true;
+    //- List of species for which equivalent
+    //  mass fraction solutions are obtained
+    //  on the FV grid
+    CH4;
+    O2;
+    CO2;
+    H2O;
+    N2;
+    CO; 
+    H2;
+    
+    primarySpecies      T;
+    condVariable        z; 
+
+    tauRelaxBlending    false; 
+    tauRelaxStart       1;
+    tauRelaxDelta       1;
+    tauRelax            10;
+    tauUnits            timestep;
+    debug               true;
+}
+
+// Calculate stochastic field statistics on the fly
+eulerianStatistics
+{
+    enabled false;
+
+    z;
+    T;
+    CO2;
+    CO;
+    O2;
+    CH4;
+}
+
+sectionalMethodProperties
+{
+    nSections 0;
+}
+
+
+particleSampling
+{
+    enabled             false;
+}
+
+// ************************************************************************* //

@@ -1,0 +1,26 @@
+rm -rf constant/polyMesh/boundary 
+rm -rf constant/polyMesh/faces 
+rm -rf constant/polyMesh/neighbour 
+rm -rf constant/polyMesh/owner 
+rm -rf constant/polyMesh/points 
+rm -rf constant/polyMesh/cellZones  
+rm -rf constant/polyMesh/faceZones  
+rm -rf constant/polyMesh/pointZones  
+rm -rf constant/polyMesh/sets
+
+rm -rf constant/super/polyMesh/boundary
+rm -rf constant/super/polyMesh/faces
+rm -rf constant/super/polyMesh/neighbour
+rm -rf constant/super/polyMesh/owner
+rm -rf constant/super/polyMesh/points
+rm -rf constant/super/polyMesh/cellZones
+rm -rf constant/super/polyMesh/faceZones
+rm -rf constant/super/polyMesh/pointZones
+rm -rf constant/super/polyMesh/sets
+
+rm -rf massConsistencyCheck.dat
+
+rm -rf samplingData
+
+rm -rf dynamicCode
+

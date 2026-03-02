@@ -1,0 +1,362 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+ * | =========                 |                                                 |
+ * | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+ * |  \\    /   O peration     | Version:  1.7.1                                 |
+ * |   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+ * |    \\/     M anipulation  |                                                 |
+ * \*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 1; 
+
+pi              3.141592653589793;
+radPiQuarter    #calc "$pi/4";
+
+D               0.00235;
+
+// positions * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *//
+
+Inlet   #calc "-6*$D"; 
+Nozzle  0.00;
+Outlet  #calc "70.18445744698163*$D";
+
+// core block inside nozzle * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ innerCoreBlockInlet    #calc "0.3*$D";
+MinnerCoreBlockInlet    #calc "-$innerCoreBlockInlet";
+
+ innerCoreBlockMiddle   #calc "0.3*$D";
+MinnerCoreBlockMiddle   #calc "-$innerCoreBlockMiddle";
+
+ innerCoreBlockOutlet   #calc "1*$D";
+MinnerCoreBlockOutlet   #calc "-$innerCoreBlockOutlet";
+
+// radius of inner bluff body edge * * * * * * * * * * * * * * * * * * * * * *//
+
+ innerBluffBodyEdgeInlet   #calc "0.5*$D";
+MinnerBluffBodyEdgeInlet   #calc "-$innerBluffBodyEdgeInlet";
+
+ innerBluffBodyEdgeMiddle  #calc "0.5*$D";
+MinnerBluffBodyEdgeMiddle  #calc "-$innerBluffBodyEdgeMiddle";
+
+ innerBluffBodyEdgeOutlet  #calc "3*$D";
+MinnerBluffBodyEdgeOutlet  #calc "-$innerBluffBodyEdgeOutlet";
+
+// radius of outer nozzle edge * * * * * * * * * * * * * * * * * * * * * * * *//
+
+ outerBluffBodyEdgeInlet   0.0135;
+MouterBluffBodyEdgeInlet  -0.0135;
+
+ outerBluffBodyEdgeMiddle  0.0135;
+MouterBluffBodyEdgeMiddle -0.0135;
+
+ outerBluffBodyEdgeOutlet  #calc "14*$D";
+MouterBluffBodyEdgeOutlet  #calc "-$outerBluffBodyEdgeOutlet";
+
+// edge of domain * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+domain   #calc "31.914893617*$D";
+Mdomain  #calc "-$domain";
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+vertices
+(
+    // Inlet
+    
+    ($innerCoreBlockMiddle      0.0                        $Nozzle)  // 0
+    (0.0                        $innerCoreBlockMiddle      $Nozzle)  // 1
+    ($MinnerCoreBlockMiddle     0.0                        $Nozzle)  // 2
+    (0.0                        $MinnerCoreBlockMiddle     $Nozzle)  // 3
+    
+    ($innerCoreBlockOutlet      0.0                        $Outlet)  // 4
+    (0.0                        $innerCoreBlockOutlet      $Outlet)  // 5
+    ($MinnerCoreBlockOutlet     0.0                        $Outlet)  // 6
+    (0.0                        $MinnerCoreBlockOutlet     $Outlet)  // 7
+    
+    ($innerBluffBodyEdgeMiddle  0.0                        $Nozzle)  // 8
+    (0.0                        $innerBluffBodyEdgeMiddle  $Nozzle)  // 9
+    ($MinnerBluffBodyEdgeMiddle 0.0                        $Nozzle)  // 10
+    (0.0                        $MinnerBluffBodyEdgeMiddle $Nozzle)  // 11
+    
+    ($innerBluffBodyEdgeOutlet  0.0                        $Outlet)  // 12
+    (0.0                        $innerBluffBodyEdgeOutlet  $Outlet)  // 13
+    ($MinnerBluffBodyEdgeOutlet 0.0                        $Outlet)  // 14
+    (0.0                        $MinnerBluffBodyEdgeOutlet $Outlet)  // 15
+    
+    // outer bluff edge 
+    ($outerBluffBodyEdgeInlet   0.0                        $Inlet)   // 16
+    (0.0                        $outerBluffBodyEdgeInlet   $Inlet)   // 17
+    ($MouterBluffBodyEdgeInlet  0.0                        $Inlet)   // 18 
+    (0.0                        $MouterBluffBodyEdgeInlet  $Inlet)   // 19
+    
+    ($outerBluffBodyEdgeMiddle  0.0                        $Nozzle)  // 20
+    (0.0                        $outerBluffBodyEdgeMiddle  $Nozzle)  // 21
+    ($MouterBluffBodyEdgeMiddle 0.0                        $Nozzle)  // 22
+    (0.0                        $MouterBluffBodyEdgeMiddle $Nozzle)  // 23
+
+    ($outerBluffBodyEdgeOutlet  0.0                        $Outlet)  // 24
+    (0.0                        $outerBluffBodyEdgeOutlet  $Outlet)  // 25
+    ($MouterBluffBodyEdgeOutlet 0.0                        $Outlet)  // 26
+    (0.0                        $MouterBluffBodyEdgeOutlet $Outlet)  // 27 
+    
+    // domain edge  
+    ($domain                    0.0                        $Inlet)   // 28
+    (0.0                        $domain                    $Inlet)   // 29
+    ($Mdomain                   0.0                        $Inlet)   // 30
+    (0.0                        $Mdomain                   $Inlet)   // 31
+    
+    ($domain                    0.0                        $Nozzle)  // 32
+    (0.0                        $domain                    $Nozzle)  // 33
+    ($Mdomain                   0.0                        $Nozzle)  // 34
+    (0.0                        $Mdomain                   $Nozzle)  // 35
+
+    ($domain                    0.0                        $Outlet)  // 36
+    (0.0                        $domain                    $Outlet)  // 37
+    ($Mdomain                   0.0                        $Outlet)  // 38
+    (0.0                        $Mdomain                   $Outlet)  // 39
+);
+
+// mesh resolution and stretching
+
+//centerblock resolution
+nCoreBlockPoints 8;
+
+// radial nozzle resolution
+nRadialNozzlePoints 8; 
+sRadialNozzleInlet  0.4;
+sRadialNozzleOutlet 1;
+
+// radial bluff body resolution
+nRadialBluffBodyPoints 30;
+sRadialBluffBodyInlet  20; 
+sRadialBluffBodyOutlet 1; 
+
+// radial coflow resolution
+nRadialCoflowPoints 10; 
+sRadialCoflowInlet  4;
+sRadialCoflowOutlet 4;
+
+// axial resolution
+nInlet 20; //20;
+sInlet 0.05;
+
+nOutlet 310; //300;
+sOutlet 10;
+
+// block definitions
+blocks
+(
+    // center block 
+    hex ( 0  1  2  3  4  5  6  7) ($nCoreBlockPoints $nCoreBlockPoints $nOutlet)       simpleGrading (1 1 $sOutlet)  // jet
+    
+    // nozzle
+    hex ( 0  8  9  1  4 12 13  5) ($nRadialNozzlePoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialNozzleInlet $sRadialNozzleInlet $sRadialNozzleOutlet $sRadialNozzleOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex ( 1  9 10  2  5 13 14  6) ($nRadialNozzlePoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialNozzleInlet $sRadialNozzleInlet $sRadialNozzleOutlet $sRadialNozzleOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex ( 2 10 11  3  6 14 15  7) ($nRadialNozzlePoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialNozzleInlet $sRadialNozzleInlet $sRadialNozzleOutlet $sRadialNozzleOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+    hex ( 3 11  8  0  7 15 12  4) ($nRadialNozzlePoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialNozzleInlet $sRadialNozzleInlet $sRadialNozzleOutlet $sRadialNozzleOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+    
+    // bluff body
+    hex ( 8 20 21  9 12 24 25 13) ($nRadialBluffBodyPoints $nCoreBlockPoints $nOutlet) edgeGrading ($sRadialBluffBodyInlet $sRadialBluffBodyInlet $sRadialBluffBodyOutlet $sRadialBluffBodyOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex ( 9 21 22 10 13 25 26 14) ($nRadialBluffBodyPoints $nCoreBlockPoints $nOutlet) edgeGrading ($sRadialBluffBodyInlet $sRadialBluffBodyInlet $sRadialBluffBodyOutlet $sRadialBluffBodyOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex (10 22 23 11 14 26 27 15) ($nRadialBluffBodyPoints $nCoreBlockPoints $nOutlet) edgeGrading ($sRadialBluffBodyInlet $sRadialBluffBodyInlet $sRadialBluffBodyOutlet $sRadialBluffBodyOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+    hex (11 23 20  8 15 27 24 12) ($nRadialBluffBodyPoints $nCoreBlockPoints $nOutlet) edgeGrading ($sRadialBluffBodyInlet $sRadialBluffBodyInlet $sRadialBluffBodyOutlet $sRadialBluffBodyOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+    
+    // coflow
+    hex (16 28 29 17 20 32 33 21) ($nRadialCoflowPoints $nCoreBlockPoints $nInlet)     edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet 1 1 1 1 $sInlet $sInlet $sInlet $sInlet)  
+    hex (17 29 30 18 21 33 34 22) ($nRadialCoflowPoints $nCoreBlockPoints $nInlet)     edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet 1 1 1 1 $sInlet $sInlet $sInlet $sInlet)  
+    hex (18 30 31 19 22 34 35 23) ($nRadialCoflowPoints $nCoreBlockPoints $nInlet)     edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet 1 1 1 1 $sInlet $sInlet $sInlet $sInlet)
+    hex (19 31 28 16 23 35 32 20) ($nRadialCoflowPoints $nCoreBlockPoints $nInlet)     edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowInlet 1 1 1 1 $sInlet $sInlet $sInlet $sInlet)
+        
+    hex (20 32 33 21 24 36 37 25) ($nRadialCoflowPoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowOutlet $sRadialCoflowOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex (21 33 34 22 25 37 38 26) ($nRadialCoflowPoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowOutlet $sRadialCoflowOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)  
+    hex (22 34 35 23 26 38 39 27) ($nRadialCoflowPoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowOutlet $sRadialCoflowOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+    hex (23 35 32 20 27 39 36 24) ($nRadialCoflowPoints $nCoreBlockPoints $nOutlet)    edgeGrading ($sRadialCoflowInlet $sRadialCoflowInlet $sRadialCoflowOutlet $sRadialCoflowOutlet 1 1 1 1 $sOutlet $sOutlet $sOutlet $sOutlet)
+);
+
+// interpolation coordinates for circular edges (cos(45°)*radius)
+
+// 0.707106781*circInnerCoreBlockInlet
+ circInnerCoreBlockInlet  #calc "0.9*$innerCoreBlockInlet*cos($radPiQuarter)";
+McircInnerCoreBlockInlet  #calc "-$circInnerCoreBlockInlet";
+
+ circInnerCoreBlockOutlet  #calc "0.9*$innerCoreBlockOutlet*cos($radPiQuarter)";
+McircInnerCoreBlockOutlet  #calc "-$circInnerCoreBlockOutlet";
+
+// 0.707106781*circInnerBluffBodyEdgeInlet
+ circInnerBluffBodyEdgeInlet   #calc "$innerBluffBodyEdgeInlet*cos($radPiQuarter)";
+McircInnerBluffBodyEdgeInlet   #calc "-$circInnerBluffBodyEdgeInlet";
+
+ circInnerBluffBodyEdgeOutlet  #calc "$innerBluffBodyEdgeOutlet*cos($radPiQuarter)";
+McircInnerBluffBodyEdgeOutlet  #calc "-$circInnerBluffBodyEdgeOutlet";
+
+// 0.707106781*circOuterBluffBodyEdgeInlet
+ circOuterBluffBodyEdgeInlet   #calc "$outerBluffBodyEdgeInlet*cos($radPiQuarter)";
+McircOuterBluffBodyEdgeInlet   #calc "-$circOuterBluffBodyEdgeInlet";
+
+ circOuterBluffBodyEdgeOutlet  #calc "$outerBluffBodyEdgeOutlet*cos($radPiQuarter)";
+McircOuterBluffBodyEdgeOutlet  #calc "-$circOuterBluffBodyEdgeOutlet";
+
+// 0.707106781*circDomain;
+ circDomain           #calc "$domain*cos($radPiQuarter)";
+McircDomain           #calc "-$circDomain";
+
+edges
+(
+    // core block
+    arc 0  1  ($circInnerCoreBlockInlet          $circInnerCoreBlockInlet       $Nozzle)
+    arc 1  2  ($McircInnerCoreBlockInlet         $circInnerCoreBlockInlet       $Nozzle)
+    arc 2  3  ($McircInnerCoreBlockInlet         $McircInnerCoreBlockInlet      $Nozzle)
+    arc 3  0  ($circInnerCoreBlockInlet          $McircInnerCoreBlockInlet      $Nozzle)
+    
+    arc 4  5  ($circInnerCoreBlockOutlet         $circInnerCoreBlockOutlet      $Outlet)
+    arc 5  6  ($McircInnerCoreBlockOutlet        $circInnerCoreBlockOutlet      $Outlet)
+    arc 6  7  ($McircInnerCoreBlockOutlet        $McircInnerCoreBlockOutlet     $Outlet)
+    arc 7  4  ($circInnerCoreBlockOutlet         $McircInnerCoreBlockOutlet     $Outlet)
+    
+    // inner bluff body
+    arc 8   9 ($circInnerBluffBodyEdgeInlet      $circInnerBluffBodyEdgeInlet   $Nozzle)
+    arc 9  10 ($McircInnerBluffBodyEdgeInlet     $circInnerBluffBodyEdgeInlet   $Nozzle)
+    arc 10 11 ($McircInnerBluffBodyEdgeInlet     $McircInnerBluffBodyEdgeInlet  $Nozzle)
+    arc 11  8 ($circInnerBluffBodyEdgeInlet      $McircInnerBluffBodyEdgeInlet  $Nozzle)
+    
+    arc 12 13 ($circInnerBluffBodyEdgeOutlet     $circInnerBluffBodyEdgeOutlet  $Outlet)
+    arc 13 14 ($McircInnerBluffBodyEdgeOutlet    $circInnerBluffBodyEdgeOutlet  $Outlet)
+    arc 14 15 ($McircInnerBluffBodyEdgeOutlet    $McircInnerBluffBodyEdgeOutlet $Outlet)
+    arc 15 12 ($circInnerBluffBodyEdgeOutlet     $McircInnerBluffBodyEdgeOutlet $Outlet)
+        
+    // outer bluff body
+    arc 16 17 ($circOuterBluffBodyEdgeInlet      $circOuterBluffBodyEdgeInlet   $Inlet)
+    arc 17 18 ($McircOuterBluffBodyEdgeInlet     $circOuterBluffBodyEdgeInlet   $Inlet)
+    arc 18 19 ($McircOuterBluffBodyEdgeInlet     $McircOuterBluffBodyEdgeInlet  $Inlet)
+    arc 19 16 ($circOuterBluffBodyEdgeInlet      $McircOuterBluffBodyEdgeInlet  $Inlet)
+    
+    arc 20 21 ($circOuterBluffBodyEdgeInlet      $circOuterBluffBodyEdgeInlet   $Nozzle)
+    arc 21 22 ($McircOuterBluffBodyEdgeInlet     $circOuterBluffBodyEdgeInlet   $Nozzle)
+    arc 22 23 ($McircOuterBluffBodyEdgeInlet     $McircOuterBluffBodyEdgeInlet  $Nozzle)
+    arc 23 20 ($circOuterBluffBodyEdgeInlet      $McircOuterBluffBodyEdgeInlet  $Nozzle)
+    
+    arc 24 25 ($circOuterBluffBodyEdgeOutlet     $circOuterBluffBodyEdgeOutlet  $Outlet)
+    arc 25 26 ($McircOuterBluffBodyEdgeOutlet    $circOuterBluffBodyEdgeOutlet  $Outlet)
+    arc 26 27 ($McircOuterBluffBodyEdgeOutlet    $McircOuterBluffBodyEdgeOutlet $Outlet)
+    arc 27 24 ($circOuterBluffBodyEdgeOutlet     $McircOuterBluffBodyEdgeOutlet $Outlet)
+    
+    // domain
+    arc 28 29 ($circDomain                       $circDomain                    $Inlet)
+    arc 29 30 ($McircDomain                      $circDomain                    $Inlet)
+    arc 30 31 ($McircDomain                      $McircDomain                   $Inlet)
+    arc 31 28 ($circDomain                       $McircDomain                   $Inlet)
+    
+    arc 32 33 ($circDomain                       $circDomain                    $Nozzle)
+    arc 33 34 ($McircDomain                      $circDomain                    $Nozzle)
+    arc 34 35 ($McircDomain                      $McircDomain                   $Nozzle)
+    arc 35 32 ($circDomain                       $McircDomain                   $Nozzle)
+    
+    arc 36 37 ($circDomain                       $circDomain                    $Outlet)
+    arc 37 38 ($McircDomain                      $circDomain                    $Outlet)
+    arc 38 39 ($McircDomain                      $McircDomain                   $Outlet)
+    arc 39 36 ($circDomain                       $McircDomain                   $Outlet)
+);
+
+boundary
+(   
+    inletJet
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (0  1  2  3)
+            
+            (0  8  9  1)
+            (1  9 10  2)
+            (2 10 11  3)
+            (3 11  8  0)
+        );
+    }
+    
+    bluffBody
+    {
+        type wall;
+        physicalType noParticleOutflow;
+        faces
+        (
+            // upper ring
+            ( 8 20 21  9)
+            ( 9 21 22 10)
+            (10 22 23 11)
+            (11 23 20  8)
+            
+            // outer wall
+            (16 20 21 17)
+            (17 21 22 18)
+            (18 22 23 19)
+            (19 23 20 16)
+        );
+    }
+    
+    inletCoflow
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (16 28 29 17)  
+            (17 29 30 18)
+            (18 30 31 19)
+            (19 31 28 16)
+        );
+    }
+    
+    outlet
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            ( 4  5  6  7)
+        
+            ( 4 12 13  5)
+            ( 5 13 14  6)
+            ( 6 14 15  7)
+            ( 7 15 12  4)
+        
+            (12 24 25 13)
+            (13 25 26 14)
+            (14 26 27 15)
+            (15 27 24 12)
+        
+            (24 36 37 25)
+            (25 37 38 26)
+            (26 38 39 27)
+            (27 39 36 24)
+        );
+    }
+    
+    side
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (28 32 33 29)
+            (29 33 34 30)
+            (30 34 35 31)
+            (31 35 32 28)
+            
+            (32 36 37 33)
+            (33 37 38 34)
+            (34 38 39 35)
+            (35 39 36 32)
+        );   
+    }
+);
+
+/// ************************************************************************* //

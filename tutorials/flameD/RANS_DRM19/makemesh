@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# ------------------------
+# Making mesh and creating patches for Finite Volume mesh
+# ------------------------ 
+blockMesh
+
+i=1
+if [ -f log.topoSet ] ; then
+   i=3
+fi
+while [ "$i" -lt 3 ] ; do
+    if [ -f log.topoSet ] ; then
+        mv log.topoSet log.topoSet.1
+    fi
+    cp system/topoSetDict.${i} system/topoSetDict
+    topoSet
+    refineMesh -dict system/refineMeshDict
+    cp -r 2e-05/polyMesh/* constant/polyMesh
+    rm -rf 2e-05
+    i=`expr $i + 1`
+done
+
+# Creating patches for inletFuel and pilot
+setSet -batch makeFaceSet.setSet
+createPatch -overwrite
+
+# ------------------------
+# Making mesh and creating patches for PDF mesh
+# ------------------------ 
+blockMesh -region super
+
+i=1
+if [ -f log.topoSet ] ; then
+   i=3
+fi
+while [ "$i" -lt 3 ] ; do
+    if [ -f log.topoSet ] ; then
+        mv log.topoSet log.topoSet.1
+    fi
+    cp system/super/topoSetDict.${i} system/super/topoSetDict
+    topoSet -region super
+    refineMesh -region super -dict system/refineMeshDict
+    cp -r 2e-05/super/polyMesh/* constant/super/polyMesh
+    rm -rf 2e-05
+    i=`expr $i + 1`
+done
+
+# Creating patches for inletFuel and pilot
+setSet -batch makeFaceSet.setSet -region super
+createPatch -overwrite -region super
+
+
+# ----------------------------------------------------------------- end-of-file

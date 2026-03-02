@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 0.001;
+
+mergeType points;
+
+vertices
+(
+// BASE
+// front left
+    (-17.5  -17.5  0 ) //0
+
+// front right
+    ( 17.5  -17.5  0 ) //1
+    
+// back right
+    ( 17.5   17.5  0 ) //2
+    
+// back left
+    (-17.5   17.5  0 ) //3
+
+// TOP
+// front left
+    (-17.5  -17.5  70) //4
+
+// front right
+    ( 17.5  -17.5  70) //5
+    
+// back right
+    ( 17.5   17.5  70) //6
+    
+// back left
+    (-17.5   17.5  70) //7
+
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (14 14 28) simpleGrading (1 1 1) //PP
+);
+
+edges
+(
+);
+
+boundary
+(
+    outlet
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
+    
+    side
+    {
+        type patch;
+        physicalType particleOutflow;
+        faces
+        (
+            (0 1 5 4)
+            (1 2 6 5)
+            (2 3 7 6)
+            (3 0 4 7)
+        );
+    }
+    
+    inletCoflow
+    {
+        type patch;
+        physicalType noParticleOutflow;
+        faces
+        (
+            (0 1 2 3)
+        );
+    }
+    
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

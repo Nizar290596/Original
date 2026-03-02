@@ -1,0 +1,8 @@
+ 
+CHEMKIN-CFD(TM) Module
+Release 20141; Build Date: Mar 7, 2016
+Copyright(c) 1997-2014 Reaction Design.  All rights reserved.
+File Formats Compatible with CHEMKIN(R) 15131/10131 Libraries
+ 
+Begin CHEMKIN-CFD pre-processing of Gas-phase chemistry mechanism
+Failure in CHEMKIN-CFD pre-processing of Gas-phase chemistry mechanism

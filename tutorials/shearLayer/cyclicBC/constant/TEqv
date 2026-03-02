@@ -1,0 +1,61 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    class           dictionary;
+    object          ThermoPopeCloud;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+fileName    "T";
+
+fields
+(
+    {
+        N 1;
+        max 1;
+        min 0;
+        name f;
+    }
+);
+
+output
+(
+    {
+       name f;
+    }
+    {
+       name T0;
+    }
+);
+
+values
+(
+    // f 
+    2
+    (
+        0.00000e-04
+        1.00000e-01
+    )
+
+    // line 1
+    2
+    (
+        5.00000e+02
+        5.00000e+02
+    )
+);

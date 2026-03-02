@@ -1,0 +1,14 @@
+# Source mmcFoam environment variables
+set -e 
+. ../../../etc/bashrc
+
+blockMesh
+blockMesh -region super
+blockMesh -region exMesh
+
+cp system/itvInflowDict system/controlDict
+itvInflow
+
+cp system/mmcFoamDict system/controlDict
+mmcFoam${MMC_APPLICATION_EXTENSION}
+

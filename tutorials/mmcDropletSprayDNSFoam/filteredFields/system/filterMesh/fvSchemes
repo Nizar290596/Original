@@ -1,0 +1,78 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+ddtSchemes
+{
+    default                                             backward;
+}
+
+gradSchemes
+{
+    default                                         Gauss linear;
+}
+
+divSchemes
+{
+    default                                                 none;
+    div(phi,U)                                      Gauss linear;
+
+    div(phi,Xii)        Gauss multivariateIndependent
+    {
+        f               limitedLinear01 1;
+        c               limitedLinear01 1;
+    };
+
+    div(phi,Yi_h)       Gauss multivariateSelection
+    {
+        O2                limitedLinear 1;
+        CH4               limitedLinear 1;
+        CO2               limitedLinear 1;
+        H2O               limitedLinear 1;
+        CO                limitedLinear 1;
+        H2                limitedLinear 1;
+        N2                limitedLinear 1;
+        C2H5OH            limitedLinear 1;
+        h                 limitedLinear 1;
+    };
+
+    div(((rho*nuEff)*dev2(T(grad(U)))))             Gauss linear;
+}
+
+laplacianSchemes
+{
+    default                              Gauss linear orthogonal;
+}
+
+interpolationSchemes
+{
+    default                                               linear;
+}
+
+snGradSchemes
+{
+    default                                           orthogonal;
+}
+
+fluxRequired
+{
+    default                                                   no;
+    p;
+}
+
+
+// ************************************************************************* //

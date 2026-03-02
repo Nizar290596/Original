@@ -1,0 +1,6 @@
+blockMesh
+blockMesh -region super
+
+cp system/mmcSprayFoamDict system/controlDict
+
+mmcSprayFoam
