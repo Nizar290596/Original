@@ -31,7 +31,8 @@ Description
         DOI: 10.1016/j.proci.2016.07.116
 
     Stage 1 — full particle set, shadow-position pairing, mix only c.
-    Stage 2 — random subset,     phi* pairing,             mix reactive scalars.
+    Stage 2 — flame-zone subset (c in [cMin, cMax]),
+               phi* pairing, mix reactive scalars.
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,19 +51,12 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
 :
     mixParticleModel<CloudType>(dict, owner, typeName, Xi),
 
+    Tu_(this->coeffDict().lookupOrDefault("Tu", 298.0)),
+    Tb_(this->coeffDict().lookupOrDefault("Tb", 2240.0)),
+    cMin_(this->coeffDict().lookupOrDefault("cMin", 0.05)),
+    cMax_(this->coeffDict().lookupOrDefault("cMax", 0.95)),
     CL_(this->coeffDict().lookupOrDefault("CL", 0.1)),
-
     beta_(this->coeffDict().lookupOrDefault("beta", 1.0)),
-
-    subsetFraction_
-    (
-        this->coeffDict().lookupOrDefault<scalar>("subsetFraction", 0.25)
-    ),
-
-    subsetN_
-    (
-        this->coeffDict().lookupOrDefault<label>("subsetN", 0)
-    ),
 
     couplingVarName_
     (
@@ -133,10 +127,12 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
 )
 :
     mixParticleModel<CloudType>(cm),
+    Tu_(cm.Tu_),
+    Tb_(cm.Tb_),
+    cMin_(cm.cMin_),
+    cMax_(cm.cMax_),
     CL_(cm.CL_),
     beta_(cm.beta_),
-    subsetFraction_(cm.subsetFraction_),
-    subsetN_(cm.subsetN_),
     couplingVarName_(cm.couplingVarName_),
     wOUVarName_(cm.wOUVarName_),
     numShadowPos_(cm.numShadowPos_),
@@ -149,29 +145,32 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
 }
 
 
-// * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * * //
-
-template<class CloudType>
-Foam::label Foam::sparsePremixedMMCcurl<CloudType>::stage2Size(label N) const
-{
-    if (subsetN_ > 0)
-        return min(subsetN_, N);
-
-    return max(label(2), label(N * subsetFraction_));
-}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
 {
     // ------------------------------------------------------------------
+    // Step 0 — Compute the progress variable c for all LOCAL particles
+    // from the particle temperature before gathering parallel data.
+    //
+    //   c = (T_p - Tu) / (Tb - Tu)  clamped to [0, 1]      (eq. 1)
+    //
+    // This must be done before buildParticleList() so that the updated
+    // c values are included when remote processors gather this
+    // processor's particle data.
+    // ------------------------------------------------------------------
+    forAllIter(CloudType, this->owner(), pIter)
+    {
+        particleType& p = pIter();
+        p.XiC()[cIndex_] = progressVar(p.T());
+    }
+
+    // ------------------------------------------------------------------
     // Build the global particle list.
-    // eulerianFieldDataList_ receives XiR = [sPx, sPy, sPz, wOU] for
-    // every particle (local + gathered remote processors in parallel).
-    // buildParticleList() also calls findPairs() internally, but we
-    // rebuild the pairs ourselves below for each stage.
+    // eulerianFieldDataList_ receives XiR = [sPx, sPy, sPz, wOU] and
+    // XiC (including the freshly computed c above) for every particle
+    // (local + gathered remote processors in parallel).
     // ------------------------------------------------------------------
     this->buildParticleList();
 
@@ -183,9 +182,10 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
 
     // ------------------------------------------------------------------
     // STAGE 1 — Full particle set, shadow-position pairing, mix only c
+    //
+    // XiR is restricted to [sPx, sPy, sPz] (first numShadowPos_ entries).
+    // The pairing kdTree therefore operates purely in shadow-position space.
     // ------------------------------------------------------------------
-
-    // Copy list and restrict XiR to the shadow-position components only.
     DynamicList<eulerianFieldData> stage1List(this->eulerianFieldDataList_);
 
     forAll(stage1List, i)
@@ -202,70 +202,44 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
     smixStage1(stage1Pairs, deltaT);
 
     // ------------------------------------------------------------------
-    // STAGE 2 — Random subset, phi* pairing, mix reactive scalars
+    // STAGE 2 — Flame-zone subset, phi* pairing, mix reactive scalars
     //
-    //   phi* = c * exp(beta * wOU)
+    //   Subset criterion : c in [cMin_, cMax_]
+    //   Modified progress variable: phi* = c * exp(beta_ * wOU)
     //
-    // The subset is chosen by a partial Fisher-Yates shuffle so that
-    // every particle has equal probability of inclusion.
-    //
-    // For consistent pairing across local and remote particles the
-    // Eulerian c field is interpolated at each particle's position
-    // (rather than using p.XiC()[cIndex_] which is unavailable for
-    // remote particles). The actual Curl mixing step uses p.XiC()
-    // which is the true particle value (local particles only).
+    // c is read from XiC[cIndex_] in eulerianFieldDataList_, which was
+    // populated from p.T() (via eq. 1) before buildParticleList().
+    // Only flame-zone particles (not fully unburned or fully burned) are
+    // included — this is the sparsity mechanism of Sundaram & Klimenko.
     // ------------------------------------------------------------------
+    DynamicList<eulerianFieldData> stage2List;
 
-    const label M = stage2Size(N);
-
-    // Create index array [0, 1, ..., N-1] and partially shuffle it
-    // to obtain M randomly chosen indices.
-    std::vector<label> indices(N);
-    std::iota(indices.begin(), indices.end(), 0);
-
-    std::mt19937 rng(static_cast<unsigned>(
-        this->owner().mesh().time().timeIndex()
-      + Pstream::myProcNo() * 1000));
-
-    for (label i = 0; i < M; i++)
+    forAll(this->eulerianFieldDataList_, i)
     {
-        std::uniform_int_distribution<label> dist(i, N - 1);
-        std::swap(indices[i], indices[dist(rng)]);
+        const eulerianFieldData& ef = this->eulerianFieldDataList_[i];
+
+        const scalar c_p   = ef.XiC()[cIndex_];
+        const scalar wOU_p = ef.XiR()[wOUIndex_];
+
+        if (c_p < cMin_ || c_p > cMax_)
+            continue;
+
+        eulerianFieldData efSubset = ef;  // copy (preserves particleIndex)
+
+        const scalar phiStar = c_p * Foam::exp(beta_ * wOU_p);
+        efSubset.XiR() = scalarField(1, phiStar);
+
+        stage2List.append(efSubset);
     }
 
-    // Interpolate Eulerian c at each selected particle's position.
-    const volScalarField& cField =
-        this->owner().mesh().objectRegistry::
-            lookupObject<volScalarField>(couplingVarName_);
-
-    interpolationCellPoint<scalar> cInterp(cField);
-
-    // Build the Stage 2 subset list with XiR = [phi*].
-    DynamicList<eulerianFieldData> stage2List(M);
-
-    for (label i = 0; i < M; i++)
-    {
-        const label idx = indices[i];
-        eulerianFieldData ef = this->eulerianFieldDataList_[idx];  // copy
-
-        const vector& pos  = ef.position();
-        const label   cell = this->owner().mesh().findCell(pos);
-
-        scalar c_p   = cInterp.interpolate(pos, cell, -1);
-        c_p          = Foam::max(c_p, VSMALL);
-
-        scalar wOU_p = this->eulerianFieldDataList_[idx].XiR()[wOUIndex_];
-
-        scalar phiStar = c_p * Foam::exp(beta_ * wOU_p);
-
-        ef.XiR() = scalarField(1, phiStar);
-        stage2List.append(ef);
-    }
+    if (stage2List.size() < 2)
+        return;
 
     DynamicList<List<label>> stage2Pairs;
     this->findPairs(stage2List, stage2Pairs);
 
-    // Mix reactive scalars using stage2List to resolve pair indices.
+    // Pair indices in stage2Pairs resolve into stage2List, NOT
+    // eulerianFieldDataList_. smixStage2 receives stage2List explicitly.
     smixStage2(stage2List, stage2Pairs, deltaT);
 }
 
@@ -328,7 +302,7 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage1
 
 
 // -----------------------------------------------------------------------
-// Stage 2 helper — pairs indexed into subsetList (the Stage 2 subset)
+// Stage 2 helper — pairs indexed into subsetList (the flame-zone subset)
 // -----------------------------------------------------------------------
 
 template<class CloudType>
@@ -344,7 +318,8 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage2
         const label sz = pair.size();
         if (sz == 2)
         {
-            // Pairs are indexed into subsetList, not eulerianFieldDataList_
+            // Pairs are indexed into subsetList, not eulerianFieldDataList_.
+            // particleIndex() still refers into particleList_.
             const eulerianFieldData& e1 = subsetList[pair[0]];
             const eulerianFieldData& e2 = subsetList[pair[1]];
 
@@ -526,15 +501,13 @@ void Foam::sparsePremixedMMCcurl<CloudType>::printInfo()
          << token::TAB << "Stage 1 — full set, shadow-position pairing:" << nl
          << token::TAB << "  CL:                  " << CL_              << nl
          << token::TAB << "  mixes only:          " << couplingVarName_ << nl
-         << token::TAB << "Stage 2 — subset, phi* pairing:" << nl
-         << token::TAB << "  beta (phi* coeff):   " << beta_            << nl;
-    if (subsetN_ > 0)
-        Info << token::TAB
-             << "  subset size (fixed): " << subsetN_ << nl;
-    else
-        Info << token::TAB
-             << "  subset fraction:     " << subsetFraction_ << nl;
-    Info << token::TAB << "  progress variable:   " << couplingVarName_ << nl
+         << token::TAB << "Stage 2 — flame-zone subset, phi* pairing:"  << nl
+         << token::TAB << "  Tu (unburned) [K]:   " << Tu_              << nl
+         << token::TAB << "  Tb (burned)   [K]:   " << Tb_              << nl
+         << token::TAB << "  cMin (subset lower): " << cMin_            << nl
+         << token::TAB << "  cMax (subset upper): " << cMax_            << nl
+         << token::TAB << "  beta (phi* coeff):   " << beta_            << nl
+         << token::TAB << "  progress variable:   " << couplingVarName_ << nl
          << token::TAB << "    -> XiC index:      " << cIndex_          << nl
          << token::TAB << "  OU variable:         " << wOUVarName_       << nl
          << token::TAB << "    -> XiR index:      " << wOUIndex_         << nl

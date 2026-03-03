@@ -36,39 +36,54 @@ Description
         - sPx, sPy, sPz : shadow positions (primary conditioning)
         - wOU           : bounded Ornstein-Uhlenbeck variable
 
-    Two sequential mixing stages per time step:
+    Progress variable
+    -----------------
+    c is computed every time step from each particle's temperature using
 
-      Stage 1 — Shadow-position pairing (full particle set)
+        c = (T_p - Tu) / (Tb - Tu)                              (1)
+
+    clamped to [0, 1], where T_p is the particle temperature (p.T()),
+    Tu is the unburned temperature, and Tb is the burned temperature.
+    The result is stored in the particle's XiC array (XiC[cIndex_]).
+    For remote particles in parallel runs, T is interpolated from the
+    Eulerian "T" field at the particle's position.
+
+    Two sequential mixing stages per time step
+    ------------------------------------------
+      Stage 1 — Shadow-position pairing  (full particle set)
         ALL particles are paired in [position, sPx, sPy, sPz] space.
-        Only the progress variable c is mixed between paired particles.
+        Only the progress variable c is mixed.
 
-      Stage 2 — Modified progress variable pairing (subset of particles)
-        A RANDOM SUBSET of particles (size controlled by subsetFraction or
-        subsetN) is selected from the full set. For each particle in the
-        subset the modified progress variable is computed:
+      Stage 2 — Modified progress variable pairing  (flame-zone subset)
+        Only particles with c in [cMin, cMax] (default [0.05, 0.95])
+        are included. These are the flame-zone particles; fully unburned
+        or fully burned particles are excluded. For each selected particle:
             phi* = c * exp(beta * wOU)
-        The subset is re-paired in [position, phi*] space. All reactive
+        The subset is paired in [position, phi*] space and all reactive
         scalars (all XiC except c) are mixed.
 
-    This subset-based Stage 2 is what makes the method sparse: the paper
-    (Sundaram & Klimenko 2017) demonstrates that ~2500 particles are
-    sufficient for Stage 2 when the full Stage 1 set has 10000 particles.
+        This flame-zone filter is the sparsity mechanism described in
+        Sundaram & Klimenko 2017: the reactive-scalar mixing only needs
+        the fraction of particles inside the flame, dramatically reducing
+        the number required for Stage 2 (e.g. 2500 from 10000).
 
-    Coefficients (sparsePremixedMMCcurlCoeffs):
-        CL              — mixing time scale coefficient (default 0.1)
+    Coefficients (sparsePremixedMMCcurlCoeffs)
+    -------------------------------------------
+        Tu              — unburned temperature [K]  (default 298 K)
+        Tb              — burned temperature [K]    (default 2240 K)
+        cMin            — lower c limit for Stage 2 subset (default 0.05)
+        cMax            — upper c limit for Stage 2 subset (default 0.95)
+        CL              — LPF mixing time scale coefficient (default 0.1)
         beta            — modulation coefficient for phi* (default 1.0)
-        subsetFraction  — fraction of particles used in Stage 2 (default 0.25)
-                          Overridden by subsetN if subsetN > 0.
-        subsetN         — fixed number of particles for Stage 2 (default 0 =
-                          use subsetFraction instead)
-        couplingVarName — name of the progress variable (default "c")
+        couplingVarName — name of the c entry in mmcVariablesDefinitions
+                          (default "c")
         wOUVarName      — name of the bounded OU reference variable
                           (default "wOU")
         numShadowPos    — number of shadow-position reference variables
-                          (default 3)
+                          (default 3: sPx, sPy, sPz)
         limitkdTree     — disable mixing when dXiR > 2*Xii (default true)
-        meanTimeScale   — use harmonic mean (true) or min (false) of pair
-                          time scales (default true)
+        meanTimeScale   — harmonic mean (true) or min (false) of pair time
+                          scales (default true)
 
     Reference:
         Sundaram & Klimenko, Proc. Combust. Inst. 36 (2017) 1937-1945.
@@ -81,7 +96,6 @@ Description
 
 #include "mixParticleModel.H"
 #include "interpolationCellPoint.H"
-#include <random>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -97,23 +111,28 @@ class sparsePremixedMMCcurl
 :
     public mixParticleModel<CloudType>
 {
-    // Typedef for particle type
     typedef typename CloudType::particleType particleType;
     typedef typename mixParticleModel<CloudType>::eulerianFieldData eulerianFieldData;
 
     // Private data
+
+        //- Unburned temperature Tu [K]  (denominator lower bound in eq. 1)
+        const scalar Tu_;
+
+        //- Burned temperature Tb [K]  (denominator upper bound in eq. 1)
+        const scalar Tb_;
+
+        //- Lower c bound for Stage 2 subset (flame zone filter)
+        const scalar cMin_;
+
+        //- Upper c bound for Stage 2 subset (flame zone filter)
+        const scalar cMax_;
 
         //- CL coefficient for LPF mixing time scale
         const scalar CL_;
 
         //- Modulation coefficient β for phi* = c * exp(β * wOU)
         const scalar beta_;
-
-        //- Fraction of particles used in Stage 2 (0 < subsetFraction_ <= 1)
-        const scalar subsetFraction_;
-
-        //- Fixed particle count for Stage 2 (0 = use subsetFraction_)
-        const label subsetN_;
 
         //- Name of the progress variable in XiC
         const word couplingVarName_;
@@ -127,31 +146,33 @@ class sparsePremixedMMCcurl
         //- Limit mixing of particles far in composition space
         const Switch limitkdTree_;
 
-        //- Use harmonic mean (true) or minimum (false) of pair time scales
+        //- Use harmonic mean (true) or min (false) of pair time scales
         const Switch meanTimeScale_;
 
-        //- Index of c in particle XiC array (set at construction)
+        //- Index of c in XiC array (set at construction)
         label cIndex_;
 
-        //- Index of wOU in particle XiR array (set at construction)
+        //- Index of wOU in XiR array (set at construction)
         label wOUIndex_;
 
     // Private Member Functions
 
-        //- Return Stage 2 particle count given total N
-        label stage2Size(label N) const;
+        //- Compute progress variable from temperature (eq. 1), clamped [0,1]
+        inline scalar progressVar(scalar T) const
+        {
+            return Foam::max(0.0, Foam::min(1.0, (T - Tu_) / (Tb_ - Tu_)));
+        }
 
-        //- Apply Stage 1 mixing: mix only c for a list of pairs.
-        //  Pairs are indexed into eulerianFieldDataList_.
+        //- Stage 1: mix only c for a list of pairs.
+        //  Pair indices resolve into eulerianFieldDataList_.
         void smixStage1
         (
             const DynamicList<List<label>>& pairs,
             scalar deltaT
         );
 
-        //- Apply Stage 2 mixing: mix all scalars except c for a list of pairs.
-        //  Pairs are indexed into the subset list passed in, NOT into
-        //  eulerianFieldDataList_.
+        //- Stage 2: mix all scalars except c for a list of pairs.
+        //  Pair indices resolve into subsetList, NOT eulerianFieldDataList_.
         void smixStage2
         (
             const DynamicList<eulerianFieldData>& subsetList,
@@ -159,8 +180,8 @@ class sparsePremixedMMCcurl
             scalar deltaT
         );
 
-        //- Perform staged Curl mixing for a single pair.
-        //  stageFlag: 1 = mix only cIndex_; 2 = mix all except cIndex_.
+        //- Perform staged Curl mixing for one pair.
+        //  stageFlag 1 → mix only cIndex_; 2 → mix everything except cIndex_.
         void mixpairStaged
         (
             particleType& p,
@@ -173,12 +194,10 @@ class sparsePremixedMMCcurl
 
     public:
 
-        //- Runtime type information
         TypeName("sparsePremixedMMCcurl");
 
     // Constructors
 
-        //- Construct from dictionary
         sparsePremixedMMCcurl
         (
             const dictionary& dict,
@@ -186,10 +205,8 @@ class sparsePremixedMMCcurl
             const mmcVarSet& Xi
         );
 
-        //- Construct copy
         sparsePremixedMMCcurl(const sparsePremixedMMCcurl<CloudType>& cm);
 
-        //- Construct and return a clone
         virtual autoPtr<CloudMixingModel<CloudType>> clone() const
         {
             return autoPtr<CloudMixingModel<CloudType>>
@@ -204,12 +221,13 @@ class sparsePremixedMMCcurl
 
     // Member Functions
 
-        //- Two-stage Smix:
-        //    Stage 1: full set paired in shadow-position space → mix c
-        //    Stage 2: random subset paired in phi* space → mix reactive scalars
+        //- Two-stage Smix.
+        //  Computes c = (T_p - Tu)/(Tb - Tu) for all local particles, then
+        //  runs Stage 1 (full set, shadow-position pairing, mix c) and
+        //  Stage 2 (flame-zone subset, phi* pairing, mix reactive scalars).
         virtual void Smix();
 
-        //- Required by base class (not used directly — Smix calls staged helpers)
+        //- Required by base class interface (fallback: calls Stage 2 mixing)
         virtual void mixpair
         (
             particleType& p,
@@ -222,8 +240,6 @@ class sparsePremixedMMCcurl
         virtual const scalarField XiR0(label patch, label patchFace);
         virtual const scalarField XiR0(label celli);
 
-    // Info
-
         void printInfo();
 };
 
@@ -235,8 +251,6 @@ class sparsePremixedMMCcurl
 #ifdef NoRepository
 #   include "sparsePremixedMMCcurl.C"
 #endif
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
