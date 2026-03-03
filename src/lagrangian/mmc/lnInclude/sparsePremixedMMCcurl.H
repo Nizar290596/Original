@@ -51,21 +51,32 @@ Description
     Two sequential mixing stages per time step
     ------------------------------------------
       Stage 1 — Shadow-position pairing  (full particle set)
-        ALL particles are paired in [position, sPx, sPy, sPz] space.
-        Only the progress variable c is mixed.
+        ALL particles are paired in [sPx, sPy, sPz] space.
+        All coupling scalars EXCEPT c are mixed (standard MMCcurl step).
+        c is deliberately not touched here.
 
-      Stage 2 — Modified progress variable pairing  (flame-zone subset)
+      Post-Stage-1 — c recomputation
+        After Stage 1 has mixed the temperatures, c is recomputed for
+        every local particle from eq. (1).  The updated c values are
+        synced into the Eulerian field data so Stage 2 sees the
+        post-Stage-1 progress variable.
+
+      Stage 2 — Combined reference pairing  (flame-zone subset)
         Only particles with c in [cMin, cMax] (default [0.05, 0.95])
         are included. These are the flame-zone particles; fully unburned
-        or fully burned particles are excluded. For each selected particle:
+        or fully burned particles are excluded.  For each selected
+        particle the modified progress variable is formed:
             phi* = c * exp(beta * wOU)
-        The subset is paired in [position, phi*] space and all reactive
-        scalars (all XiC except c) are mixed.
+        The subset is paired in the combined 4-D space
+            [sPx, sPy, sPz, phi*]
+        so that only particles close in BOTH shadow-position space AND
+        flame structure are mixed.  All coupling scalars (including c)
+        are mixed in this stage.
 
         This flame-zone filter is the sparsity mechanism described in
-        Sundaram & Klimenko 2017: the reactive-scalar mixing only needs
-        the fraction of particles inside the flame, dramatically reducing
-        the number required for Stage 2 (e.g. 2500 from 10000).
+        Sundaram & Klimenko 2017: the second-conditioning mixing only
+        needs the fraction of particles inside the flame, dramatically
+        reducing the number required for Stage 2 (e.g. 2500 from 10000).
 
     Coefficients (sparsePremixedMMCcurlCoeffs)
     -------------------------------------------
@@ -163,7 +174,7 @@ class sparsePremixedMMCcurl
             return Foam::max(0.0, Foam::min(1.0, (T - Tu_) / (Tb_ - Tu_)));
         }
 
-        //- Stage 1: mix only c for a list of pairs.
+        //- Stage 1: mix all XiC except c for a list of pairs.
         //  Pair indices resolve into eulerianFieldDataList_.
         void smixStage1
         (
@@ -171,7 +182,7 @@ class sparsePremixedMMCcurl
             scalar deltaT
         );
 
-        //- Stage 2: mix all scalars except c for a list of pairs.
+        //- Stage 2: mix all scalars (including c) for a list of pairs.
         //  Pair indices resolve into subsetList, NOT eulerianFieldDataList_.
         void smixStage2
         (
@@ -181,7 +192,8 @@ class sparsePremixedMMCcurl
         );
 
         //- Perform staged Curl mixing for one pair.
-        //  stageFlag 1 → mix only cIndex_; 2 → mix everything except cIndex_.
+        //  stageFlag 1 → mix all XiC except cIndex_ (standard MMCcurl step).
+        //  stageFlag 2 → mix all XiC including cIndex_ (second-conditioning).
         void mixpairStaged
         (
             particleType& p,
@@ -222,9 +234,10 @@ class sparsePremixedMMCcurl
     // Member Functions
 
         //- Two-stage Smix.
-        //  Computes c = (T_p - Tu)/(Tb - Tu) for all local particles, then
-        //  runs Stage 1 (full set, shadow-position pairing, mix c) and
-        //  Stage 2 (flame-zone subset, phi* pairing, mix reactive scalars).
+        //  Stage 1: full set, shadow-position pairing, mix all XiC except c.
+        //  Post-Stage-1: recompute c = (T_p-Tu)/(Tb-Tu) from mixed T.
+        //  Stage 2: flame-zone subset, paired in [sP, phi*] combined space,
+        //           mix all XiC (including c).
         virtual void Smix();
 
         //- Required by base class interface (fallback: calls Stage 2 mixing)
