@@ -38,23 +38,30 @@ Description
 
     Two sequential mixing stages per time step:
 
-      Stage 1 — Shadow-position pairing
-        Particles are paired in [position, sPx, sPy, sPz] space.
+      Stage 1 — Shadow-position pairing (full particle set)
+        ALL particles are paired in [position, sPx, sPy, sPz] space.
         Only the progress variable c is mixed between paired particles.
 
-      Stage 2 — Modified progress variable pairing
-        The modified progress variable is computed for each particle:
+      Stage 2 — Modified progress variable pairing (subset of particles)
+        A RANDOM SUBSET of particles (size controlled by subsetFraction or
+        subsetN) is selected from the full set. For each particle in the
+        subset the modified progress variable is computed:
             phi* = c * exp(beta * wOU)
-        Particles are re-paired in [position, phi*] space.
-        All reactive scalars (all XiC except c) are mixed.
+        The subset is re-paired in [position, phi*] space. All reactive
+        scalars (all XiC except c) are mixed.
 
-    The LPF (laminar premixed flame) mixing time scale is used in both stages.
+    This subset-based Stage 2 is what makes the method sparse: the paper
+    (Sundaram & Klimenko 2017) demonstrates that ~2500 particles are
+    sufficient for Stage 2 when the full Stage 1 set has 10000 particles.
 
     Coefficients (sparsePremixedMMCcurlCoeffs):
         CL              — mixing time scale coefficient (default 0.1)
         beta            — modulation coefficient for phi* (default 1.0)
-        couplingVarName — name of the progress variable in mmcVariablesDefinitions
-                          (default "c")
+        subsetFraction  — fraction of particles used in Stage 2 (default 0.25)
+                          Overridden by subsetN if subsetN > 0.
+        subsetN         — fixed number of particles for Stage 2 (default 0 =
+                          use subsetFraction instead)
+        couplingVarName — name of the progress variable (default "c")
         wOUVarName      — name of the bounded OU reference variable
                           (default "wOU")
         numShadowPos    — number of shadow-position reference variables
@@ -74,6 +81,7 @@ Description
 
 #include "mixParticleModel.H"
 #include "interpolationCellPoint.H"
+#include <random>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -101,6 +109,12 @@ class sparsePremixedMMCcurl
         //- Modulation coefficient β for phi* = c * exp(β * wOU)
         const scalar beta_;
 
+        //- Fraction of particles used in Stage 2 (0 < subsetFraction_ <= 1)
+        const scalar subsetFraction_;
+
+        //- Fixed particle count for Stage 2 (0 = use subsetFraction_)
+        const label subsetN_;
+
         //- Name of the progress variable in XiC
         const word couplingVarName_;
 
@@ -124,22 +138,29 @@ class sparsePremixedMMCcurl
 
     // Private Member Functions
 
-        //- Apply Stage 1 mixing: mix only c for a list of pairs
+        //- Return Stage 2 particle count given total N
+        label stage2Size(label N) const;
+
+        //- Apply Stage 1 mixing: mix only c for a list of pairs.
+        //  Pairs are indexed into eulerianFieldDataList_.
         void smixStage1
         (
             const DynamicList<List<label>>& pairs,
             scalar deltaT
         );
 
-        //- Apply Stage 2 mixing: mix all scalars except c for a list of pairs
+        //- Apply Stage 2 mixing: mix all scalars except c for a list of pairs.
+        //  Pairs are indexed into the subset list passed in, NOT into
+        //  eulerianFieldDataList_.
         void smixStage2
         (
+            const DynamicList<eulerianFieldData>& subsetList,
             const DynamicList<List<label>>& pairs,
             scalar deltaT
         );
 
-        //- Compute mixing for a single pair (internal helper)
-        //  stageFlag: 1 = mix only cIndex_, 2 = mix all except cIndex_
+        //- Perform staged Curl mixing for a single pair.
+        //  stageFlag: 1 = mix only cIndex_; 2 = mix all except cIndex_.
         void mixpairStaged
         (
             particleType& p,
@@ -183,7 +204,9 @@ class sparsePremixedMMCcurl
 
     // Member Functions
 
-        //- Two-stage Smix: Stage 1 (shadow position) then Stage 2 (phi*)
+        //- Two-stage Smix:
+        //    Stage 1: full set paired in shadow-position space → mix c
+        //    Stage 2: random subset paired in phi* space → mix reactive scalars
         virtual void Smix();
 
         //- Required by base class (not used directly — Smix calls staged helpers)

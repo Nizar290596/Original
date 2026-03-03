@@ -23,12 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-    Two-stage sequential conditioning MMC mixing model for sparse premixed
-    simulations.
+    Two-stage sequential second-conditioning MMC mixing model for sparse
+    premixed combustion simulations.
 
     Implementation of the method described in:
         Sundaram & Klimenko, Proc. Combust. Inst. 36 (2017) 1937-1945.
         DOI: 10.1016/j.proci.2016.07.116
+
+    Stage 1 — full particle set, shadow-position pairing, mix only c.
+    Stage 2 — random subset,     phi* pairing,             mix reactive scalars.
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,6 +53,16 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
     CL_(this->coeffDict().lookupOrDefault("CL", 0.1)),
 
     beta_(this->coeffDict().lookupOrDefault("beta", 1.0)),
+
+    subsetFraction_
+    (
+        this->coeffDict().lookupOrDefault<scalar>("subsetFraction", 0.25)
+    ),
+
+    subsetN_
+    (
+        this->coeffDict().lookupOrDefault<label>("subsetN", 0)
+    ),
 
     couplingVarName_
     (
@@ -95,7 +108,6 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
     }
 
     // Resolve index of c in XiC (coupling variable set)
-    // The coupling variable set is accessible through the cloud.
     const auto& cVarMap = owner.coupling().XiC().cVarInXiC();
     if (cVarMap.found(couplingVarName_))
     {
@@ -123,6 +135,8 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
     mixParticleModel<CloudType>(cm),
     CL_(cm.CL_),
     beta_(cm.beta_),
+    subsetFraction_(cm.subsetFraction_),
+    subsetN_(cm.subsetN_),
     couplingVarName_(cm.couplingVarName_),
     wOUVarName_(cm.wOUVarName_),
     numShadowPos_(cm.numShadowPos_),
@@ -135,27 +149,43 @@ Foam::sparsePremixedMMCcurl<CloudType>::sparsePremixedMMCcurl
 }
 
 
+// * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * * //
+
+template<class CloudType>
+Foam::label Foam::sparsePremixedMMCcurl<CloudType>::stage2Size(label N) const
+{
+    if (subsetN_ > 0)
+        return min(subsetN_, N);
+
+    return max(label(2), label(N * subsetFraction_));
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
 {
     // ------------------------------------------------------------------
-    // Build the global particle list (handles parallel communication and
-    // sets eulerianFieldDataList_ with XiR = [sPx, sPy, sPz, wOU]).
+    // Build the global particle list.
+    // eulerianFieldDataList_ receives XiR = [sPx, sPy, sPz, wOU] for
+    // every particle (local + gathered remote processors in parallel).
     // buildParticleList() also calls findPairs() internally, but we
-    // override the pairs below for each stage.
+    // rebuild the pairs ourselves below for each stage.
     // ------------------------------------------------------------------
     this->buildParticleList();
+
+    const label N = this->eulerianFieldDataList_.size();
+    if (N < 2)
+        return;
 
     const scalar deltaT = this->owner().mesh().time().deltaT().value();
 
     // ------------------------------------------------------------------
-    // Stage 1: pair in [position + shadow-position] space, mix only c
+    // STAGE 1 — Full particle set, shadow-position pairing, mix only c
     // ------------------------------------------------------------------
 
-    // Build a modified copy of the eulerian list with XiR restricted to
-    // the shadow-position components only (indices 0..numShadowPos_-1).
+    // Copy list and restrict XiR to the shadow-position components only.
     DynamicList<eulerianFieldData> stage1List(this->eulerianFieldDataList_);
 
     forAll(stage1List, i)
@@ -172,47 +202,77 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
     smixStage1(stage1Pairs, deltaT);
 
     // ------------------------------------------------------------------
-    // Stage 2: pair in [position + phi*] space, mix reactive scalars
+    // STAGE 2 — Random subset, phi* pairing, mix reactive scalars
     //
     //   phi* = c * exp(beta * wOU)
     //
-    // c is the Eulerian progress variable interpolated at each particle's
-    // position (consistent for both local and remote particles in
-    // parallel runs).
+    // The subset is chosen by a partial Fisher-Yates shuffle so that
+    // every particle has equal probability of inclusion.
+    //
+    // For consistent pairing across local and remote particles the
+    // Eulerian c field is interpolated at each particle's position
+    // (rather than using p.XiC()[cIndex_] which is unavailable for
+    // remote particles). The actual Curl mixing step uses p.XiC()
+    // which is the true particle value (local particles only).
     // ------------------------------------------------------------------
 
-    // Interpolate the Eulerian c field at each particle's position.
+    const label M = stage2Size(N);
+
+    // Create index array [0, 1, ..., N-1] and partially shuffle it
+    // to obtain M randomly chosen indices.
+    std::vector<label> indices(N);
+    std::iota(indices.begin(), indices.end(), 0);
+
+    std::mt19937 rng(static_cast<unsigned>(
+        this->owner().mesh().time().timeIndex()
+      + Pstream::myProcNo() * 1000));
+
+    for (label i = 0; i < M; i++)
+    {
+        std::uniform_int_distribution<label> dist(i, N - 1);
+        std::swap(indices[i], indices[dist(rng)]);
+    }
+
+    // Interpolate Eulerian c at each selected particle's position.
     const volScalarField& cField =
         this->owner().mesh().objectRegistry::
             lookupObject<volScalarField>(couplingVarName_);
 
     interpolationCellPoint<scalar> cInterp(cField);
 
-    DynamicList<eulerianFieldData> stage2List(this->eulerianFieldDataList_);
+    // Build the Stage 2 subset list with XiR = [phi*].
+    DynamicList<eulerianFieldData> stage2List(M);
 
-    forAll(stage2List, i)
+    for (label i = 0; i < M; i++)
     {
-        const vector& pos  = stage2List[i].position();
+        const label idx = indices[i];
+        eulerianFieldData ef = this->eulerianFieldDataList_[idx];  // copy
+
+        const vector& pos  = ef.position();
         const label   cell = this->owner().mesh().findCell(pos);
-        const label   face = -1;  // face not needed for cellPoint interpolation
 
-        scalar c_p = cInterp.interpolate(pos, cell, face);
-        c_p = Foam::max(c_p, VSMALL);   // ensure positivity
+        scalar c_p   = cInterp.interpolate(pos, cell, -1);
+        c_p          = Foam::max(c_p, VSMALL);
 
-        scalar wOU_p = this->eulerianFieldDataList_[i].XiR()[wOUIndex_];
+        scalar wOU_p = this->eulerianFieldDataList_[idx].XiR()[wOUIndex_];
 
         scalar phiStar = c_p * Foam::exp(beta_ * wOU_p);
 
-        scalarField ps(1, phiStar);
-        stage2List[i].XiR() = ps;
+        ef.XiR() = scalarField(1, phiStar);
+        stage2List.append(ef);
     }
 
     DynamicList<List<label>> stage2Pairs;
     this->findPairs(stage2List, stage2Pairs);
 
-    smixStage2(stage2Pairs, deltaT);
+    // Mix reactive scalars using stage2List to resolve pair indices.
+    smixStage2(stage2List, stage2Pairs, deltaT);
 }
 
+
+// -----------------------------------------------------------------------
+// Stage 1 helper — pairs indexed into eulerianFieldDataList_
+// -----------------------------------------------------------------------
 
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::smixStage1
@@ -226,8 +286,11 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage1
         const label sz = pair.size();
         if (sz == 2)
         {
-            const eulerianFieldData& e1 = this->eulerianFieldDataList_[pair[0]];
-            const eulerianFieldData& e2 = this->eulerianFieldDataList_[pair[1]];
+            const eulerianFieldData& e1 =
+                this->eulerianFieldDataList_[pair[0]];
+            const eulerianFieldData& e2 =
+                this->eulerianFieldDataList_[pair[1]];
+
             if (e1.local() || e2.local())
                 mixpairStaged
                 (
@@ -238,9 +301,13 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage1
         }
         else if (sz == 3)
         {
-            const eulerianFieldData& e1 = this->eulerianFieldDataList_[pair[0]];
-            const eulerianFieldData& e2 = this->eulerianFieldDataList_[pair[1]];
-            const eulerianFieldData& e3 = this->eulerianFieldDataList_[pair[2]];
+            const eulerianFieldData& e1 =
+                this->eulerianFieldDataList_[pair[0]];
+            const eulerianFieldData& e2 =
+                this->eulerianFieldDataList_[pair[1]];
+            const eulerianFieldData& e3 =
+                this->eulerianFieldDataList_[pair[2]];
+
             if (e1.local() || e2.local())
                 mixpairStaged
                 (
@@ -260,9 +327,14 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage1
 }
 
 
+// -----------------------------------------------------------------------
+// Stage 2 helper — pairs indexed into subsetList (the Stage 2 subset)
+// -----------------------------------------------------------------------
+
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::smixStage2
 (
+    const DynamicList<eulerianFieldData>& subsetList,
     const DynamicList<List<label>>& pairs,
     scalar deltaT
 )
@@ -272,8 +344,10 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage2
         const label sz = pair.size();
         if (sz == 2)
         {
-            const eulerianFieldData& e1 = this->eulerianFieldDataList_[pair[0]];
-            const eulerianFieldData& e2 = this->eulerianFieldDataList_[pair[1]];
+            // Pairs are indexed into subsetList, not eulerianFieldDataList_
+            const eulerianFieldData& e1 = subsetList[pair[0]];
+            const eulerianFieldData& e2 = subsetList[pair[1]];
+
             if (e1.local() || e2.local())
                 mixpairStaged
                 (
@@ -284,9 +358,10 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage2
         }
         else if (sz == 3)
         {
-            const eulerianFieldData& e1 = this->eulerianFieldDataList_[pair[0]];
-            const eulerianFieldData& e2 = this->eulerianFieldDataList_[pair[1]];
-            const eulerianFieldData& e3 = this->eulerianFieldDataList_[pair[2]];
+            const eulerianFieldData& e1 = subsetList[pair[0]];
+            const eulerianFieldData& e2 = subsetList[pair[1]];
+            const eulerianFieldData& e3 = subsetList[pair[2]];
+
             if (e1.local() || e2.local())
                 mixpairStaged
                 (
@@ -305,6 +380,10 @@ void Foam::sparsePremixedMMCcurl<CloudType>::smixStage2
     }
 }
 
+
+// -----------------------------------------------------------------------
+// Low-level staged mixing for one particle pair
+// -----------------------------------------------------------------------
 
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::mixpairStaged
@@ -320,14 +399,14 @@ void Foam::sparsePremixedMMCcurl<CloudType>::mixpairStaged
     if (p.wt() + q.wt() <= 0)
         return;
 
-    // LPF mixing time scale (from particle's stored mixing time field)
+    // LPF mixing time scale from particle's stored mixing time field
     scalar tauP = CL_ * p.mixTime();
     scalar tauQ = CL_ * q.mixTime();
 
     if (tauP >= 1e30 || tauQ >= 1e30)
         return;
 
-    // Optionally skip pairs that are too far apart in reference space
+    // Optionally skip pairs too far apart in reference space
     if (limitkdTree_)
     {
         forAll(p.dXiR(), i)
@@ -343,9 +422,8 @@ void Foam::sparsePremixedMMCcurl<CloudType>::mixpairStaged
     else
         tauMix = Foam::min(tauP, tauQ);
 
-    scalar mixExtent = 1.0 - Foam::exp(-deltaT / (tauMix + VSMALL));
-
-    const scalar wtSum = p.wt() + q.wt();
+    const scalar mixExtent = 1.0 - Foam::exp(-deltaT / (tauMix + VSMALL));
+    const scalar wtSum     = p.wt() + q.wt();
 
     if (stageFlag == 1)
     {
@@ -389,8 +467,7 @@ void Foam::sparsePremixedMMCcurl<CloudType>::mixpair
     scalar& deltaT
 )
 {
-    // Default single-stage full mixing (used when Smix() is not overridden
-    // by derived classes). Calls Stage 2 (all scalars) as fallback.
+    // Fallback when called directly (not through the two-stage Smix).
     mixpairStaged(p, pEulFields, q, qEulFields, deltaT, 2);
 }
 
@@ -399,25 +476,20 @@ template<class CloudType>
 const Foam::scalarField
 Foam::sparsePremixedMMCcurl<CloudType>::XiR0(label patch, label patchFace)
 {
-    const mmcVarSet& setOfXi = this->XiR();
-
-    const labelHashTable& XiIndexes  = setOfXi.rVarInXi();
-    const labelHashTable& XiRIndexes = setOfXi.rVarInXiR();
+    const mmcVarSet& setOfXi    = this->XiR();
+    const labelHashTable& XiIdx = setOfXi.rVarInXi();
+    const labelHashTable& XiRIdx= setOfXi.rVarInXiR();
 
     scalarField XXi(this->numXiR(), 0.0);
 
     for (const word& varName : this->XiRNames_)
     {
-        if (setOfXi.Vars(XiIndexes[varName]).type() == "evolved")
-        {
-            XXi[XiRIndexes[varName]] = 0.0;
-        }
+        if (setOfXi.Vars(XiIdx[varName]).type() == "evolved")
+            XXi[XiRIdx[varName]] = 0.0;
         else
-        {
-            XXi[XiRIndexes[varName]] =
-                setOfXi.Vars(XiIndexes[varName])
+            XXi[XiRIdx[varName]] =
+                setOfXi.Vars(XiIdx[varName])
                     .field().boundaryField()[patch][patchFace];
-        }
     }
     return XXi;
 }
@@ -427,24 +499,19 @@ template<class CloudType>
 const Foam::scalarField
 Foam::sparsePremixedMMCcurl<CloudType>::XiR0(label celli)
 {
-    const mmcVarSet& setOfXi = this->XiR();
-
-    const labelHashTable& XiIndexes  = setOfXi.rVarInXi();
-    const labelHashTable& XiRIndexes = setOfXi.rVarInXiR();
+    const mmcVarSet& setOfXi    = this->XiR();
+    const labelHashTable& XiIdx = setOfXi.rVarInXi();
+    const labelHashTable& XiRIdx= setOfXi.rVarInXiR();
 
     scalarField XXi(this->numXiR(), 0.0);
 
     for (const word& varName : this->XiRNames_)
     {
-        if (setOfXi.Vars(XiIndexes[varName]).type() == "evolved")
-        {
-            XXi[XiRIndexes[varName]] = 0.0;
-        }
+        if (setOfXi.Vars(XiIdx[varName]).type() == "evolved")
+            XXi[XiRIdx[varName]] = 0.0;
         else
-        {
-            XXi[XiRIndexes[varName]] =
-                setOfXi.Vars(XiIndexes[varName]).field()[celli];
-        }
+            XXi[XiRIdx[varName]] =
+                setOfXi.Vars(XiIdx[varName]).field()[celli];
     }
     return XXi;
 }
@@ -453,23 +520,34 @@ Foam::sparsePremixedMMCcurl<CloudType>::XiR0(label celli)
 template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::printInfo()
 {
-    Info << "Mixing Model: sparsePremixedMMCcurl (two-stage second conditioning)" << nl
-         << token::TAB << "CL:                  " << CL_              << nl
-         << token::TAB << "beta (phi* mod):     " << beta_            << nl
-         << token::TAB << "Progress variable:   " << couplingVarName_ << nl
-         << token::TAB << "  -> XiC index:      " << cIndex_          << nl
-         << token::TAB << "OU variable:         " << wOUVarName_       << nl
-         << token::TAB << "  -> XiR index:      " << wOUIndex_         << nl
-         << token::TAB << "Shadow pos dims:     " << numShadowPos_     << nl
-         << token::TAB << "ri:                  " << this->ri_         << nl
-         << token::TAB << "Xi:                  " << this->Xii_        << nl
-         << token::TAB << "---------------------------"                 << nl;
-    if (meanTimeScale_)
+    Info << "Mixing Model: sparsePremixedMMCcurl" << nl
+         << token::TAB
+         << "(two-stage second conditioning, Sundaram & Klimenko 2017)" << nl
+         << token::TAB << "Stage 1 — full set, shadow-position pairing:" << nl
+         << token::TAB << "  CL:                  " << CL_              << nl
+         << token::TAB << "  mixes only:          " << couplingVarName_ << nl
+         << token::TAB << "Stage 2 — subset, phi* pairing:" << nl
+         << token::TAB << "  beta (phi* coeff):   " << beta_            << nl;
+    if (subsetN_ > 0)
         Info << token::TAB
-             << "Use harmonic mean of two particles' mixing time scales" << nl;
+             << "  subset size (fixed): " << subsetN_ << nl;
     else
         Info << token::TAB
-             << "Use the min of two particles' mixing time scales" << nl;
+             << "  subset fraction:     " << subsetFraction_ << nl;
+    Info << token::TAB << "  progress variable:   " << couplingVarName_ << nl
+         << token::TAB << "    -> XiC index:      " << cIndex_          << nl
+         << token::TAB << "  OU variable:         " << wOUVarName_       << nl
+         << token::TAB << "    -> XiR index:      " << wOUIndex_         << nl
+         << token::TAB << "  shadow pos dims:     " << numShadowPos_     << nl
+         << token::TAB << "ri:                    " << this->ri_         << nl
+         << token::TAB << "Xii:                   " << this->Xii_        << nl
+         << token::TAB << "---------------------------"                   << nl;
+    if (meanTimeScale_)
+        Info << token::TAB
+             << "Time scale: harmonic mean of pair values" << nl;
+    else
+        Info << token::TAB
+             << "Time scale: minimum of pair values" << nl;
     if (limitkdTree_)
         Info << token::TAB
              << "Particles with dXiR > 2*Xii are NOT mixed" << endl;
