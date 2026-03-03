@@ -33,6 +33,7 @@ License
 #include "premixedMMCcurl.H"
 #include "Curl.H"
 #include "ransMMCcurl.H"
+#include "sparsePremixedMMCcurl.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +43,8 @@ License
     makeCloudMixingModelType(NoMixing, CloudType);                          \
     makeCloudMixingModelType(premixedMMCcurl, CloudType);                   \
     makeCloudMixingModelType(Curl, CloudType);                              \
-    makeCloudMixingModelType(ransMMCcurl, CloudType);
+    makeCloudMixingModelType(ransMMCcurl, CloudType);                       \
+    makeCloudMixingModelType(sparsePremixedMMCcurl, CloudType);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

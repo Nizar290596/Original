@@ -23,32 +23,9 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef makeMixingPopeParticleMixingModels_H
-#define makeMixingPopeParticleMixingModels_H
+#include "scalarBoundedOrnsteinUhlenbeck.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "NoMixing.H"
-#include "MMCcurl.H"
-#include "sootMMCCurl.H"
-#include "Curl.H"
-#include "ransMMCcurl.H"
-#include "sparsePremixedMMCcurl.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#define makeMixingPopeParticleMixingModels(CloudType)                       \
-                                                                            \
-    makeCloudMixingModel(CloudType);                                        \
-    makeCloudMixingModelType(NoMixing, CloudType);                          \
-    makeCloudMixingModelType(MMCcurl, CloudType);                           \
-    makeCloudMixingModelType(sootMMCCurl, CloudType);                       \
-    makeCloudMixingModelType(Curl, CloudType);                              \
-    makeCloudMixingModelType(ransMMCcurl, CloudType);                       \
-    makeCloudMixingModelType(sparsePremixedMMCcurl, CloudType);
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
+// * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
+// (No static hash-table needed for BoundedOrnsteinUhlenbeck — placeholder only)
 
 // ************************************************************************* //

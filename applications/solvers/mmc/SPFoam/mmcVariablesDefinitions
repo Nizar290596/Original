@@ -21,7 +21,7 @@ FoamFile
 }   
     
 variables
-{ 
+{
     z
     {
         name            z;
@@ -31,6 +31,18 @@ variables
         MMCType         couplingVar;
     }
 
+    // Progress variable — primary conditioning scalar, mixed in Stage 1.
+    // Set passive false when the Eulerian c field is coupled to particles.
+    c
+    {
+        name            c;
+        couplingName    c;
+        passive         false;
+        mixStep         1;
+        MMCType         couplingVar;
+    }
+
+    // Shadow-position reference variables (Stage 1 pairing).
     sPx
     {
         name            sPx;
@@ -48,6 +60,17 @@ variables
     sPz
     {
         name            sPz;
+        MMCType         referenceVar;
+        referenceType   sde;
+    }
+
+    // Bounded Ornstein-Uhlenbeck variable (Stage 2 second conditioning).
+    // Evolves as:  dω = -θ·ω·dt + sqrt(2θ)·dW,  clipped to [-wMax, +wMax].
+    // The modified progress variable phi* = c * exp(beta * wOU) is used for
+    // Stage 2 pairing in the sparsePremixedMMCcurl mixing model.
+    wOU
+    {
+        name            wOU;
         MMCType         referenceVar;
         referenceType   sde;
     }

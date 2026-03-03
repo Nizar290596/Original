@@ -29,6 +29,7 @@ $(MMCVARIABLES)/referenceVariable/referenceVar.C
 $(MMCVARIABLES)/cAndrVariable/crVar.C
 
 $(ITOSDEMODEL)/ShadowPosition/scalarShadowPosition.C
+$(ITOSDEMODEL)/BoundedOrnsteinUhlenbeck/scalarBoundedOrnsteinUhlenbeck.C
 $(ITOSDEMODEL)/ItoEqn/makeItoEqns.C
 
 $(EVOLMODELS)/evolModel/evolModel.C

@@ -22,6 +22,7 @@ License
 #include "ItoEqn.H"
 #include "scalarItoEqn.H"
 #include "scalarShadowPosition.H"
+#include "scalarBoundedOrnsteinUhlenbeck.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -34,6 +35,7 @@ namespace Foam
 
 makeItoEqn(scalar);
 makeSpecializedItoEqnType(ShadowPosition,scalar);
+makeSpecializedItoEqnType(BoundedOrnsteinUhlenbeck,scalar);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
