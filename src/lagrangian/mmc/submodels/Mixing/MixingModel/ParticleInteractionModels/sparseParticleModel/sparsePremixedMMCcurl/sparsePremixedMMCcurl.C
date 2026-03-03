@@ -23,16 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-    Two-stage sequential second-conditioning MMC mixing model for sparse
-    premixed combustion simulations.
+    Two-stage sequential second-conditioning MMC mixing-reaction model for
+    sparse premixed combustion simulations.
 
     Implementation of the method described in:
         Sundaram & Klimenko, Proc. Combust. Inst. 36 (2017) 1937-1945.
         DOI: 10.1016/j.proci.2016.07.116
 
-    Stage 1 — full particle set, shadow-position pairing, mix only c.
+    Stage 1 — full particle set, shadow-position pairing,
+               mix all XiC except c, then single-step reaction on ALL particles.
+               c is recomputed from the post-reaction temperature.
     Stage 2 — flame-zone subset (c in [cMin, cMax]),
-               phi* pairing, mix reactive scalars.
+               combined [sP, phi*] pairing, mix all XiC, then
+               detailed chemistry reaction on the subset only.
+               c is recomputed from the post-reaction temperature.
 
 \*---------------------------------------------------------------------------*/
 
@@ -151,26 +155,11 @@ template<class CloudType>
 void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
 {
     // ------------------------------------------------------------------
-    // Step 0 — Compute the progress variable c for all LOCAL particles
-    // from the particle temperature before gathering parallel data.
-    //
-    //   c = (T_p - Tu) / (Tb - Tu)  clamped to [0, 1]      (eq. 1)
-    //
-    // This must be done before buildParticleList() so that the updated
-    // c values are included when remote processors gather this
-    // processor's particle data.
-    // ------------------------------------------------------------------
-    forAllIter(CloudType, this->owner(), pIter)
-    {
-        particleType& p = pIter();
-        p.XiC()[cIndex_] = progressVar(p.T());
-    }
-
-    // ------------------------------------------------------------------
     // Build the global particle list.
     // eulerianFieldDataList_ receives XiR = [sPx, sPy, sPz, wOU] and
-    // XiC (including the freshly computed c above) for every particle
-    // (local + gathered remote processors in parallel).
+    // XiC for every particle (local + gathered remote processors in parallel).
+    // c is NOT pre-computed here; it is derived from temperature after
+    // Stage 1 so that it reflects the post-Stage-1 mixed state.
     // ------------------------------------------------------------------
     this->buildParticleList();
 
@@ -181,10 +170,13 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
     const scalar deltaT = this->owner().mesh().time().deltaT().value();
 
     // ------------------------------------------------------------------
-    // STAGE 1 — Full particle set, shadow-position pairing, mix only c
+    // STAGE 1 — Full particle set, shadow-position pairing.
+    //           Standard MMCcurl mixing of all scalars EXCEPT c.
     //
-    // XiR is restricted to [sPx, sPy, sPz] (first numShadowPos_ entries).
-    // The pairing kdTree therefore operates purely in shadow-position space.
+    // XiR is restricted to [sPx, sPy, sPz] (first numShadowPos_ entries)
+    // so the pairing kdTree operates purely in shadow-position space.
+    // c is deliberately excluded from mixing here; it will be re-derived
+    // from the mixed temperature field immediately after this stage.
     // ------------------------------------------------------------------
     DynamicList<eulerianFieldData> stage1List(this->eulerianFieldDataList_);
 
@@ -202,15 +194,75 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
     smixStage1(stage1Pairs, deltaT);
 
     // ------------------------------------------------------------------
-    // STAGE 2 — Flame-zone subset, phi* pairing, mix reactive scalars
+    // Post-Stage-1 reaction — single-step chemistry (constant/thermophysicalProperties).
+    //
+    // All local particles react to locate the flame front consistent with
+    // the existing solver.  The reaction updates species mass fractions Y
+    // and temperature T on every local particle.
+    // ------------------------------------------------------------------
+    {
+        const scalar t0 = this->owner().db().time().value();
+
+        forAllIter(CloudType, this->owner(), pIter)
+        {
+            particleType& p = pIter();
+
+            this->owner().reaction().calculate
+            (
+                t0, deltaT,
+                p.hA(), p.pc(), p.T(),
+                p.XiC()[cIndex_],
+                p.Y()
+            );
+
+            p.T() = this->owner().composition()
+                        .particleMixture(p.Y())
+                        .THa(p.hA(), p.pc(), p.T());
+
+            p.NumActSp() = this->owner().reaction().nActiveSp();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Post-Stage-1 — Recompute c from the post-reaction particle temperatures.
+    //
+    //   c = (T_p - Tu) / (Tb - Tu)  clamped to [0, 1]      (eq. 1)
+    //
+    // Update local particle objects, then sync the new c values into
+    // eulerianFieldDataList_ so Stage 2 uses post-reaction c values when
+    // computing phi* and filtering the flame-zone subset.
+    // Remote particle entries in eulerianFieldDataList_ retain their
+    // pre-Stage-1 c (their temperature was mixed on their home processor).
+    // ------------------------------------------------------------------
+    forAllIter(CloudType, this->owner(), pIter)
+    {
+        particleType& p = pIter();
+        p.XiC()[cIndex_] = progressVar(p.T());
+    }
+
+    forAll(this->eulerianFieldDataList_, i)
+    {
+        if (this->eulerianFieldDataList_[i].local())
+        {
+            const label pIdx =
+                this->eulerianFieldDataList_[i].particleIndex();
+            this->eulerianFieldDataList_[i].XiC()[cIndex_] =
+                this->particleList_[pIdx]->XiC()[cIndex_];
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // STAGE 2 — Flame-zone subset, second-conditioning pairing.
+    //           Pairing in combined [sPx, sPy, sPz, phi*] space (4D).
+    //           Mixes all coupling scalars (including c).
     //
     //   Subset criterion : c in [cMin_, cMax_]
     //   Modified progress variable: phi* = c * exp(beta_ * wOU)
     //
-    // c is read from XiC[cIndex_] in eulerianFieldDataList_, which was
-    // populated from p.T() (via eq. 1) before buildParticleList().
-    // Only flame-zone particles (not fully unburned or fully burned) are
-    // included — this is the sparsity mechanism of Sundaram & Klimenko.
+    // Pairing uses BOTH shadow positions and phi* simultaneously so that
+    // only particles close in both physical reference space and flame
+    // structure are mixed together (second conditioning, S&K 2017).
+    // The flame-zone filter [cMin, cMax] is the sparsity mechanism.
     // ------------------------------------------------------------------
     DynamicList<eulerianFieldData> stage2List;
 
@@ -227,7 +279,13 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
         eulerianFieldData efSubset = ef;  // copy (preserves particleIndex)
 
         const scalar phiStar = c_p * Foam::exp(beta_ * wOU_p);
-        efSubset.XiR() = scalarField(1, phiStar);
+
+        // Combined reference: [sPx, sPy, sPz, phi*]
+        scalarField combinedRef(numShadowPos_ + 1);
+        for (label k = 0; k < numShadowPos_; k++)
+            combinedRef[k] = ef.XiR()[k];
+        combinedRef[numShadowPos_] = phiStar;
+        efSubset.XiR() = combinedRef;
 
         stage2List.append(efSubset);
     }
@@ -241,6 +299,43 @@ void Foam::sparsePremixedMMCcurl<CloudType>::Smix()
     // Pair indices in stage2Pairs resolve into stage2List, NOT
     // eulerianFieldDataList_. smixStage2 receives stage2List explicitly.
     smixStage2(stage2List, stage2Pairs, deltaT);
+
+    // ------------------------------------------------------------------
+    // Post-Stage-2 reaction — detailed chemistry (detailedReactionModelCoeffs).
+    //
+    // Only the flame-zone subset particles (those in stage2List) undergo
+    // detailed chemistry.  This refines the species and temperature fields
+    // for particles inside the flame front identified by Stage 1.
+    // After the reaction c is recomputed from the updated T.
+    // ------------------------------------------------------------------
+    {
+        const scalar t0 = this->owner().db().time().value();
+
+        for (const auto& ef : stage2List)
+        {
+            if (!ef.local())
+                continue;
+
+            particleType& p = *this->particleList_[ef.particleIndex()];
+
+            this->owner().reaction2().calculate
+            (
+                t0, deltaT,
+                p.hA(), p.pc(), p.T(),
+                p.XiC()[cIndex_],
+                p.Y()
+            );
+
+            p.T() = this->owner().composition()
+                        .particleMixture(p.Y())
+                        .THa(p.hA(), p.pc(), p.T());
+
+            p.NumActSp() = this->owner().reaction2().nActiveSp();
+
+            // Recompute c from the post-detailed-chemistry temperature
+            p.XiC()[cIndex_] = progressVar(p.T());
+        }
+    }
 }
 
 
@@ -402,21 +497,27 @@ void Foam::sparsePremixedMMCcurl<CloudType>::mixpairStaged
 
     if (stageFlag == 1)
     {
-        // Stage 1: mix only the progress variable c
-        scalar cAv =
-            (p.wt() * p.XiC()[cIndex_] + q.wt() * q.XiC()[cIndex_]) / wtSum;
-
-        p.XiC()[cIndex_] += mixExtent * (cAv - p.XiC()[cIndex_]);
-        q.XiC()[cIndex_] += mixExtent * (cAv - q.XiC()[cIndex_]);
-    }
-    else
-    {
-        // Stage 2: mix all coupling scalars except c
+        // Stage 1: standard MMCcurl step — mix all coupling scalars except c.
+        // c is not touched here; it is recomputed from temperature after Stage 1.
         forAll(p.XiC(), nn)
         {
             if (nn == cIndex_)
                 continue;
 
+            scalar av =
+                (p.wt() * p.XiC()[nn] + q.wt() * q.XiC()[nn]) / wtSum;
+
+            p.XiC()[nn] += mixExtent * (av - p.XiC()[nn]);
+            q.XiC()[nn] += mixExtent * (av - q.XiC()[nn]);
+        }
+    }
+    else
+    {
+        // Stage 2: second-conditioning step — mix all coupling scalars,
+        // including c (which was freshly derived from the post-Stage-1
+        // temperature before this stage runs).
+        forAll(p.XiC(), nn)
+        {
             scalar av =
                 (p.wt() * p.XiC()[nn] + q.wt() * q.XiC()[nn]) / wtSum;
 
@@ -498,23 +599,28 @@ void Foam::sparsePremixedMMCcurl<CloudType>::printInfo()
     Info << "Mixing Model: sparsePremixedMMCcurl" << nl
          << token::TAB
          << "(two-stage second conditioning, Sundaram & Klimenko 2017)" << nl
-         << token::TAB << "Stage 1 — full set, shadow-position pairing:" << nl
-         << token::TAB << "  CL:                  " << CL_              << nl
-         << token::TAB << "  mixes only:          " << couplingVarName_ << nl
-         << token::TAB << "Stage 2 — flame-zone subset, phi* pairing:"  << nl
-         << token::TAB << "  Tu (unburned) [K]:   " << Tu_              << nl
-         << token::TAB << "  Tb (burned)   [K]:   " << Tb_              << nl
-         << token::TAB << "  cMin (subset lower): " << cMin_            << nl
-         << token::TAB << "  cMax (subset upper): " << cMax_            << nl
-         << token::TAB << "  beta (phi* coeff):   " << beta_            << nl
-         << token::TAB << "  progress variable:   " << couplingVarName_ << nl
-         << token::TAB << "    -> XiC index:      " << cIndex_          << nl
-         << token::TAB << "  OU variable:         " << wOUVarName_       << nl
-         << token::TAB << "    -> XiR index:      " << wOUIndex_         << nl
-         << token::TAB << "  shadow pos dims:     " << numShadowPos_     << nl
-         << token::TAB << "ri:                    " << this->ri_         << nl
-         << token::TAB << "Xii:                   " << this->Xii_        << nl
-         << token::TAB << "---------------------------"                   << nl;
+         << token::TAB << "Stage 1 — full set, shadow-position pairing + single-step reaction:" << nl
+         << token::TAB << "  CL:                     " << CL_               << nl
+         << token::TAB << "  mixes all XiC except:   " << couplingVarName_  << nl
+         << token::TAB << "  reaction:               single-step (reactionModel in subModelProperties)" << nl
+         << token::TAB << "  (c recomputed from T after Stage 1 reaction)"   << nl
+         << token::TAB << "Stage 2 — flame-zone subset [sP+phi*] pairing + detailed reaction:" << nl
+         << token::TAB << "  Tu (unburned) [K]:      " << Tu_               << nl
+         << token::TAB << "  Tb (burned)   [K]:      " << Tb_               << nl
+         << token::TAB << "  cMin (subset lower):    " << cMin_              << nl
+         << token::TAB << "  cMax (subset upper):    " << cMax_              << nl
+         << token::TAB << "  beta (phi* coeff):      " << beta_              << nl
+         << token::TAB << "  progress variable:      " << couplingVarName_   << nl
+         << token::TAB << "    -> XiC index:         " << cIndex_            << nl
+         << token::TAB << "  OU variable:            " << wOUVarName_        << nl
+         << token::TAB << "    -> XiR index:         " << wOUIndex_          << nl
+         << token::TAB << "  shadow pos dims:        " << numShadowPos_      << nl
+         << token::TAB << "  pairing space dims:     " << numShadowPos_ + 1  << nl
+         << token::TAB << "  reaction:               detailed (detailedReactionModelCoeffs)" << nl
+         << token::TAB << "  (c recomputed from T after Stage 2 reaction)"   << nl
+         << token::TAB << "ri:                       " << this->ri_          << nl
+         << token::TAB << "Xii:                      " << this->Xii_         << nl
+         << token::TAB << "---------------------------"                       << nl;
     if (meanTimeScale_)
         Info << token::TAB
              << "Time scale: harmonic mean of pair values" << nl;

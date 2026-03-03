@@ -26,7 +26,7 @@ Class
     Foam::sparsePremixedMMCcurl
 
 Description
-    Sparse second-conditioning MMC mixing model for premixed flames.
+    Sparse second-conditioning MMC mixing-reaction model for premixed flames.
 
     Implements the two-stage sequential conditioning method of
     Sundaram & Klimenko (PCI 36, 2017, 1937-1945) to reduce the required
@@ -38,34 +38,53 @@ Description
 
     Progress variable
     -----------------
-    c is computed every time step from each particle's temperature using
+    c is derived every time step from each particle's temperature using
 
         c = (T_p - Tu) / (Tb - Tu)                              (1)
 
     clamped to [0, 1], where T_p is the particle temperature (p.T()),
     Tu is the unburned temperature, and Tb is the burned temperature.
     The result is stored in the particle's XiC array (XiC[cIndex_]).
-    For remote particles in parallel runs, T is interpolated from the
-    Eulerian "T" field at the particle's position.
 
-    Two sequential mixing stages per time step
-    ------------------------------------------
-      Stage 1 — Shadow-position pairing  (full particle set)
-        ALL particles are paired in [position, sPx, sPy, sPz] space.
-        Only the progress variable c is mixed.
+    Two sequential mixing-reaction stages per time step
+    ----------------------------------------------------
+      Stage 1 — Shadow-position pairing + single-step reaction (full set)
+        ALL particles are paired in [sPx, sPy, sPz] space.
+        All coupling scalars EXCEPT c are mixed (standard MMCcurl step).
+        After mixing, ALL local particles react using the single-step
+        chemistry specified in 'constant/thermophysicalProperties'
+        (via cloud.reaction(), i.e. 'reactionModel' in subModelProperties).
+        This locates the flame front consistent with the existing solver.
+        After the reaction, c is recomputed from the updated T (eq. 1)
+        and synced into the Eulerian field data.
 
-      Stage 2 — Modified progress variable pairing  (flame-zone subset)
-        Only particles with c in [cMin, cMax] (default [0.05, 0.95])
-        are included. These are the flame-zone particles; fully unburned
-        or fully burned particles are excluded. For each selected particle:
+      Stage 2 — Combined reference pairing + detailed reaction (flame-zone)
+        Only particles with c in [cMin, cMax] (default [0.05, 0.95]) are
+        included — the flame-zone subset.  For each selected particle the
+        OU-modulated progress variable is formed:
             phi* = c * exp(beta * wOU)
-        The subset is paired in [position, phi*] space and all reactive
-        scalars (all XiC except c) are mixed.
+        The subset is paired in the combined 4-D space [sPx, sPy, sPz, phi*]
+        so that only particles close in BOTH shadow-position space AND
+        flame structure are mixed.  All coupling scalars (including c) are
+        mixed in this stage.
+        After Stage 2 mixing, the flame-zone particles undergo detailed
+        chemistry using the model in 'detailedReactionModelCoeffs'
+        (via cloud.reaction2()).  c is then recomputed from the updated T.
 
         This flame-zone filter is the sparsity mechanism described in
-        Sundaram & Klimenko 2017: the reactive-scalar mixing only needs
-        the fraction of particles inside the flame, dramatically reducing
-        the number required for Stage 2 (e.g. 2500 from 10000).
+        Sundaram & Klimenko 2017: the second-conditioning mixing only
+        needs the fraction of particles inside the flame, dramatically
+        reducing the number required for Stage 2 (e.g. 2500 from 10000).
+
+    Transport-level chemistry
+    -------------------------
+    Because Smix() owns all chemistry calls, set
+
+        reactionInSmix  true;
+
+    in the cloud's subModelProperties to prevent ReactingPopeParticle::calc()
+    from also calling cloud.reaction() during particle transport (which would
+    double-count the single-step reaction).
 
     Coefficients (sparsePremixedMMCcurlCoeffs)
     -------------------------------------------
@@ -163,7 +182,7 @@ class sparsePremixedMMCcurl
             return Foam::max(0.0, Foam::min(1.0, (T - Tu_) / (Tb_ - Tu_)));
         }
 
-        //- Stage 1: mix only c for a list of pairs.
+        //- Stage 1: mix all XiC except c for a list of pairs.
         //  Pair indices resolve into eulerianFieldDataList_.
         void smixStage1
         (
@@ -171,7 +190,7 @@ class sparsePremixedMMCcurl
             scalar deltaT
         );
 
-        //- Stage 2: mix all scalars except c for a list of pairs.
+        //- Stage 2: mix all scalars (including c) for a list of pairs.
         //  Pair indices resolve into subsetList, NOT eulerianFieldDataList_.
         void smixStage2
         (
@@ -181,7 +200,8 @@ class sparsePremixedMMCcurl
         );
 
         //- Perform staged Curl mixing for one pair.
-        //  stageFlag 1 → mix only cIndex_; 2 → mix everything except cIndex_.
+        //  stageFlag 1 → mix all XiC except cIndex_ (standard MMCcurl step).
+        //  stageFlag 2 → mix all XiC including cIndex_ (second-conditioning).
         void mixpairStaged
         (
             particleType& p,
@@ -222,9 +242,10 @@ class sparsePremixedMMCcurl
     // Member Functions
 
         //- Two-stage Smix.
-        //  Computes c = (T_p - Tu)/(Tb - Tu) for all local particles, then
-        //  runs Stage 1 (full set, shadow-position pairing, mix c) and
-        //  Stage 2 (flame-zone subset, phi* pairing, mix reactive scalars).
+        //  Stage 1: full set, shadow-position pairing, mix all XiC except c.
+        //  Post-Stage-1: recompute c = (T_p-Tu)/(Tb-Tu) from mixed T.
+        //  Stage 2: flame-zone subset, paired in [sP, phi*] combined space,
+        //           mix all XiC (including c).
         virtual void Smix();
 
         //- Required by base class interface (fallback: calls Stage 2 mixing)
