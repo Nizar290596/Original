@@ -43,10 +43,31 @@ Foam::ReactingPopeCloud<CloudType>::reaction()
     return reactionModel_();
 }
 template<class CloudType>
+inline const Foam::ReactionModel<Foam::ReactingPopeCloud<CloudType> >&
+Foam::ReactingPopeCloud<CloudType>::reaction2() const
+{
+    return reactionModel2_();
+}
+
+template<class CloudType>
+inline Foam::ReactionModel<Foam::ReactingPopeCloud<CloudType> >&
+Foam::ReactingPopeCloud<CloudType>::reaction2()
+{
+    return reactionModel2_();
+}
+
+template<class CloudType>
 inline const Foam::Switch&
-Foam::ReactingPopeCloud<CloudType>::balanceReactionLoad() 
+Foam::ReactingPopeCloud<CloudType>::balanceReactionLoad()
 {
     return balanceReactionLoad_;
+}
+
+template<class CloudType>
+inline bool
+Foam::ReactingPopeCloud<CloudType>::reactionInSmix() const
+{
+    return reactionInSmix_;
 }
 
 

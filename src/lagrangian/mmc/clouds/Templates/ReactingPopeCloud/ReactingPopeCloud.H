@@ -96,18 +96,30 @@ class ReactingPopeCloud
             //- Disallow default bitwise assignment
             void operator=(const ReactingPopeCloud&);
 
-            //-swritch of balance reaction load
-            Switch balanceReactionLoad_; 
+            //- Switch: balance reaction load across processors
+            Switch balanceReactionLoad_;
+
+            //- Switch: when true, Smix() owns all chemistry calls and
+            //  ReactingPopeParticle::calc() skips the transport-level reaction.
+            //  Set to 'true' when using sparsePremixedMMCcurl (staged mixing).
+            Switch reactionInSmix_;
 
 
     protected:
 
         // Protected data
-        
+
         // References to the cloud sub-models
 
-            //- Reaction model
+            //- Stage 1 reaction model (single-step chemistry).
+            //  Read from 'reactionModel' in subModelProperties.
             autoPtr<ReactionModel<ReactingPopeCloud<CloudType> > > reactionModel_;
+
+            //- Stage 2 reaction model (detailed chemistry).
+            //  Read from 'detailedReactionModelCoeffs' in subModelProperties.
+            //  Used by sparsePremixedMMCcurl after Stage 2 mixing on the
+            //  flame-zone subset (0.05 < c < 0.95).
+            autoPtr<ReactionModel<ReactingPopeCloud<CloudType> > > reactionModel2_;
 
         // Sources
 
@@ -161,14 +173,25 @@ class ReactingPopeCloud
 
         // Sub-models
 
-            //- Return const access to reacting model
+            //- Return const access to Stage 1 reaction model (single-step)
             inline const ReactionModel<ReactingPopeCloud<CloudType> >& reaction() const;
 
-            //- Return const access to reacting model
+            //- Return non-const access to Stage 1 reaction model (single-step)
             inline ReactionModel<ReactingPopeCloud<CloudType> >& reaction();
 
-            //- Return const access to balanceReactionLoad swtich
+            //- Return const access to Stage 2 reaction model (detailed)
+            inline const ReactionModel<ReactingPopeCloud<CloudType> >& reaction2() const;
+
+            //- Return non-const access to Stage 2 reaction model (detailed)
+            inline ReactionModel<ReactingPopeCloud<CloudType> >& reaction2();
+
+            //- Return balanceReactionLoad switch
             inline const Switch& balanceReactionLoad();
+
+            //- Return reactionInSmix switch.
+            //  When true, chemistry is managed by Smix() (staged mixing model)
+            //  and ReactingPopeParticle::calc() skips the transport-level reaction.
+            inline bool reactionInSmix() const;
 
         // Modelling options
 

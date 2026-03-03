@@ -26,7 +26,7 @@ Class
     Foam::sparsePremixedMMCcurl
 
 Description
-    Sparse second-conditioning MMC mixing model for premixed flames.
+    Sparse second-conditioning MMC mixing-reaction model for premixed flames.
 
     Implements the two-stage sequential conditioning method of
     Sundaram & Klimenko (PCI 36, 2017, 1937-1945) to reduce the required
@@ -38,45 +38,53 @@ Description
 
     Progress variable
     -----------------
-    c is computed every time step from each particle's temperature using
+    c is derived every time step from each particle's temperature using
 
         c = (T_p - Tu) / (Tb - Tu)                              (1)
 
     clamped to [0, 1], where T_p is the particle temperature (p.T()),
     Tu is the unburned temperature, and Tb is the burned temperature.
     The result is stored in the particle's XiC array (XiC[cIndex_]).
-    For remote particles in parallel runs, T is interpolated from the
-    Eulerian "T" field at the particle's position.
 
-    Two sequential mixing stages per time step
-    ------------------------------------------
-      Stage 1 — Shadow-position pairing  (full particle set)
+    Two sequential mixing-reaction stages per time step
+    ----------------------------------------------------
+      Stage 1 — Shadow-position pairing + single-step reaction (full set)
         ALL particles are paired in [sPx, sPy, sPz] space.
         All coupling scalars EXCEPT c are mixed (standard MMCcurl step).
-        c is deliberately not touched here.
+        After mixing, ALL local particles react using the single-step
+        chemistry specified in 'constant/thermophysicalProperties'
+        (via cloud.reaction(), i.e. 'reactionModel' in subModelProperties).
+        This locates the flame front consistent with the existing solver.
+        After the reaction, c is recomputed from the updated T (eq. 1)
+        and synced into the Eulerian field data.
 
-      Post-Stage-1 — c recomputation
-        After Stage 1 has mixed the temperatures, c is recomputed for
-        every local particle from eq. (1).  The updated c values are
-        synced into the Eulerian field data so Stage 2 sees the
-        post-Stage-1 progress variable.
-
-      Stage 2 — Combined reference pairing  (flame-zone subset)
-        Only particles with c in [cMin, cMax] (default [0.05, 0.95])
-        are included. These are the flame-zone particles; fully unburned
-        or fully burned particles are excluded.  For each selected
-        particle the modified progress variable is formed:
+      Stage 2 — Combined reference pairing + detailed reaction (flame-zone)
+        Only particles with c in [cMin, cMax] (default [0.05, 0.95]) are
+        included — the flame-zone subset.  For each selected particle the
+        OU-modulated progress variable is formed:
             phi* = c * exp(beta * wOU)
-        The subset is paired in the combined 4-D space
-            [sPx, sPy, sPz, phi*]
+        The subset is paired in the combined 4-D space [sPx, sPy, sPz, phi*]
         so that only particles close in BOTH shadow-position space AND
-        flame structure are mixed.  All coupling scalars (including c)
-        are mixed in this stage.
+        flame structure are mixed.  All coupling scalars (including c) are
+        mixed in this stage.
+        After Stage 2 mixing, the flame-zone particles undergo detailed
+        chemistry using the model in 'detailedReactionModelCoeffs'
+        (via cloud.reaction2()).  c is then recomputed from the updated T.
 
         This flame-zone filter is the sparsity mechanism described in
         Sundaram & Klimenko 2017: the second-conditioning mixing only
         needs the fraction of particles inside the flame, dramatically
         reducing the number required for Stage 2 (e.g. 2500 from 10000).
+
+    Transport-level chemistry
+    -------------------------
+    Because Smix() owns all chemistry calls, set
+
+        reactionInSmix  true;
+
+    in the cloud's subModelProperties to prevent ReactingPopeParticle::calc()
+    from also calling cloud.reaction() during particle transport (which would
+    double-count the single-step reaction).
 
     Coefficients (sparsePremixedMMCcurlCoeffs)
     -------------------------------------------
