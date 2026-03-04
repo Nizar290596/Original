@@ -31,7 +31,6 @@ License
 template<class CloudType>
 void Foam::ReactingPopeCloud<CloudType>::setModels()
 {
-    // Stage 1: single-step reaction model (from 'reactionModel' key)
     reactionModel_.reset
     (
         ReactionModel<ReactingPopeCloud<CloudType> >::New
@@ -41,28 +40,6 @@ void Foam::ReactingPopeCloud<CloudType>::setModels()
         ).ptr()
     );
 
-    // Stage 2: detailed reaction model.
-    // Read from the 'detailedReactionModelCoeffs' subdict, which must contain
-    // a 'reactionModel' key and the corresponding coefficients dict.
-    if (this->subModelProperties().found("detailedReactionModelCoeffs"))
-    {
-        Info << "Stage 2 detailed reaction model found." << endl;
-        reactionModel2_.reset
-        (
-            ReactionModel<ReactingPopeCloud<CloudType> >::New
-            (
-                this->subModelProperties()
-                    .subDict("detailedReactionModelCoeffs"),
-                *this
-            ).ptr()
-        );
-    }
-    else
-    {
-        Info << "No 'detailedReactionModelCoeffs' found in subModelProperties."
-             << " Stage 2 will reuse the Stage 1 reaction model." << endl;
-        reactionModel2_ = reactionModel_->clone();
-    }
 }
 
 
@@ -108,11 +85,7 @@ Foam::ReactingPopeCloud<CloudType>::ReactingPopeCloud
 
     balanceReactionLoad_(false),
 
-    reactionInSmix_(false),
-
-    reactionModel_(nullptr),
-
-    reactionModel2_(nullptr)
+    reactionModel_(nullptr)
 {
     Info << "Creating reacting Pope Particle Cloud." << nl << endl;
 
@@ -124,11 +97,6 @@ Foam::ReactingPopeCloud<CloudType>::ReactingPopeCloud
         this->subModelProperties().lookupOrDefault("balanceReactionLoad", false);
 
     Info << nl << "balanceReactionLoad is " << balanceReactionLoad() << endl;
-
-    reactionInSmix_ =
-        this->subModelProperties().lookupOrDefault("reactionInSmix", false);
-
-    Info << nl << "reactionInSmix is " << reactionInSmix() << endl;
 
     setEulerianStatistics();
 
@@ -180,11 +148,7 @@ Foam::ReactingPopeCloud<CloudType>::ReactingPopeCloud
 
     balanceReactionLoad_(false),
 
-    reactionInSmix_(false),
-
-    reactionModel_(nullptr),
-
-    reactionModel2_(nullptr)
+    reactionModel_(nullptr)
 {
     Info << "Creating reacting Pope Particle Cloud." << nl << endl;
 
@@ -196,11 +160,6 @@ Foam::ReactingPopeCloud<CloudType>::ReactingPopeCloud
         this->subModelProperties().lookupOrDefault("balanceReactionLoad", false);
 
     Info << nl << "balanceReactionLoad is " << balanceReactionLoad() << endl;
-
-    reactionInSmix_ =
-        this->subModelProperties().lookupOrDefault("reactionInSmix", false);
-
-    Info << nl << "reactionInSmix is " << reactionInSmix() << endl;
 
     setEulerianStatistics();
 

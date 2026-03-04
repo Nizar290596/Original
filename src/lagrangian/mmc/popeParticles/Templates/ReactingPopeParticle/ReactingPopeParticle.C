@@ -56,34 +56,32 @@ void Foam::ReactingPopeParticle<ParticleType>::calc
 {
     ParticleType::calc(cloud, td, dt, cellI);
 
-    // When reactionInSmix is active, chemistry and temperature update are
-    // managed entirely by Smix() (staged mixing model).  Skip here to avoid
-    // double-counting reactions within the same timestep.
-    if (!cloud.reactionInSmix())
+//    Info << "calc reaction" << endl;
+
+    // Reaction models uses mixture fraction. For now I pass the conditioning
+    // variable  used for density coupling but something more generic is required.
+
+    // Conditioning (state) variable
+    const word cVarName = cloud.coupling().cVarName();
+
+    if(!cloud.balanceReactionLoad())
     {
-        // Reaction model uses mixture fraction.  For now the conditioning
-        // variable used for density coupling is passed; something more
-        // generic may be required in future.
-        const word cVarName = cloud.coupling().cVarName();
+        scalar t0 = cloud.db().time().value();
 
-        if (!cloud.balanceReactionLoad())
-        {
-            scalar t0 = cloud.db().time().value();
-
-            cloud.reaction().calculate
-            (
-                t0, dt, this->hA(), this->pc(), this->T(),
-                this->XiC(cVarName), this->Y()
-            );
-        }
-
-        this->T() = cloud.composition().particleMixture
+        cloud.reaction().calculate
         (
-            this->Y()
-        ).THa(this->hA(), this->pc(), this->T());
-
-        this->NumActSp() = cloud.reaction().nActiveSp();
+            t0,dt,this->hA(),this->pc(),this->T(),this->XiC(cVarName),this->Y()
+        );
     }
+
+
+    this->T() = cloud.composition().particleMixture
+    (
+        this->Y()
+    ).THa(this->hA(), this->pc(), this->T()
+    );
+//    Info << "T after update from raction ="<< this->T() << endl;
+    this-> NumActSp() = cloud.reaction().nActiveSp();
 }
 
 
