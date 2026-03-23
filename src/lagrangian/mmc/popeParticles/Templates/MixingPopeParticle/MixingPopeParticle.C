@@ -169,8 +169,12 @@ void Foam::MixingPopeParticle<ParticleType>::initStatisticalSampling()
 {
     ParticleType::initStatisticalSampling();
 
-    // Add ethalpy
-    this->nameVariableLookUpTable().addNamedVariable("dx",dx_);
+    // Add physical-space mixing distance
+    this->nameVariableLookUpTable().addNamedVariable("dx", dx_);
+
+    // Second conditioning scalars
+    this->nameVariableLookUpTable().addNamedVariable("omegaOU",     omegaOU_);
+    this->nameVariableLookUpTable().addNamedVariable("phiModified", phiModified_);
 
     // Note: XiRNames is initialized as a static variablebefore 
     // XiR_ is set. Therefore we need to check if they are set to avoid
@@ -208,7 +212,10 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_)
+    dx_(p.dx_),
+    secondCondFlag_(p.secondCondFlag_),
+    omegaOU_(p.omegaOU_),
+    phiModified_(p.phiModified_)
 {
     initStatisticalSampling();
 }
@@ -224,7 +231,10 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p, mesh),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_)
+    dx_(p.dx_),
+    secondCondFlag_(p.secondCondFlag_),
+    omegaOU_(p.omegaOU_),
+    phiModified_(p.phiModified_)
 {
     initStatisticalSampling();
 }

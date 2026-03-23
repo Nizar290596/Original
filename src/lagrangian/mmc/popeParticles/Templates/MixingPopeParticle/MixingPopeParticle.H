@@ -130,6 +130,17 @@ protected:
             //- Distance between mixing particle pairs in physical space
             scalar dx_;
 
+            // Second conditioning fields
+
+                //- Subset flag: 0 = regular particle, 1 = second-cond subset
+                label secondCondFlag_;
+
+                //- Ornstein-Uhlenbeck process state variable ω_OU
+                scalar omegaOU_;
+
+                //- Modified progress variable φ° = φ * exp(β * ω_OU)
+                scalar phiModified_;
+
 public:
 
     // Static data members
@@ -144,6 +155,9 @@ public:
             " XiR"
           + " dXiR"
           + " dx"
+          + " secondCondFlag"
+          + " omegaOU"
+          + " phiModified"
         );
 
 
@@ -228,26 +242,44 @@ public:
             //- Return const access to specific reference variable
             inline const scalar& XiR(const word& name) const;
             
-            //- Return const access to specific ref variable mixing distance 
+            //- Return const access to specific ref variable mixing distance
             inline const scalar& dXiR(const word& name) const;
+
+            //- Return const access to second conditioning flag
+            inline label secondCondFlag() const;
+
+            //- Return const access to OU state variable
+            inline scalar omegaOU() const;
+
+            //- Return const access to modified progress variable
+            inline scalar phiModified() const;
 
 
         // Edit
-            
+
             //- Return reference variables
             inline scalarField& XiR();
 
             //- Return distance between mixing particles in Xi-space
             inline scalarField& dXiR();
-            
+
             //- Return distance between mixing particles in x-space
             inline scalar& dx();
-            
+
             //- Return specific reference variable
             inline scalar& XiR(const word& name);
-            
+
             //- Return specific reference variable mixing distance
             inline scalar& dXiR(const word& name);
+
+            //- Return reference to second conditioning flag
+            inline label& secondCondFlag();
+
+            //- Return reference to OU state variable
+            inline scalar& omegaOU();
+
+            //- Return reference to modified progress variable
+            inline scalar& phiModified();
             
             //- Set the static member variables 
             template<class CloudType>

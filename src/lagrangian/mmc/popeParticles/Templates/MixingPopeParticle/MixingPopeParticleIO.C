@@ -55,13 +55,19 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(mesh, is, readFields, newFormat),
     XiR_(0),
     dXiR_(0),
-    dx_(0.0)
+    dx_(0.0),
+    secondCondFlag_(0),
+    omegaOU_(0.0),
+    phiModified_(0.0)
 {
     if (readFields)
     {
         is  >>  XiR_
             >> dXiR_
-            >> dx_;
+            >> dx_
+            >> secondCondFlag_
+            >> omegaOU_
+            >> phiModified_;
     }
 
     initStatisticalSampling();
@@ -109,11 +115,29 @@ void Foam::MixingPopeParticle<ParticleType>::readFields
     IOField<scalar> dx(c.newIOobject("dx", IOobject::MUST_READ));
     c.checkFieldIOobject(c, dx);
 
+    IOField<label>  secondCondFlag
+    (
+        c.newIOobject("secondCondFlag", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, secondCondFlag);
+
+    IOField<scalar> omegaOU(c.newIOobject("omegaOU", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, omegaOU);
+
+    IOField<scalar> phiModified
+    (
+        c.newIOobject("phiModified", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, phiModified);
+
     label i = 0;
     forAllIters(c, iter)
     {
         MixingPopeParticle<ParticleType>& p = iter();
-        p.dx_           = dx[i];       
+        p.dx_            = dx[i];
+        p.secondCondFlag_ = secondCondFlag[i];
+        p.omegaOU_        = omegaOU[i];
+        p.phiModified_    = phiModified[i];
         i++;
     }
     
@@ -195,16 +219,31 @@ void Foam::MixingPopeParticle<ParticleType>::writeFields
     if (np > 0)
     {
         IOField<scalar> dx(c.newIOobject("dx", IOobject::NO_READ), np);
+        IOField<label>  secondCondFlag
+        (
+            c.newIOobject("secondCondFlag", IOobject::NO_READ), np
+        );
+        IOField<scalar> omegaOU(c.newIOobject("omegaOU", IOobject::NO_READ), np);
+        IOField<scalar> phiModified
+        (
+            c.newIOobject("phiModified", IOobject::NO_READ), np
+        );
 
         label i = 0;
         forAllConstIters(c, iter)
         {
             const MixingPopeParticle<ParticleType>& p = iter();
-            dx[i] = p.dx_;
+            dx[i]             = p.dx_;
+            secondCondFlag[i] = p.secondCondFlag_;
+            omegaOU[i]        = p.omegaOU_;
+            phiModified[i]    = p.phiModified_;
             i++;
         }
 
         dx.write();
+        secondCondFlag.write();
+        omegaOU.write();
+        phiModified.write();
         
         // Write the reference variables and distances in Xi space
         const wordList& XiRTypes = mixModel.XiRNames();
@@ -269,7 +308,10 @@ Foam::Ostream& Foam::operator<<
     os  << static_cast<const ParticleType&>(p)
         << token::SPACE << p.XiR_
         << token::SPACE << p.dXiR_
-        << token::SPACE << p.dx_;
+        << token::SPACE << p.dx_
+        << token::SPACE << p.secondCondFlag_
+        << token::SPACE << p.omegaOU_
+        << token::SPACE << p.phiModified_;
  
     // Check state of Ostream
     os.check
