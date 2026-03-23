@@ -82,37 +82,53 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
         false,  // Only the top level cloud will call initAtCnstr
         readFields
     ),
-  
+
     mixingPopeCloud(),
-    
+
     cloudCopyPtr_(nullptr),
-    
-    mixingModel_(nullptr)
-    
+
+    mixingModel_(nullptr),
+
+    secondCondR_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("R", 0.0)
+    ),
+    secondCondBeta_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("beta", 1.0)
+    ),
+    secondCondTauOU_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("tauOU", 1.0)
+    )
+
 {
     Info << "Creating mixing Pope Particle Cloud." << nl << endl;
 
     setModels(Xi); // passing mmcVarSet
-    
+
     Info << nl << "Mixing model constructed." << endl;
-    
+
     setEulerianStatistics();
-    
+
     if(readFields)
     {
         if(this->size()>0)
         {
             Info << nl << "Reading Mixing Pope particle cloud data from file." << endl;
-            
+
             particleType::mixingParticleIOType::readFields(*this, this->mixing());
         }
-    
+
         else
         {
             if(initAtCnstr)
             {
                 Info << "Initial realease of Pope particles into the finite volume field." << nl << endl;
-            
+
                 this->initReleaseParticles();
             }
         }
@@ -138,37 +154,53 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
         false,      // Only the top level cloud will call initAtCnstr
         readFields
     ),
-  
+
     mixingPopeCloud(),
-    
+
     cloudCopyPtr_(nullptr),
-    
-    mixingModel_(nullptr)
-    
+
+    mixingModel_(nullptr),
+
+    secondCondR_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("R", 0.0)
+    ),
+    secondCondBeta_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("beta", 1.0)
+    ),
+    secondCondTauOU_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .getOrDefault<scalar>("tauOU", 1.0)
+    )
+
 {
     Info << "Creating mixing Pope Particle Cloud." << nl << endl;
 
     setModels(Xi); // passing mmcVarSet
-    
+
     Info << nl << "Mixing model constructed." << endl;
-    
+
     setEulerianStatistics();
-    
+
     if(readFields)
     {
         if(this->size()>0)
         {
             Info << nl << "Reading Mixing Pope particle cloud data from file." << endl;
-            
+
             particleType::mixingParticleIOType::readFields(*this, this->mixing());
         }
-    
+
         else
         {
             if(initAtCnstr)
             {
                 Info << "Initial realease of Pope particles into the finite volume field." << nl << endl;
-            
+
                 this->initReleaseParticles();
             }
         }
@@ -209,7 +241,11 @@ void Foam::MixingPopeCloud<CloudType>::setParticleProperties
 
 
     particle.dx() = 0;
-    
+
+    // Assign second-conditioning subset flag based on fraction R
+    particle.secondCondFlag() =
+        (secondCondR_ > 0 && this->rndGen_.Random() < secondCondR_) ? 1 : 0;
+
     label numXiR = mixing().numXiR();
 
     //- Extension for a set of variables    

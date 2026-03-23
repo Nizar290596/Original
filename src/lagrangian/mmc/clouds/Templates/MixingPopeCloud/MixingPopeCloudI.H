@@ -40,4 +40,29 @@ Foam::MixingPopeCloud<CloudType>::mixing()
 {
     return mixingModel_();
 }
+
+
+// Second conditioning accessors
+
+template<class CloudType>
+inline Foam::scalar Foam::MixingPopeCloud<CloudType>::secondCondR() const
+{
+    return secondCondR_;
+}
+
+
+template<class CloudType>
+inline Foam::scalar Foam::MixingPopeCloud<CloudType>::secondCondBeta() const
+{
+    return secondCondBeta_;
+}
+
+
+template<class CloudType>
+inline Foam::scalar Foam::MixingPopeCloud<CloudType>::secondCondTauOU() const
+{
+    return secondCondTauOU_;
+}
+
+
 // ************************************************************************* //

@@ -96,6 +96,17 @@ class MixingPopeCloud
         //- Mixing model
         autoPtr<CloudMixingModel<MixingPopeCloud<CloudType> > >  mixingModel_;
 
+        // Second conditioning parameters (read from cloudProperties)
+
+            //- Fraction of particles assigned to the second-cond subset [0,1]
+            scalar secondCondR_;
+
+            //- OU weight β used in φ° = φ·exp(β·ω_OU)
+            scalar secondCondBeta_;
+
+            //- OU process relaxation time τ_OU [s]
+            scalar secondCondTauOU_;
+
     // Protected Member Functions
 
         //- Set cloud sub-models
@@ -152,6 +163,17 @@ class MixingPopeCloud
 
         //- Return non-const access to mixing model
         inline CloudMixingModel<MixingPopeCloud<CloudType> >& mixing();
+
+    // Second conditioning
+
+        //- Fraction of particles in the second-conditioning subset
+        inline scalar secondCondR() const;
+
+        //- OU weight β
+        inline scalar secondCondBeta() const;
+
+        //- OU relaxation time τ_OU [s]
+        inline scalar secondCondTauOU() const;
 
     // I-O
     
