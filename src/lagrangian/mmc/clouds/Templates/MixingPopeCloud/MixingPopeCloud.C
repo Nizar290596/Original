@@ -92,17 +92,17 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     secondCondR_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("R", 0.0)
+            .lookupOrDefault("R", scalar(0.0))
     ),
     secondCondBeta_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("beta", 1.0)
+            .lookupOrDefault("beta", scalar(1.0))
     ),
     secondCondTauOU_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("tauOU", 1.0)
+            .lookupOrDefault("tauOU", scalar(1.0))
     )
 
 {
@@ -164,17 +164,17 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     secondCondR_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("R", 0.0)
+            .lookupOrDefault("R", scalar(0.0))
     ),
     secondCondBeta_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("beta", 1.0)
+            .lookupOrDefault("beta", scalar(1.0))
     ),
     secondCondTauOU_
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
-            .getOrDefault<scalar>("tauOU", 1.0)
+            .lookupOrDefault("tauOU", scalar(1.0))
     )
 
 {
