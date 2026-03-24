@@ -53,12 +53,12 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
         
         forAllConstIter(wordList, cloud.mixing().XiRNames(), iter)
         {
-
-            //- This part requires review
-            //- (For now it works fine just for interpolated)
-
+        
+            //- This part requires review 
+            //- (For now it works fine just for interpolated) 
+              
             //if (setOfXi.Vars(indexInXi[*iter]).refType()=="interpolated")
-            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);
+            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);                
             //else if (setOfXi.Vars(indexInXi[*iter]).refType()=="evolved")
             //{
                 // Do nothing since it is evolved by MMC model
@@ -72,27 +72,6 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
            //     XiR()[indexInXiR[*iter]] = 0.0;//this->position();
         }
     }
-
-    // Advance Ornstein-Uhlenbeck state for second-conditioning particles
-    applyOUProcessUpdate(*this, cloud, dt);
-
-    // Progress variable reaction source: W(φ) = A·(1−φ)·exp[Z·(φ−1)]
-    // Applied to ALL particles; A=0 (default) disables the source entirely.
-    {
-        const scalar aPhi = cloud.secondCondAPhi();
-        const scalar zPhi = cloud.secondCondZPhi();
-        if (aPhi > SMALL)
-        {
-            const scalar phi0 = phi_;
-            phi_ = max(0.0, min(1.0,
-                phi0 + dt * aPhi * (1.0 - phi0) * exp(zPhi * (phi0 - 1.0))
-            ));
-        }
-    }
-
-    // Recompute φ° = φ·exp(β·ω_OU) for all particles.
-    // For non-subset particles ω_OU = 0, so phiModified_ reduces to phi_.
-    phiModified_ = phi_ * exp(cloud.secondCondBeta() * omegaOU_);
 }
 
 
@@ -114,18 +93,11 @@ void Foam::MixingPopeParticle<ParticleType>::calc
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     scalar mixExtent
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
+{       
     ParticleType::mixProperties(p, q, mixExtent);
 }
 
@@ -133,40 +105,26 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     const scalar& mixExtent,
     const scalar& mixExtentSoot
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
-    ParticleType::mixProperties(p, q, mixExtent, mixExtentSoot);
+{       
+    ParticleType::mixProperties(p, q, mixExtent,mixExtentSoot);
 }
 
 
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     scalar mixExtent,
     scalarList ScaledExtent
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
-    ParticleType::mixProperties(p, q, mixExtent, ScaledExtent);
+{       
+    ParticleType::mixProperties(p, q, mixExtent,ScaledExtent);
 }
 
 
@@ -211,13 +169,8 @@ void Foam::MixingPopeParticle<ParticleType>::initStatisticalSampling()
 {
     ParticleType::initStatisticalSampling();
 
-    // Add physical-space mixing distance
-    this->nameVariableLookUpTable().addNamedVariable("dx", dx_);
-
-    // Second conditioning scalars
-    this->nameVariableLookUpTable().addNamedVariable("omegaOU",     omegaOU_);
-    this->nameVariableLookUpTable().addNamedVariable("phi",         phi_);
-    this->nameVariableLookUpTable().addNamedVariable("phiModified", phiModified_);
+    // Add ethalpy
+    this->nameVariableLookUpTable().addNamedVariable("dx",dx_);
 
     // Note: XiRNames is initialized as a static variablebefore 
     // XiR_ is set. Therefore we need to check if they are set to avoid
@@ -255,11 +208,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_),
-    secondCondFlag_(p.secondCondFlag_),
-    omegaOU_(p.omegaOU_),
-    phi_(p.phi_),
-    phiModified_(p.phiModified_)
+    dx_(p.dx_)
 {
     initStatisticalSampling();
 }
@@ -275,11 +224,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p, mesh),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_),
-    secondCondFlag_(p.secondCondFlag_),
-    omegaOU_(p.omegaOU_),
-    phi_(p.phi_),
-    phiModified_(p.phiModified_)
+    dx_(p.dx_)
 {
     initStatisticalSampling();
 }

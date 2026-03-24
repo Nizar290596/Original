@@ -38,11 +38,7 @@ inline Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(mesh, coordinates, cellI, tetFaceI, tetPtI),
     XiR_(0),
     dXiR_(0),
-    dx_(0.0),
-    secondCondFlag_(0),
-    omegaOU_(0.0),
-    phi_(0.0),
-    phiModified_(0.0)
+    dx_(0.0)
 {}
 
 
@@ -127,72 +123,6 @@ template<class ParticleType>
 inline Foam::scalar& Foam::MixingPopeParticle<ParticleType>::dx()
 {
     return dx_;
-}
-
-
-// Second conditioning accessors
-
-template<class ParticleType>
-inline Foam::label
-Foam::MixingPopeParticle<ParticleType>::secondCondFlag() const
-{
-    return secondCondFlag_;
-}
-
-
-template<class ParticleType>
-inline Foam::label&
-Foam::MixingPopeParticle<ParticleType>::secondCondFlag()
-{
-    return secondCondFlag_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar
-Foam::MixingPopeParticle<ParticleType>::omegaOU() const
-{
-    return omegaOU_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar&
-Foam::MixingPopeParticle<ParticleType>::omegaOU()
-{
-    return omegaOU_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar
-Foam::MixingPopeParticle<ParticleType>::phi() const
-{
-    return phi_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar&
-Foam::MixingPopeParticle<ParticleType>::phi()
-{
-    return phi_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar
-Foam::MixingPopeParticle<ParticleType>::phiModified() const
-{
-    return phiModified_;
-}
-
-
-template<class ParticleType>
-inline Foam::scalar&
-Foam::MixingPopeParticle<ParticleType>::phiModified()
-{
-    return phiModified_;
 }
 
 
