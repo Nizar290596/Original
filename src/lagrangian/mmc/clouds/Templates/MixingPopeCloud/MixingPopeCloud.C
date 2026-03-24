@@ -103,6 +103,26 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
             .template lookupOrDefault<scalar>("tauOU", 1.0)
+    ),
+    secondCondTu_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Tu", 300.0)
+    ),
+    secondCondTb_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Tb", 2000.0)
+    ),
+    secondCondAPhi_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("A_phi", 0.0)
+    ),
+    secondCondZPhi_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Z_phi", 0.0)
     )
 
 {
@@ -175,6 +195,26 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
             .template lookupOrDefault<scalar>("tauOU", 1.0)
+    ),
+    secondCondTu_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Tu", 300.0)
+    ),
+    secondCondTb_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Tb", 2000.0)
+    ),
+    secondCondAPhi_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("A_phi", 0.0)
+    ),
+    secondCondZPhi_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("Z_phi", 0.0)
     )
 
 {
@@ -245,6 +285,25 @@ void Foam::MixingPopeCloud<CloudType>::setParticleProperties
     // Assign second-conditioning subset flag based on fraction R
     particle.secondCondFlag() =
         (secondCondR_ > 0 && this->rndGen_.Random() < secondCondR_) ? 1 : 0;
+
+    // Initialize progress variable from particle temperature
+    // phi = (T - Tu) / (Tb - Tu), clamped to [0, 1]
+    {
+        const scalar dT = secondCondTb_ - secondCondTu_;
+        if (dT > SMALL)
+        {
+            particle.phi() =
+                max(0.0, min(1.0, (particle.T() - secondCondTu_) / dT));
+        }
+        else
+        {
+            particle.phi() = 0.0;
+        }
+    }
+
+    // phiModified = phi * exp(beta * omegaOU); omegaOU=0 at creation so
+    // phiModified = phi initially
+    particle.phiModified() = particle.phi();
 
     label numXiR = mixing().numXiR();
 

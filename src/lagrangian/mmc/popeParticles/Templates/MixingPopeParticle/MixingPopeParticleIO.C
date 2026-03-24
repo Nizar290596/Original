@@ -58,6 +58,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     dx_(0.0),
     secondCondFlag_(0),
     omegaOU_(0.0),
+    phi_(0.0),
     phiModified_(0.0)
 {
     if (readFields)
@@ -67,6 +68,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
             >> dx_
             >> secondCondFlag_
             >> omegaOU_
+            >> phi_
             >> phiModified_;
     }
 
@@ -124,6 +126,9 @@ void Foam::MixingPopeParticle<ParticleType>::readFields
     IOField<scalar> omegaOU(c.newIOobject("omegaOU", IOobject::MUST_READ));
     c.checkFieldIOobject(c, omegaOU);
 
+    IOField<scalar> phi(c.newIOobject("phi", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, phi);
+
     IOField<scalar> phiModified
     (
         c.newIOobject("phiModified", IOobject::MUST_READ)
@@ -134,9 +139,10 @@ void Foam::MixingPopeParticle<ParticleType>::readFields
     forAllIters(c, iter)
     {
         MixingPopeParticle<ParticleType>& p = iter();
-        p.dx_            = dx[i];
+        p.dx_             = dx[i];
         p.secondCondFlag_ = secondCondFlag[i];
         p.omegaOU_        = omegaOU[i];
+        p.phi_            = phi[i];
         p.phiModified_    = phiModified[i];
         i++;
     }
@@ -224,6 +230,7 @@ void Foam::MixingPopeParticle<ParticleType>::writeFields
             c.newIOobject("secondCondFlag", IOobject::NO_READ), np
         );
         IOField<scalar> omegaOU(c.newIOobject("omegaOU", IOobject::NO_READ), np);
+        IOField<scalar> phi(c.newIOobject("phi", IOobject::NO_READ), np);
         IOField<scalar> phiModified
         (
             c.newIOobject("phiModified", IOobject::NO_READ), np
@@ -236,6 +243,7 @@ void Foam::MixingPopeParticle<ParticleType>::writeFields
             dx[i]             = p.dx_;
             secondCondFlag[i] = p.secondCondFlag_;
             omegaOU[i]        = p.omegaOU_;
+            phi[i]            = p.phi_;
             phiModified[i]    = p.phiModified_;
             i++;
         }
@@ -243,6 +251,7 @@ void Foam::MixingPopeParticle<ParticleType>::writeFields
         dx.write();
         secondCondFlag.write();
         omegaOU.write();
+        phi.write();
         phiModified.write();
         
         // Write the reference variables and distances in Xi space
@@ -311,6 +320,7 @@ Foam::Ostream& Foam::operator<<
         << token::SPACE << p.dx_
         << token::SPACE << p.secondCondFlag_
         << token::SPACE << p.omegaOU_
+        << token::SPACE << p.phi_
         << token::SPACE << p.phiModified_;
  
     // Check state of Ostream

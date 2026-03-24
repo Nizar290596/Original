@@ -177,6 +177,7 @@ void Foam::MixingPopeParticle<ParticleType>::initStatisticalSampling()
 
     // Second conditioning scalars
     this->nameVariableLookUpTable().addNamedVariable("omegaOU",     omegaOU_);
+    this->nameVariableLookUpTable().addNamedVariable("phi",         phi_);
     this->nameVariableLookUpTable().addNamedVariable("phiModified", phiModified_);
 
     // Note: XiRNames is initialized as a static variablebefore 
@@ -218,6 +219,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     dx_(p.dx_),
     secondCondFlag_(p.secondCondFlag_),
     omegaOU_(p.omegaOU_),
+    phi_(p.phi_),
     phiModified_(p.phiModified_)
 {
     initStatisticalSampling();
@@ -237,6 +239,7 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     dx_(p.dx_),
     secondCondFlag_(p.secondCondFlag_),
     omegaOU_(p.omegaOU_),
+    phi_(p.phi_),
     phiModified_(p.phiModified_)
 {
     initStatisticalSampling();

@@ -107,6 +107,18 @@ class MixingPopeCloud
             //- OU process relaxation time τ_OU [s]
             scalar secondCondTauOU_;
 
+            //- Unburnt mixture temperature Tu [K]
+            scalar secondCondTu_;
+
+            //- Burnt mixture temperature Tb [K]
+            scalar secondCondTb_;
+
+            //- Pre-exponential coefficient in the progress-variable reaction term
+            scalar secondCondAPhi_;
+
+            //- Activation parameter in the progress-variable reaction term
+            scalar secondCondZPhi_;
+
     // Protected Member Functions
 
         //- Set cloud sub-models
@@ -174,6 +186,18 @@ class MixingPopeCloud
 
         //- OU relaxation time τ_OU [s]
         inline scalar secondCondTauOU() const;
+
+        //- Unburnt temperature Tu [K]
+        inline scalar secondCondTu() const;
+
+        //- Burnt temperature Tb [K]
+        inline scalar secondCondTb() const;
+
+        //- Pre-exponential reaction coefficient A_phi
+        inline scalar secondCondAPhi() const;
+
+        //- Activation parameter Z_phi
+        inline scalar secondCondZPhi() const;
 
     // I-O
     

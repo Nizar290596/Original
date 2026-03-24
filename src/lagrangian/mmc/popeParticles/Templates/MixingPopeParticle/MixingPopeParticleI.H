@@ -41,6 +41,7 @@ inline Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     dx_(0.0),
     secondCondFlag_(0),
     omegaOU_(0.0),
+    phi_(0.0),
     phiModified_(0.0)
 {}
 
@@ -160,6 +161,22 @@ inline Foam::scalar&
 Foam::MixingPopeParticle<ParticleType>::omegaOU()
 {
     return omegaOU_;
+}
+
+
+template<class ParticleType>
+inline Foam::scalar
+Foam::MixingPopeParticle<ParticleType>::phi() const
+{
+    return phi_;
+}
+
+
+template<class ParticleType>
+inline Foam::scalar&
+Foam::MixingPopeParticle<ParticleType>::phi()
+{
+    return phi_;
 }
 
 

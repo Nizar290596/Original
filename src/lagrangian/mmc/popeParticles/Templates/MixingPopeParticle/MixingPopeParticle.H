@@ -139,6 +139,9 @@ protected:
                 //- Ornstein-Uhlenbeck process state variable ω_OU
                 scalar omegaOU_;
 
+                //- Progress variable φ = (T - Tu)/(Tb - Tu)  ∈ [0,1]
+                scalar phi_;
+
                 //- Modified progress variable φ° = φ * exp(β * ω_OU)
                 scalar phiModified_;
 
@@ -158,6 +161,7 @@ public:
           + " dx"
           + " secondCondFlag"
           + " omegaOU"
+          + " phi"
           + " phiModified"
         );
 
@@ -252,6 +256,9 @@ public:
             //- Return const access to OU state variable
             inline scalar omegaOU() const;
 
+            //- Return const access to progress variable
+            inline scalar phi() const;
+
             //- Return const access to modified progress variable
             inline scalar phiModified() const;
 
@@ -278,6 +285,9 @@ public:
 
             //- Return reference to OU state variable
             inline scalar& omegaOU();
+
+            //- Return reference to progress variable
+            inline scalar& phi();
 
             //- Return reference to modified progress variable
             inline scalar& phiModified();
