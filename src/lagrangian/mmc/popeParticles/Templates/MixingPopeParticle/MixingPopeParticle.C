@@ -75,24 +75,6 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
 
     // Advance Ornstein-Uhlenbeck state for second-conditioning particles
     applyOUProcessUpdate(*this, cloud, dt);
-
-    // Progress variable reaction source: W(φ) = A·(1−φ)·exp[Z·(φ−1)]
-    // Applied to ALL particles; A=0 (default) disables the source entirely.
-    {
-        const scalar aPhi = cloud.secondCondAPhi();
-        const scalar zPhi = cloud.secondCondZPhi();
-        if (aPhi > SMALL)
-        {
-            const scalar phi0 = phi_;
-            phi_ = max(0.0, min(1.0,
-                phi0 + dt * aPhi * (1.0 - phi0) * exp(zPhi * (phi0 - 1.0))
-            ));
-        }
-    }
-
-    // Recompute φ° = φ·exp(β·ω_OU) for all particles.
-    // For non-subset particles ω_OU = 0, so phiModified_ reduces to phi_.
-    phiModified_ = phi_ * exp(cloud.secondCondBeta() * omegaOU_);
 }
 
 
@@ -114,18 +96,11 @@ void Foam::MixingPopeParticle<ParticleType>::calc
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     scalar mixExtent
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
+{       
     ParticleType::mixProperties(p, q, mixExtent);
 }
 
@@ -133,40 +108,26 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     const scalar& mixExtent,
     const scalar& mixExtentSoot
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
-    ParticleType::mixProperties(p, q, mixExtent, mixExtentSoot);
+{       
+    ParticleType::mixProperties(p, q, mixExtent,mixExtentSoot);
 }
 
 
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p,
-    MixingPopeParticle<ParticleType>& q,
+    MixingPopeParticle<ParticleType>& p, 
+    MixingPopeParticle<ParticleType>& q, 
     scalar mixExtent,
     scalarList ScaledExtent
 )
-{
-    // Mix progress variable φ (first-conditioning, all particles)
-    const scalar phiAv =
-        (p.wt() * p.phi() + q.wt() * q.phi())
-      / (p.wt() + q.wt());
-    p.phi() += mixExtent * (phiAv - p.phi());
-    q.phi() += mixExtent * (phiAv - q.phi());
-
-    ParticleType::mixProperties(p, q, mixExtent, ScaledExtent);
+{       
+    ParticleType::mixProperties(p, q, mixExtent,ScaledExtent);
 }
 
 
