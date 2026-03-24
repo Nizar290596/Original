@@ -53,12 +53,12 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
         
         forAllConstIter(wordList, cloud.mixing().XiRNames(), iter)
         {
-        
-            //- This part requires review 
-            //- (For now it works fine just for interpolated) 
-              
+
+            //- This part requires review
+            //- (For now it works fine just for interpolated)
+
             //if (setOfXi.Vars(indexInXi[*iter]).refType()=="interpolated")
-            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);                
+            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);
             //else if (setOfXi.Vars(indexInXi[*iter]).refType()=="evolved")
             //{
                 // Do nothing since it is evolved by MMC model
@@ -72,6 +72,9 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
            //     XiR()[indexInXiR[*iter]] = 0.0;//this->position();
         }
     }
+
+    // Advance Ornstein-Uhlenbeck state for second-conditioning particles
+    applyOUProcessUpdate(*this, cloud, dt);
 }
 
 
@@ -169,8 +172,13 @@ void Foam::MixingPopeParticle<ParticleType>::initStatisticalSampling()
 {
     ParticleType::initStatisticalSampling();
 
-    // Add ethalpy
-    this->nameVariableLookUpTable().addNamedVariable("dx",dx_);
+    // Add physical-space mixing distance
+    this->nameVariableLookUpTable().addNamedVariable("dx", dx_);
+
+    // Second conditioning scalars
+    this->nameVariableLookUpTable().addNamedVariable("omegaOU",     omegaOU_);
+    this->nameVariableLookUpTable().addNamedVariable("phi",         phi_);
+    this->nameVariableLookUpTable().addNamedVariable("phiModified", phiModified_);
 
     // Note: XiRNames is initialized as a static variablebefore 
     // XiR_ is set. Therefore we need to check if they are set to avoid
@@ -208,7 +216,11 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_)
+    dx_(p.dx_),
+    secondCondFlag_(p.secondCondFlag_),
+    omegaOU_(p.omegaOU_),
+    phi_(p.phi_),
+    phiModified_(p.phiModified_)
 {
     initStatisticalSampling();
 }
@@ -224,7 +236,11 @@ Foam::MixingPopeParticle<ParticleType>::MixingPopeParticle
     ParticleType(p, mesh),
     XiR_(p.XiR_),
     dXiR_(p.dXiR_),
-    dx_(p.dx_)
+    dx_(p.dx_),
+    secondCondFlag_(p.secondCondFlag_),
+    omegaOU_(p.omegaOU_),
+    phi_(p.phi_),
+    phiModified_(p.phiModified_)
 {
     initStatisticalSampling();
 }

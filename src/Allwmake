@@ -13,6 +13,7 @@ set -e
 wmake ${@} $makeType mmcSupport
 wmakeLnInclude -pwd mmcSupport
 wmake ${@} $makeType mmcChemistryModel
+wmakeLnInclude -pwd lagrangian/mmc
 wmake ${@} $makeType lagrangian/mmc
 wmake ${@} $makeType lagrangian/spray
 
