@@ -89,22 +89,23 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
 
     mixingModel_(nullptr),
 
-    secondCondR_(0.0),
-    secondCondBeta_(1.0),
-    secondCondTauOU_(1.0)
+    secondCondR_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("R", 0.0)
+    ),
+    secondCondBeta_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("beta", 1.0)
+    ),
+    secondCondTauOU_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("tauOU", 1.0)
+    )
 
 {
-    // Read second conditioning parameters — done in the body so that
-    // subOrEmptyDict() returns a concrete dictionary& (no dependent-type
-    // template-disambiguation issue as would occur in the initializer list).
-    {
-        const dictionary& scDict =
-            this->cloudProperties_.subOrEmptyDict("secondConditioning");
-        secondCondR_     = scDict.lookupOrDefault("R",     scalar(0.0));
-        secondCondBeta_  = scDict.lookupOrDefault("beta",  scalar(1.0));
-        secondCondTauOU_ = scDict.lookupOrDefault("tauOU", scalar(1.0));
-    }
-
     Info << "Creating mixing Pope Particle Cloud." << nl << endl;
 
     setModels(Xi); // passing mmcVarSet
@@ -160,20 +161,23 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
 
     mixingModel_(nullptr),
 
-    secondCondR_(0.0),
-    secondCondBeta_(1.0),
-    secondCondTauOU_(1.0)
+    secondCondR_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("R", 0.0)
+    ),
+    secondCondBeta_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("beta", 1.0)
+    ),
+    secondCondTauOU_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("tauOU", 1.0)
+    )
 
 {
-    // Read second conditioning parameters (see comment in first constructor)
-    {
-        const dictionary& scDict =
-            this->cloudProperties_.subOrEmptyDict("secondConditioning");
-        secondCondR_     = scDict.lookupOrDefault("R",     scalar(0.0));
-        secondCondBeta_  = scDict.lookupOrDefault("beta",  scalar(1.0));
-        secondCondTauOU_ = scDict.lookupOrDefault("tauOU", scalar(1.0));
-    }
-
     Info << "Creating mixing Pope Particle Cloud." << nl << endl;
 
     setModels(Xi); // passing mmcVarSet
