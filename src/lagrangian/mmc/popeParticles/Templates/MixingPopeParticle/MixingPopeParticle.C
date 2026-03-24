@@ -75,6 +75,17 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
 
     // Advance Ornstein-Uhlenbeck state for second-conditioning particles
     applyOUProcessUpdate(*this, cloud, dt);
+
+    // W(φ): chemical source term  dφ/dt = A·(1−φ)·exp[Z·(φ−1)]
+    {
+        const scalar A = cloud.secondCondAPhi();
+        const scalar Z = cloud.secondCondZPhi();
+        phi_ += dt * A * (1.0 - phi_) * Foam::exp(Z * (phi_ - 1.0));
+        phi_ = max(0.0, min(1.0, phi_));
+    }
+
+    // Recompute φ° = φ·exp(β·ω_OU) after OU and W(φ) updates
+    phiModified_ = phi_ * Foam::exp(cloud.secondCondBeta() * omegaOU_);
 }
 
 
@@ -93,41 +104,66 @@ void Foam::MixingPopeParticle<ParticleType>::calc
 
 // * * * * * * * * * * * * * * * * Operators * * * * * * * * * * * * * * * * //
 
-template<class ParticleType>
-void Foam::MixingPopeParticle<ParticleType>::mixProperties
-(
-    MixingPopeParticle<ParticleType>& p, 
-    MixingPopeParticle<ParticleType>& q, 
-    scalar mixExtent
-)
-{       
-    ParticleType::mixProperties(p, q, mixExtent);
+// Helper: apply IEM phi mixing and clamp to [0,1]
+namespace
+{
+    template<class P>
+    void mixPhiIEM(P& p, P& q, scalar mixExtent)
+    {
+        const scalar phiMean =
+            (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
+        p.phi() += mixExtent * (phiMean - p.phi());
+        q.phi() += mixExtent * (phiMean - q.phi());
+        p.phi() = max(0.0, min(1.0, p.phi()));
+        q.phi() = max(0.0, min(1.0, q.phi()));
+    }
 }
 
 
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p, 
-    MixingPopeParticle<ParticleType>& q, 
+    MixingPopeParticle<ParticleType>& p,
+    MixingPopeParticle<ParticleType>& q,
+    scalar mixExtent
+)
+{
+    ParticleType::mixProperties(p, q, mixExtent);
+
+    // S(φ): first-conditioning IEM mixing of progress variable
+    mixPhiIEM(p, q, mixExtent);
+}
+
+
+template<class ParticleType>
+void Foam::MixingPopeParticle<ParticleType>::mixProperties
+(
+    MixingPopeParticle<ParticleType>& p,
+    MixingPopeParticle<ParticleType>& q,
     const scalar& mixExtent,
     const scalar& mixExtentSoot
 )
-{       
+{
     ParticleType::mixProperties(p, q, mixExtent,mixExtentSoot);
+
+    // S(φ): first-conditioning IEM mixing of progress variable
+    mixPhiIEM(p, q, mixExtent);
 }
 
 
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
-    MixingPopeParticle<ParticleType>& p, 
-    MixingPopeParticle<ParticleType>& q, 
+    MixingPopeParticle<ParticleType>& p,
+    MixingPopeParticle<ParticleType>& q,
     scalar mixExtent,
     scalarList ScaledExtent
 )
-{       
+{
     ParticleType::mixProperties(p, q, mixExtent,ScaledExtent);
+
+    // S(φ): first-conditioning IEM mixing of progress variable
+    mixPhiIEM(p, q, mixExtent);
 }
 
 
