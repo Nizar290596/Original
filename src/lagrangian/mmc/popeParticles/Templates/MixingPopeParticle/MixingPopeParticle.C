@@ -53,12 +53,12 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
         
         forAllConstIter(wordList, cloud.mixing().XiRNames(), iter)
         {
-        
-            //- This part requires review 
-            //- (For now it works fine just for interpolated) 
-              
+
+            //- This part requires review
+            //- (For now it works fine just for interpolated)
+
             //if (setOfXi.Vars(indexInXi[*iter]).refType()=="interpolated")
-            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);                
+            //    XiR()[indexInXiR[*iter]] = td.XiRInterp()[indexInXiR[*iter]].interpolate(this->coordinates(),tetIs);
             //else if (setOfXi.Vars(indexInXi[*iter]).refType()=="evolved")
             //{
                 // Do nothing since it is evolved by MMC model
@@ -72,6 +72,9 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
            //     XiR()[indexInXiR[*iter]] = 0.0;//this->position();
         }
     }
+
+    // Advance Ornstein-Uhlenbeck state for second-conditioning particles
+    applyOUProcessUpdate(*this, cloud, dt);
 }
 
 
