@@ -104,22 +104,6 @@ void Foam::MixingPopeParticle<ParticleType>::calc
 
 // * * * * * * * * * * * * * * * * Operators * * * * * * * * * * * * * * * * //
 
-// Helper: apply IEM phi mixing and clamp to [0,1]
-namespace
-{
-    template<class P>
-    void mixPhiIEM(P& p, P& q, scalar mixExtent)
-    {
-        const scalar phiMean =
-            (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
-        p.phi() += mixExtent * (phiMean - p.phi());
-        q.phi() += mixExtent * (phiMean - q.phi());
-        p.phi() = max(0.0, min(1.0, p.phi()));
-        q.phi() = max(0.0, min(1.0, q.phi()));
-    }
-}
-
-
 template<class ParticleType>
 void Foam::MixingPopeParticle<ParticleType>::mixProperties
 (
@@ -130,8 +114,11 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 {
     ParticleType::mixProperties(p, q, mixExtent);
 
-    // S(φ): first-conditioning IEM mixing of progress variable
-    mixPhiIEM(p, q, mixExtent);
+    // S(φ): mix progress variable between the pair (same as other reactive
+    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
+    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
+    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
+    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 }
 
 
@@ -146,8 +133,11 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 {
     ParticleType::mixProperties(p, q, mixExtent,mixExtentSoot);
 
-    // S(φ): first-conditioning IEM mixing of progress variable
-    mixPhiIEM(p, q, mixExtent);
+    // S(φ): mix progress variable between the pair (same as other reactive
+    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
+    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
+    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
+    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 }
 
 
@@ -162,8 +152,11 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 {
     ParticleType::mixProperties(p, q, mixExtent,ScaledExtent);
 
-    // S(φ): first-conditioning IEM mixing of progress variable
-    mixPhiIEM(p, q, mixExtent);
+    // S(φ): mix progress variable between the pair (same as other reactive
+    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
+    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
+    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
+    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 }
 
 
