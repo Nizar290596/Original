@@ -33,6 +33,7 @@ License
 #include "sootMMCCurl.H"
 #include "Curl.H"
 #include "ransMMCcurl.H"
+#include "secondCondMMCcurl.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,7 +44,8 @@ License
     makeCloudMixingModelType(MMCcurl, CloudType);                           \
     makeCloudMixingModelType(sootMMCCurl, CloudType);                       \
     makeCloudMixingModelType(Curl, CloudType);                              \
-    makeCloudMixingModelType(ransMMCcurl, CloudType);
+    makeCloudMixingModelType(ransMMCcurl, CloudType);                       \
+    makeCloudMixingModelType(secondCondMMCcurl, CloudType);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
