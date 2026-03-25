@@ -32,25 +32,28 @@ Description
     secondCondFlag == 1 and pairs particles in the 4-dimensional reference
     space
 
-        (φ°, ξ_x, ξ_y, ξ_z)
+        (phi_modified, xi_x, xi_y, xi_z)
 
     where
-      - φ° = phiModified (modified progress variable, already computed from
-                          the OU process)
-      - ξ = particle position relative to a user-supplied shadowOrigin
+      - phi_modified = phiModified (modified progress variable, already
+                       computed from the OU process at each timestep)
+      - xi = shadow positions stored in the particle's existing XiR() field
+             as XiR()[0], XiR()[1], XiR()[2]
 
-    The k-d tree splitting is driven by normalisation factors read from the
-    coefficient dictionary.  A tight normalisation for φ° (e.g. phiMod_m =
-    0.01) causes the tree to split preferentially on the progress-variable
-    axis; looser normalisations for the shadow-position coordinates (e.g.
-    sPx_m = sPy_m = sPz_m = 0.05) provide spatial context with lower
-    priority.  Physical coordinates are NOT included as independent splitting
-    dimensions (consistent with the first-conditioning MMCcurl model).
+    The k-d tree splitting uses the normalisation factors from the inherited
+    Xii_ list (read from the Xim_i subdictionary — must have exactly 4
+    entries corresponding to phiMod_m, sPx_m, sPy_m, sPz_m).  A tight
+    normalisation for phi_modified (e.g. 0.01) causes the tree to split
+    preferentially on the progress-variable axis; looser normalisations for
+    the shadow-position coordinates (e.g. 0.05) provide spatial context with
+    lower priority.  Physical coordinates are NOT used as split dimensions
+    (the ncond = 3 + i offset in KkdTreeLikeSearch ensures this).
 
-    Note
-      - The mixing rule applied to found pairs is deferred (mixpair is a
-        stub) and will be added in a subsequent step.
-      - Parallel pairing is not yet implemented; local pairing only.
+    The aISO timescale is computed identically to MMCcurl.  Only Y, T, and
+    hA are mixed between the paired particles; phi, XiR, XiC, and
+    secondCondFlag are NOT mixed.
+
+    Parallel pairing is not implemented; local pairing only.
 
     Usage in cloudProperties:
     \verbatim
@@ -58,21 +61,26 @@ Description
 
     secondCondMMCcurlCoeffs
     {
-        // Required by base class (first-conditioning XiR normalisation)
+        // Base class: position-space normalisation (unused for k-d splitting
+        // but required by the constructor)
         r_i     1e-3;
-        Xim_i { fm_m 0.03; }
+
+        // 4-entry normalisation for the (phiModified, xi_x, xi_y, xi_z)
+        // reference space.  Tight phiMod_m dominates the k-d tree splitting.
+        Xim_i
+        {
+            phiMod_m    0.01;
+            sPx_m       0.05;
+            sPy_m       0.05;
+            sPz_m       0.05;
+        }
 
         pairingMethod   local;
 
-        // Second-conditioning normalisation factors
-        phiMod_m    0.01;   // tight  -> dominates k-d tree splitting
-        sPx_m       0.05;
-        sPy_m       0.05;
-        sPz_m       0.05;
-
-        // Names of the shadow-position XiR variables as defined in
-        // cloudProperties referenceVariables (must match exactly)
-        shadowPosNames  (sPx sPy sPz);
+        // aISO timescale coefficients (same meaning as MMCcurl)
+        CL              0.5;
+        CE              0.1;
+        meanTimeScale   true;
     }
     \endverbatim
 
@@ -82,7 +90,6 @@ Description
 #define secondCondMMCcurl_H
 
 #include "mixParticleModel.H"
-#include <vector>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -105,53 +112,36 @@ class secondCondMMCcurl
 
     // Private data
 
-        //- Normalisation factors for the 4D reference space
-        //  XiR order: [0] phiModified, [1] ξ_x, [2] ξ_y, [3] ξ_z
-        scalar phiMod_m_;
-        scalar sPx_m_;
-        scalar sPy_m_;
-        scalar sPz_m_;
+        //- aISO timescale model coefficients (same as MMCcurl)
+        const scalar CL_;
+        const scalar CE_;
 
-        //- Names of the three shadow-position XiR variables as declared in
-        //  cloudProperties referenceVariables (e.g. sPx, sPy, sPz).
-        //  Values are read from the particle's XiR field at each timestep
-        //  using the same indexInXiR_ lookup used by the base solver.
-        word sPxName_;
-        word sPyName_;
-        word sPzName_;
+        //- true  → harmonic mean of the two particle mixing time scales
+        //- false → minimum of the two particle mixing time scales
+        const Switch meanTimeScale_;
 
 
     // Private member functions
 
-        //- Build the local particle list and find pairs.
-        //  Only particles with secondCondFlag == 1 are included.
-        //  Populates particleList_, eulerianFieldDataList_, particlePairs_.
-        void buildSecondCondList();
-
-        //- Pair-finding wrapper that drives secondCondKdTree.
-        void findSecondCondPairs
+        //- Mix only Y, T, and hA between paired particles.
+        //  Deliberately does NOT mix phi, XiR, XiC, or secondCondFlag.
+        static void mixSpeciesOnly
         (
-            const DynamicList<eulerianFieldData>& eulerianFieldList,
-            DynamicList<List<label>>& pairs
-        ) const;
+            particleType& p,
+            particleType& q,
+            scalar mixExtent
+        );
 
-        //- Recursive k-d tree search in the 4D space (φ°, ξ_x, ξ_y, ξ_z).
-        //
-        //  All four variables are stored in eulerianFieldData::XiR()[0..3].
-        //  The dimension with the largest normalised spread is selected as
-        //  the split axis.  The lessArg comparator from mixParticleModel is
-        //  invoked with ncond = bestI + 3 so that ii_ >= 3 → XiR()[ii_-3]
-        //  is used, bypassing the physical-position branch (ii_ < 3).
-        //  Physical coordinates are therefore never used as split dimensions.
-        void secondCondKdTree
-        (
-            const DynamicList<eulerianFieldData>& particleList,
-            label l,
-            label u,
-            std::vector<label>& pInd,
-            std::vector<label>& L,
-            std::vector<label>& U
-        ) const;
+
+protected:
+
+    // Override of base-class particle-list builder
+
+        //- Build the local particle list filtered to secondCondFlag == 1,
+        //  populate eulerianFieldDataList_ with a 4D XiR
+        //  (phiModified, xi_x, xi_y, xi_z), interpolate Eulerian fields,
+        //  and call findPairs() for local pairing.
+        virtual void buildParticleList() override;
 
 
 public:
@@ -189,11 +179,7 @@ public:
 
     // Member Functions
 
-        //- Override Smix: build flagged-particle list, pair in 4D, then mix
-        virtual void Smix() override;
-
-        //- Pair-wise mixing for second-conditioning pairs.
-        //  Stub — mixing rule to be implemented in a subsequent step.
+        //- Pair-wise mixing: aISO timescale + mixSpeciesOnly
         virtual void mixpair
         (
             particleType& p,
@@ -203,7 +189,7 @@ public:
             scalar& deltaT
         ) override;
 
-        //- Boundary initialisation (returns empty — not applicable here)
+        //- Boundary initialisation (not applicable — returns empty field)
         virtual const scalarField XiR0
         (
             label patch,

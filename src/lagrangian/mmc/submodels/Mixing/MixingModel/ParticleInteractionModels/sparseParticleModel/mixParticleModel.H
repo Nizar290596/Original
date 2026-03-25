@@ -269,7 +269,8 @@ class mixParticleModel
         // Private Member Functions
         
             //- Build particle list and correct for parallel runs
-            void buildParticleList();
+            //  Virtual so derived models can filter the particle set before pairing
+            virtual void buildParticleList();
 
             //- Build particle list for particles considered only for local 
             //  mixing

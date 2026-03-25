@@ -957,7 +957,7 @@ void Foam::mixParticleModel<CloudType>::KkdTreeLikeSearch
         if(disXiR > disMax)
         {
             disMax = disXiR;
-            ncond = i;
+            ncond = 3 + i;  // offset by 3 so lessArg routes to XiR()[i] not position()[i]
             //ncond = particleList[*it].XiR()[i];
             //Info << "i: " << i << endl;
         }

@@ -25,9 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "secondCondMMCcurl.H"
-#include <numeric>
-#include <algorithm>
-#include <cmath>
+#include "interpolationCellPoint.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -41,35 +39,12 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
 :
     mixParticleModel<CloudType>(dict, owner, typeName, Xi),
 
-    phiMod_m_
-    (
-        this->coeffDict().template lookupOrDefault<scalar>("phiMod_m", 0.01)
-    ),
-    sPx_m_
-    (
-        this->coeffDict().template lookupOrDefault<scalar>("sPx_m", 0.05)
-    ),
-    sPy_m_
-    (
-        this->coeffDict().template lookupOrDefault<scalar>("sPy_m", 0.05)
-    ),
-    sPz_m_
-    (
-        this->coeffDict().template lookupOrDefault<scalar>("sPz_m", 0.05)
-    ),
-    sPxName_(),
-    sPyName_(),
-    sPzName_()
+    CL_(this->coeffDict().lookupOrDefault("CL", 0.5)),
+
+    CE_(this->coeffDict().lookupOrDefault("CE", 0.1)),
+
+    meanTimeScale_(this->coeffDict().lookup("meanTimeScale"))
 {
-    const wordList spNames(this->coeffDict().lookup("shadowPosNames"));
-    if (spNames.size() != 3)
-        FatalErrorInFunction
-            << "shadowPosNames must contain exactly 3 variable names, "
-            << "got " << spNames.size()
-            << exit(FatalError);
-    sPxName_ = spNames[0];
-    sPyName_ = spNames[1];
-    sPzName_ = spNames[2];
     printInfo();
 }
 
@@ -81,13 +56,9 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
 )
 :
     mixParticleModel<CloudType>(cm),
-    phiMod_m_(cm.phiMod_m_),
-    sPx_m_   (cm.sPx_m_),
-    sPy_m_   (cm.sPy_m_),
-    sPz_m_   (cm.sPz_m_),
-    sPxName_ (cm.sPxName_),
-    sPyName_ (cm.sPyName_),
-    sPzName_ (cm.sPzName_)
+    CL_(cm.CL_),
+    CE_(cm.CE_),
+    meanTimeScale_(cm.meanTimeScale_)
 {
     printInfo();
 }
@@ -96,16 +67,17 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-void Foam::secondCondMMCcurl<CloudType>::Smix()
+void Foam::secondCondMMCcurl<CloudType>::buildParticleList()
 {
-    buildSecondCondList();
-    this->SmixList();
-}
+    // Set up interpolators for Eulerian transport fields
+    // (identical to mixParticleModel::buildParticleList())
+    interpolationCellPoint<scalar> DEff_intp_(this->DEff_);
+    interpolationCellPoint<scalar> D_intp_   (this->D_);
+    interpolationCellPoint<scalar> Dt_intp_  (this->Dt_);
+    interpolationCellPoint<scalar> DeltaE_intp_(this->DeltaE_);
+    interpolationCellPoint<scalar> mu_intp_  (this->mu_);
+    interpolationCellPoint<scalar> vb_intp_  (this->vb_);
 
-
-template<class CloudType>
-void Foam::secondCondMMCcurl<CloudType>::buildSecondCondList()
-{
     this->particleList_.clear();
     this->eulerianFieldDataList_.clear();
     this->particlePairs_.clear();
@@ -114,196 +86,56 @@ void Foam::secondCondMMCcurl<CloudType>::buildSecondCondList()
 
     forAllIters(this->owner(), iter)
     {
-        // Only include particles flagged for second conditioning
+        // Filter: include only particles flagged for second conditioning
         if (iter().secondCondFlag() != 1)
             continue;
 
-        // Store pointer to the particle (no deallocation ownership)
+        // Append pointer to the particle (no ownership)
         this->particleList_.append(iter.get());
 
         eulerianFieldData eulerianFields;
 
-        const vector pos = iter().position();
+        const vector pos   = iter().position();
+        const label  cellI = iter().cell();
+        const label  faceI = iter().face();
 
         eulerianFields.particleIndex()  = particleInd++;
         eulerianFields.processorIndex() = Pstream::myProcNo();
-
-        // Physical position stored for reference (not used as k-d tree split
-        // axis — all splitting is done via XiR, see secondCondKdTree)
-        eulerianFields.position() = pos;
+        eulerianFields.position()       = pos;
 
         // 4D reference space for the k-d tree:
-        //   XiR[0] = φ°  (phiModified, tight normalisation → dominant axis)
-        //   XiR[1] = ξ_x (shadow x,    loose normalisation)
-        //   XiR[2] = ξ_y (shadow y,    loose normalisation)
-        //   XiR[3] = ξ_z (shadow z,    loose normalisation)
+        //   XiR[0] = phi_modified  (tight normalisation → dominant split axis)
+        //   XiR[1] = xi_x          (shadow position x, from particle XiR()[0])
+        //   XiR[2] = xi_y          (shadow position y, from particle XiR()[1])
+        //   XiR[3] = xi_z          (shadow position z, from particle XiR()[2])
         //
-        // Shadow position values are read from the particle's XiR field using
-        // the variable names defined in cloudProperties (shadowPosNames).
-        // This is the same lookup mechanism used by the base solver for all
-        // reference variables.
+        // The particle's XiR() field holds the first-conditioning reference
+        // variables (shadow positions) set by the base solver.  We read them
+        // positionally here; their names are not needed.
         eulerianFields.XiR().resize(4);
         eulerianFields.XiR()[0] = iter().phiModified();
-        eulerianFields.XiR()[1] = iter().XiR(sPxName_);
-        eulerianFields.XiR()[2] = iter().XiR(sPyName_);
-        eulerianFields.XiR()[3] = iter().XiR(sPzName_);
+        eulerianFields.XiR()[1] = iter().XiR()[0];
+        eulerianFields.XiR()[2] = iter().XiR()[1];
+        eulerianFields.XiR()[3] = iter().XiR()[2];
 
-        // magSqrRefVar is not used by secondCondMMCcurl (no time-scale
-        // calculation based on Eulerian gradients); set to zero.
+        // magSqrRefVar is not used in the aISO timescale; set to 4 zeros
         eulerianFields.magSqrRefVar().resize(4, 0.0);
 
-        // Eulerian transport properties — populated to satisfy the
-        // eulerianFieldData interface; set to neutral values since mixpair
-        // is a stub and does not use them yet.
-        eulerianFields.DEff()   = 0.0;
-        eulerianFields.D()      = 0.0;
-        eulerianFields.Dt()     = 0.0;
-        eulerianFields.DeltaE() = 1.0;
-        eulerianFields.mu()     = 0.0;
-        eulerianFields.vb()     = 1.0;
+        // Interpolate Eulerian transport properties at the particle location
         eulerianFields.Rand()   = 0.0;
+        eulerianFields.DEff()   = DEff_intp_.interpolate(pos, cellI, faceI);
+        eulerianFields.D()      = D_intp_   .interpolate(pos, cellI, faceI);
+        eulerianFields.Dt()     = Dt_intp_  .interpolate(pos, cellI, faceI);
+        eulerianFields.DeltaE() = DeltaE_intp_.interpolate(pos, cellI, faceI);
+        eulerianFields.mu()     = mu_intp_  .interpolate(pos, cellI, faceI);
+        eulerianFields.vb()     = vb_intp_  .interpolate(pos, cellI, faceI);
 
         this->eulerianFieldDataList_.append(std::move(eulerianFields));
     }
 
-    // Build pairs from the flagged-particle list (local pairing only)
-    findSecondCondPairs(this->eulerianFieldDataList_, this->particlePairs_);
-}
-
-
-template<class CloudType>
-void Foam::secondCondMMCcurl<CloudType>::findSecondCondPairs
-(
-    const DynamicList<eulerianFieldData>& eulerianFieldList,
-    DynamicList<List<label>>& pairs
-) const
-{
-    pairs.clear();
-
-    if (eulerianFieldList.size() < 2)
-        return;
-
-    std::vector<label> L, U;
-    L.reserve(eulerianFieldList.size());
-    U.reserve(eulerianFieldList.size());
-
-    std::vector<label> pInd(eulerianFieldList.size());
-    std::iota(pInd.begin(), pInd.end(), 0);
-
-    secondCondKdTree
-    (
-        eulerianFieldList,
-        1,
-        eulerianFieldList.size(),
-        pInd, L, U
-    );
-
-    pairs.reserve(static_cast<label>(std::ceil(0.5*eulerianFieldList.size())));
-
-    for (std::size_t i = 0; i < L.size(); i++)
-    {
-        label p = L[i] - 1;
-        label q = L[i];
-
-        if (U[i] - L[i] < 2)
-        {
-            List<label> pair(2);
-            pair[0] = pInd[p];
-            pair[1] = pInd[q];
-            pairs.append(std::move(pair));
-        }
-        else if (U[i] - L[i] == 2)
-        {
-            label r = L[i] + 1;
-            List<label> pair(3);
-            pair[0] = pInd[p];
-            pair[1] = pInd[q];
-            pair[2] = pInd[r];
-            pairs.append(std::move(pair));
-        }
-    }
-}
-
-
-template<class CloudType>
-void Foam::secondCondMMCcurl<CloudType>::secondCondKdTree
-(
-    const DynamicList<eulerianFieldData>& particleList,
-    label l,
-    label u,
-    std::vector<label>& pInd,
-    std::vector<label>& L,
-    std::vector<label>& U
-) const
-{
-    // Base case: group of 2 or 3 particles → record as a leaf pair/triple
-    if (u - l <= 2)
-    {
-        L.push_back(l);
-        U.push_back(u);
-        return;
-    }
-
-    // Split point (adjusted so each sub-list has an even size)
-    label m = (l + u) / 2;
-    if ((u - m) % 2 != 0) m++;
-
-    auto iterL = pInd.begin(); std::advance(iterL, l - 1);
-    auto iterU = pInd.begin(); std::advance(iterU, u);
-
-    // Normalisation factors in the same order as XiR:
-    //   [0] phiMod_m_  (tight  → dominant)
-    //   [1] sPx_m_
-    //   [2] sPy_m_
-    //   [3] sPz_m_
-    const scalar Xii[4] = {phiMod_m_, sPx_m_, sPy_m_, sPz_m_};
-
-    scalar maxXiR[4] = {-GREAT, -GREAT, -GREAT, -GREAT};
-    scalar minXiR[4] = { GREAT,  GREAT,  GREAT,  GREAT};
-
-    for (auto it = iterL; it != iterU; ++it)
-    {
-        for (label i = 0; i < 4; ++i)
-        {
-            const scalar val = particleList[*it].XiR()[i];
-            maxXiR[i] = std::max(maxXiR[i], val);
-            minXiR[i] = std::min(minXiR[i], val);
-        }
-    }
-
-    // Select the dimension with the largest normalised range
-    scalar disMax = 0.0;
-    label  bestI  = 0;
-
-    for (label i = 0; i < 4; ++i)
-    {
-        const scalar dis = mag(maxXiR[i] - minXiR[i]) / Xii[i];
-        if (dis > disMax)
-        {
-            disMax = dis;
-            bestI  = i;
-        }
-    }
-
-    // Use lessArg with ncond = bestI + 3 so that the XiR() branch of the
-    // comparator is always triggered (lessArg: ii_ < 3 → position, ii_ >= 3
-    // → XiR()[ii_-3]).  Physical coordinates are therefore never used as
-    // split dimensions, consistent with the first-conditioning MMCcurl.
-    typename mixParticleModel<CloudType>::lessArg comp(bestI + 3);
-
-    std::sort
-    (
-        iterL,
-        iterU,
-        [&](label A, label B) -> bool
-        {
-            return comp(particleList[A], particleList[B]);
-        }
-    );
-
-    // Recursive calls on the two halves
-    secondCondKdTree(particleList, l,   m,   pInd, L, U);
-    secondCondKdTree(particleList, m+1, u,   pInd, L, U);
+    // Pair the flagged particles locally (no parallel exchange for second
+    // conditioning — consistent with the local-pairing-only design note)
+    this->findPairs(this->eulerianFieldDataList_, this->particlePairs_);
 }
 
 
@@ -311,17 +143,100 @@ template<class CloudType>
 void Foam::secondCondMMCcurl<CloudType>::mixpair
 (
     particleType& p,
-    const eulerianFieldData& /*pEulerianFields*/,
+    const eulerianFieldData& pEulFields,
     particleType& q,
-    const eulerianFieldData& /*qEulerianFields*/,
-    scalar& /*deltaT*/
+    const eulerianFieldData& qEulFields,
+    scalar& deltaT
 )
 {
-    // Second-conditioning mixing rule — to be implemented.
-    // Particles p and q have been paired in (φ°, ξ_x, ξ_y, ξ_z) space;
-    // the actual mixing operation on their scalars will be added here.
-    (void)p;
-    (void)q;
+    if (p.wt() + q.wt() <= 0)
+        return;
+
+    // aISO timescale — identical formulation to MMCcurl
+    //   tau = (1/vb) * DeltaE^2 / (CE * (D + Dt))
+    scalar tauP = 1e30;
+    scalar tauQ = 1e30;
+
+    const scalar A = pEulFields.D() + pEulFields.Dt();
+    const scalar B = qEulFields.D() + qEulFields.Dt();
+
+    if (A > VSMALL)
+        tauP = (1.0 / pEulFields.vb())
+             * (sqr(pEulFields.DeltaE()) / (CE_ * A));
+
+    if (B > VSMALL)
+        tauQ = (1.0 / qEulFields.vb())
+             * (sqr(qEulFields.DeltaE()) / (CE_ * B));
+
+    if (tauP >= 1e30 || tauQ >= 1e30)
+        return;
+
+    scalar tauMix = 0.0;
+
+    if (meanTimeScale_)
+        tauMix = 2.0
+           / (
+                  1.0 / (tauP + VSMALL)
+                + 1.0 / (tauQ + VSMALL)
+             );
+    else
+        tauMix = min(tauP, tauQ);
+
+    const scalar mixExtent = 1.0 - Foam::exp(-deltaT / (tauMix + VSMALL));
+
+    // Set diagnostic distance fields on the particles
+    scalar dx_pq = Foam::sqrt
+    (
+        sqr(pEulFields.position().x() - qEulFields.position().x())
+      + sqr(pEulFields.position().y() - qEulFields.position().y())
+      + sqr(pEulFields.position().z() - qEulFields.position().z())
+    );
+    p.dx() = dx_pq;
+    q.dx() = dx_pq;
+
+    forAll(p.dXiR(), i)
+    {
+        p.dXiR()[i] = mag(p.XiR()[i] - q.XiR()[i]);
+        q.dXiR()[i] = p.dXiR()[i];
+    }
+
+    // Mix species-only: Y, T, hA — NOT phi, XiR, XiC, or secondCondFlag
+    mixSpeciesOnly(p, q, mixExtent);
+}
+
+
+template<class CloudType>
+void Foam::secondCondMMCcurl<CloudType>::mixSpeciesOnly
+(
+    particleType& p,
+    particleType& q,
+    scalar mixExtent
+)
+{
+    const scalar wtSum = p.wt() + q.wt();
+    if (wtSum < VSMALL)
+        return;
+
+    // Mix enthalpy hA
+    {
+        scalar hAv = (p.wt() * p.hA() + q.wt() * q.hA()) / wtSum;
+        p.hA() = p.hA() + mixExtent * (hAv - p.hA());
+        q.hA() = q.hA() + mixExtent * (hAv - q.hA());
+    }
+
+    // Mix temperature T
+    {
+        scalar TAv = (p.wt() * p.T() + q.wt() * q.T()) / wtSum;
+        p.T() = p.T() + mixExtent * (TAv - p.T());
+        q.T() = q.T() + mixExtent * (TAv - q.T());
+    }
+
+    // Mix species Y
+    {
+        scalarField YAv = (p.wt() * p.Y() + q.wt() * q.Y()) / wtSum;
+        p.Y() = p.Y() + mixExtent * (YAv - p.Y());
+        q.Y() = q.Y() + mixExtent * (YAv - q.Y());
+    }
 }
 
 
@@ -355,13 +270,13 @@ void Foam::secondCondMMCcurl<CloudType>::printInfo()
 {
     Info<< "Mixing Model: " << this->modelType() << nl
         << token::TAB << "Reference space: (phiModified, xi_x, xi_y, xi_z)" << nl
-        << token::TAB << "phiMod_m:      " << phiMod_m_ << nl
-        << token::TAB << "sPx_m:         " << sPx_m_    << "  (var: " << sPxName_ << ")" << nl
-        << token::TAB << "sPy_m:         " << sPy_m_    << "  (var: " << sPyName_ << ")" << nl
-        << token::TAB << "sPz_m:         " << sPz_m_    << "  (var: " << sPzName_ << ")" << nl
-        << token::TAB << "---------------------------" << nl
         << token::TAB << "Particle filter: secondCondFlag == 1 only" << nl
-        << token::TAB << "k-d tree: splits on XiR (no physical-coord axis)"
+        << token::TAB << "k-d tree:        splits on XiR (ncond = 3+i, no physical coord)" << nl
+        << token::TAB << "Timescale:       aISO" << nl
+        << token::TAB << "CL:              " << CL_           << nl
+        << token::TAB << "CE:              " << CE_           << nl
+        << token::TAB << "meanTimeScale:   " << meanTimeScale_ << nl
+        << token::TAB << "Mixes:           Y, T, hA  (NOT phi, XiR, XiC, secondCondFlag)"
         << endl;
 }
 
