@@ -70,8 +70,9 @@ Description
         sPy_m       0.05;
         sPz_m       0.05;
 
-        // Optional reference origin for shadow coordinates (default: zero)
-        shadowOrigin    (0 0 0);
+        // Names of the shadow-position XiR variables as defined in
+        // cloudProperties referenceVariables (must match exactly)
+        shadowPosNames  (sPx sPy sPz);
     }
     \endverbatim
 
@@ -111,9 +112,13 @@ class secondCondMMCcurl
         scalar sPy_m_;
         scalar sPz_m_;
 
-        //- User-supplied origin; shadow coordinates are particle position
-        //  minus this vector.  Defaults to (0 0 0) → physical coordinates.
-        vector shadowOrigin_;
+        //- Names of the three shadow-position XiR variables as declared in
+        //  cloudProperties referenceVariables (e.g. sPx, sPy, sPz).
+        //  Values are read from the particle's XiR field at each timestep
+        //  using the same indexInXiR_ lookup used by the base solver.
+        word sPxName_;
+        word sPyName_;
+        word sPzName_;
 
 
     // Private member functions

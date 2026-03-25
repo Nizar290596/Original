@@ -57,15 +57,19 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
     (
         this->coeffDict().template lookupOrDefault<scalar>("sPz_m", 0.05)
     ),
-    shadowOrigin_
-    (
-        this->coeffDict().template lookupOrDefault<vector>
-        (
-            "shadowOrigin",
-            vector::zero
-        )
-    )
+    sPxName_(),
+    sPyName_(),
+    sPzName_()
 {
+    const wordList spNames(this->coeffDict().lookup("shadowPosNames"));
+    if (spNames.size() != 3)
+        FatalErrorInFunction
+            << "shadowPosNames must contain exactly 3 variable names, "
+            << "got " << spNames.size()
+            << exit(FatalError);
+    sPxName_ = spNames[0];
+    sPyName_ = spNames[1];
+    sPzName_ = spNames[2];
     printInfo();
 }
 
@@ -81,7 +85,9 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
     sPx_m_   (cm.sPx_m_),
     sPy_m_   (cm.sPy_m_),
     sPz_m_   (cm.sPz_m_),
-    shadowOrigin_(cm.shadowOrigin_)
+    sPxName_ (cm.sPxName_),
+    sPyName_ (cm.sPyName_),
+    sPzName_ (cm.sPzName_)
 {
     printInfo();
 }
@@ -126,20 +132,21 @@ void Foam::secondCondMMCcurl<CloudType>::buildSecondCondList()
         // axis — all splitting is done via XiR, see secondCondKdTree)
         eulerianFields.position() = pos;
 
-        // Shadow coordinates: particle position relative to shadowOrigin.
-        // When shadowOrigin = (0,0,0) these equal the physical coordinates.
-        const vector xi = pos - shadowOrigin_;
-
         // 4D reference space for the k-d tree:
         //   XiR[0] = φ°  (phiModified, tight normalisation → dominant axis)
         //   XiR[1] = ξ_x (shadow x,    loose normalisation)
         //   XiR[2] = ξ_y (shadow y,    loose normalisation)
         //   XiR[3] = ξ_z (shadow z,    loose normalisation)
+        //
+        // Shadow position values are read from the particle's XiR field using
+        // the variable names defined in cloudProperties (shadowPosNames).
+        // This is the same lookup mechanism used by the base solver for all
+        // reference variables.
         eulerianFields.XiR().resize(4);
         eulerianFields.XiR()[0] = iter().phiModified();
-        eulerianFields.XiR()[1] = xi.x();
-        eulerianFields.XiR()[2] = xi.y();
-        eulerianFields.XiR()[3] = xi.z();
+        eulerianFields.XiR()[1] = iter().XiR(sPxName_);
+        eulerianFields.XiR()[2] = iter().XiR(sPyName_);
+        eulerianFields.XiR()[3] = iter().XiR(sPzName_);
 
         // magSqrRefVar is not used by secondCondMMCcurl (no time-scale
         // calculation based on Eulerian gradients); set to zero.
@@ -348,11 +355,10 @@ void Foam::secondCondMMCcurl<CloudType>::printInfo()
 {
     Info<< "Mixing Model: " << this->modelType() << nl
         << token::TAB << "Reference space: (phiModified, xi_x, xi_y, xi_z)" << nl
-        << token::TAB << "phiMod_m:      " << phiMod_m_    << nl
-        << token::TAB << "sPx_m:         " << sPx_m_       << nl
-        << token::TAB << "sPy_m:         " << sPy_m_       << nl
-        << token::TAB << "sPz_m:         " << sPz_m_       << nl
-        << token::TAB << "shadowOrigin:  " << shadowOrigin_ << nl
+        << token::TAB << "phiMod_m:      " << phiMod_m_ << nl
+        << token::TAB << "sPx_m:         " << sPx_m_    << "  (var: " << sPxName_ << ")" << nl
+        << token::TAB << "sPy_m:         " << sPy_m_    << "  (var: " << sPyName_ << ")" << nl
+        << token::TAB << "sPz_m:         " << sPz_m_    << "  (var: " << sPzName_ << ")" << nl
         << token::TAB << "---------------------------" << nl
         << token::TAB << "Particle filter: secondCondFlag == 1 only" << nl
         << token::TAB << "k-d tree: splits on XiR (no physical-coord axis)"
