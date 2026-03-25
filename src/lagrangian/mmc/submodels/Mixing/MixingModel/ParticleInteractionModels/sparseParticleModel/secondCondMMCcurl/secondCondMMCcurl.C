@@ -24,8 +24,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "secondCondMMCcurl.H"
-#include "interpolationCellPoint.H"
+// Note: this file is included by secondCondMMCcurl.H via NoRepository.
+// interpolationCellPoint is available through the mixParticleModel.H include chain.
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
