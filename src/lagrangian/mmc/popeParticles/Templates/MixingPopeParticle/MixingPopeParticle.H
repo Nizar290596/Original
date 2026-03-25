@@ -116,9 +116,12 @@ protected:
     
     // Static data
         static HashTable<label, word> indexInXiR_;
-        
+
         //- Name of the reference variables
         static List<word> XiRNames_;
+
+        //- Cached β from cloud (used in mixProperties where no cloud ref available)
+        static scalar secondCondBeta_s_;
 
         // Particle properties
 

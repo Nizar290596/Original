@@ -84,8 +84,10 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
         phi_ = max(0.0, min(1.0, phi_));
     }
 
-    // Recompute φ° = φ·exp(β·ω_OU) after OU and W(φ) updates
-    phiModified_ = phi_ * Foam::exp(cloud.secondCondBeta() * omegaOU_);
+    // Recompute φ° = φ·exp(β·ω_OU) — only meaningful for flagged particles;
+    // unflagged particles always have ω_OU = 0 so phiModified_ would equal phi_.
+    if (secondCondFlag_ == 1)
+        phiModified_ = phi_ * Foam::exp(cloud.secondCondBeta() * omegaOU_);
 }
 
 
@@ -119,6 +121,12 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
+
+    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
+    if (p.secondCondFlag() == 1)
+        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    if (q.secondCondFlag() == 1)
+        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
@@ -138,6 +146,12 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
+
+    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
+    if (p.secondCondFlag() == 1)
+        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    if (q.secondCondFlag() == 1)
+        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
@@ -157,6 +171,12 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
+
+    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
+    if (p.secondCondFlag() == 1)
+        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    if (q.secondCondFlag() == 1)
+        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
@@ -165,7 +185,10 @@ template<class CloudType>
 void Foam::MixingPopeParticle<ParticleType>::setStaticProperties(CloudType& c)
 {
     ParticleType::setStaticProperties(c);
-    
+
+    // Cache β so mixProperties (which has no cloud ref) can recompute φ°
+    secondCondBeta_s_ = c.secondCondBeta();
+
     if (c.mixing().numXiR())
     {
         indexInXiR_ = c.mixing().XiR().rVarInXiR();
