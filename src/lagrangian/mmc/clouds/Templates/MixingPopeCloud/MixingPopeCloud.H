@@ -40,6 +40,7 @@ SourceFiles
 #include "ThermoPopeCloud.H"
 #include "mixingPopeCloud.H"
 #include "SLGThermo.H"
+#include "OUProcessUpdate.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -211,6 +212,17 @@ class MixingPopeCloud
 
         //- Activation parameter Z_phi
         inline scalar secondCondZPhi() const;
+
+    // Second-conditioning cloud-level operations
+    // (called from moveParticles.H in the correct timestep sequence)
+
+        //- Apply W(φ) = A·(1−φ)·exp[Z·(φ−1)] to ALL particles for one Δt.
+        //  Must be called after mixing().Smix() and before updateOUProcess().
+        void updatePhiReaction(scalar deltaT);
+
+        //- Advance ω_OU and recompute φ° = φ·exp(β·ω_OU) for flagged particles.
+        //  Must be called after updatePhiReaction() and before secondCondMixing().Smix().
+        void updateOUProcess(scalar deltaT);
 
     // I-O
     

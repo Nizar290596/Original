@@ -39,7 +39,6 @@ SourceFiles
 
 #include "particle.H"
 #include "mmcVarSet.H"
-#include "OUProcessUpdate.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

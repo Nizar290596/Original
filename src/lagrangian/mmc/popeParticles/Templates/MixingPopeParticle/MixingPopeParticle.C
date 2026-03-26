@@ -73,21 +73,10 @@ void Foam::MixingPopeParticle<ParticleType>::setCellValues
         }
     }
 
-    // Advance Ornstein-Uhlenbeck state for second-conditioning particles
-    applyOUProcessUpdate(*this, cloud, dt);
-
-    // W(φ): chemical source term  dφ/dt = A·(1−φ)·exp[Z·(φ−1)]
-    {
-        const scalar A = cloud.secondCondAPhi();
-        const scalar Z = cloud.secondCondZPhi();
-        phi_ += dt * A * (1.0 - phi_) * Foam::exp(Z * (phi_ - 1.0));
-        phi_ = max(0.0, min(1.0, phi_));
-    }
-
-    // Recompute φ° = φ·exp(β·ω_OU) — only meaningful for flagged particles;
-    // unflagged particles always have ω_OU = 0 so phiModified_ would equal phi_.
-    if (secondCondFlag_ == 1)
-        phiModified_ = phi_ * Foam::exp(cloud.secondCondBeta() * omegaOU_);
+    // Note: the W(φ) reaction, OU state advance, and φ° recomputation are
+    // NOT done here.  They are cloud-level operations called from moveParticles.H
+    // in the correct sequence (after all particles have been mixed by Smix()).
+    // See MixingPopeCloud::updatePhiReaction() and updateOUProcess().
 }
 
 

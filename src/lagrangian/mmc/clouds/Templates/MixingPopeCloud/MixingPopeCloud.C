@@ -302,6 +302,57 @@ Foam::MixingPopeCloud<CloudType>::~MixingPopeCloud()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
+void Foam::MixingPopeCloud<CloudType>::updatePhiReaction(const scalar deltaT)
+{
+    // Apply the progress-variable reaction source W(φ) = A·(1−φ)·exp[Z·(φ−1)]
+    // to every particle for one time step.  Applied to all particles (not just
+    // flagged ones) so that φ is consistent across the entire cloud before
+    // the second conditioning runs.
+    const scalar A = secondCondAPhi_;
+    const scalar Z = secondCondZPhi_;
+
+    if (A <= SMALL)
+        return;  // no-op when reaction coefficient is zero
+
+    forAllIters(*this, iter)
+    {
+        scalar& phi = iter().phi();
+        phi += deltaT * A * (1.0 - phi) * Foam::exp(Z * (phi - 1.0));
+        phi  = max(0.0, min(1.0, phi));
+    }
+}
+
+
+template<class CloudType>
+void Foam::MixingPopeCloud<CloudType>::updateOUProcess(const scalar deltaT)
+{
+    // For each particle flagged for second conditioning:
+    //   1. Advance ω_OU using the exact discrete OU update.
+    //   2. Recompute φ° = φ·exp(β·ω_OU) so buildParticleList() in
+    //      secondCondMixing().Smix() sees the current modified variable.
+    const scalar beta  = secondCondBeta_;
+    const scalar tauOU = secondCondTauOU_;
+
+    if (tauOU <= SMALL)
+        return;
+
+    forAllIters(*this, iter)
+    {
+        if (iter().secondCondFlag() == 1)
+        {
+            const scalar xi = this->rndGen_.Normal(0, 1);
+            iter().omegaOU() = OUStateUpdate
+            (
+                iter().omegaOU(), deltaT, tauOU, xi
+            );
+            iter().phiModified() =
+                iter().phi() * Foam::exp(beta * iter().omegaOU());
+        }
+    }
+}
+
+
+template<class CloudType>
 void Foam::MixingPopeCloud<CloudType>::setParticleProperties
 (
     particleType& particle,
