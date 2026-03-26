@@ -66,6 +66,10 @@ Foam::BalanceReactModel<CloudType>::buildReactPaticleList
 
     forAllIters(this->owner(), iter)
     {
+        // Only include second-conditioning subset particles in the reaction list
+        if (iter().secondCondFlag() != 1)
+            continue;
+
         scalar MixtureFrac = iter().XiC("z");
 
         // create a new particle data container to store only the required 
@@ -158,18 +162,21 @@ void Foam::BalanceReactModel<CloudType>::SreactBalance()
     {
         solveReaction(reactParList);
 
-        // Update particles in the cloud
+        // Update particles in the cloud (subset particles only — aligned with reactParList)
         label k=0;
         forAllIters(this->owner(), iter)
         {
+            if (iter().secondCondFlag() != 1)
+                continue;
+
             iter().T() = reactParList[k].T();
 
             iter().hA() = reactParList[k].h();
 
             iter().Y() = reactParList[k].Y();
-            
+
             iter().cpuTime() = reactParList[k].cpuTime();
-            
+
             k++;
         }
         
@@ -296,25 +303,28 @@ void Foam::BalanceReactModel<CloudType>::SreactBalance()
         start = end;
     }
 
-    // Now update all particle data
+    // Now update all particle data (subset particles only — aligned with reactParList)
     label k =0;
     forAllIters(this->owner(), iter)
     {
+        if (iter().secondCondFlag() != 1)
+            continue;
+
         iter().T() = reactParList[k].T();
 
         iter().hA() = reactParList[k].h();
 
         iter().Y() = reactParList[k].Y();
-        
+
         iter().cpuTime() = reactParList[k].cpuTime();
-        
+
         #ifdef FULLDEBUG
         if (iter().origId() != reactParList[k].origId())
-            FatalError 
-                << "Particles ID do not match after load balancing" 
+            FatalError
+                << "Particles ID do not match after load balancing"
                 << exit(FatalError);
         #endif
-        
+
         k++;
     }
     

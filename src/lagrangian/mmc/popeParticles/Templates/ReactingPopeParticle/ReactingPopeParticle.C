@@ -56,9 +56,14 @@ void Foam::ReactingPopeParticle<ParticleType>::calc
 {
     ParticleType::calc(cloud, td, dt, cellI);
 
+    // Non-subset particles skip chemistry integration.
+    // Transport (position SDE) and XiR evolution are handled by ParticleType::calc() above.
+    if (this->secondCondFlag() == 0)
+        return;
+
 //    Info << "calc reaction" << endl;
-    
-    // Reaction models uses mixture fraction. For now I pass the conditioning 
+
+    // Reaction models uses mixture fraction. For now I pass the conditioning
     // variable  used for density coupling but something more generic is required.
 
     // Conditioning (state) variable
