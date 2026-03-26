@@ -37,20 +37,29 @@ if(pdfMethodOn)
         const scalar t1mix = runTime.elapsedCpuTime();
         Info << "\tFinish first-conditioning mixing in " << t1mix - t0mix << "s" << endl;
 
-        // 3–5. Second-conditioning block — only when the model is enabled
-        if (pSets[pSi].secondCondMixingEnabled())
+        // Steps 3–5: second-conditioning block.
+        // secondCondEnabled is true when the secondConditioning sub-dictionary
+        // is present, enabled = true, and the model pointer was constructed.
+        // updatePhiReaction (step 3) applies to ALL particles — φ is a
+        // first-level quantity — but it only exists when second conditioning
+        // is part of the setup, so it shares the same guard as steps 4 and 5.
+        // When second conditioning is off the solver goes directly to step 6,
+        // identical to the original baseline solver.
+        const bool secondCondEnabled = pSets[pSi].secondCondMixingEnabled();
+
+        if (secondCondEnabled)
         {
             const scalar deltaT = runTime.deltaTValue();
 
-            // 3. W(φ) reaction for all particles — must follow Smix() so all
-            //    particles have their post-mixing φ before reaction is applied
+            // 3. W(φ) reaction — all particles, after Smix() has completed
+            //    for the whole cloud so φ values are post-mixing
             pSets[pSi].updatePhiReaction(deltaT);
 
-            // 4. Advance ω_OU and recompute φ° for flagged particles — must
-            //    follow updatePhiReaction() so φ° reflects the reacted φ
+            // 4. Advance ω_OU and recompute φ° — flagged particles only,
+            //    after reaction so φ° reflects the reacted φ
             pSets[pSi].updateOUProcess(deltaT);
 
-            // 5. Second-conditioning mixing — uses the updated φ° values
+            // 5. Second-conditioning mixing — uses updated φ° values
             //    (stored as eulerianFieldData.XiR()[0] in buildParticleList)
             const scalar t0sc = runTime.elapsedCpuTime();
 
