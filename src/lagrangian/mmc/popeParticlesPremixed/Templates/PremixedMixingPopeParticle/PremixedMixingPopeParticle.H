@@ -230,7 +230,11 @@ public:
     // Member Functions
 
         // Access
-            
+
+            //- Second conditioning is not used in the premixed path;
+            //  return 1 so all particles are treated as chemistry-active.
+            inline label secondCondFlag() const { return 1; }
+
             //- Return const access to reference variables
             inline const scalarField& XiR() const;
 
