@@ -57,11 +57,16 @@ void Foam::MixingPopeCloud<CloudType>::setModels(const mmcVarSet& Xi)
                 this->subModelProperties().lookup("secondCondMixingModel")
             );
 
-            auto* ctorPtr =
+            auto cstrIter =
                 CloudMixingModel<MixingPopeCloud<CloudType>>::
                     dictionaryConstructorTablePtr_->find(scModelType);
 
-            if (!ctorPtr)
+            if
+            (
+                cstrIter
+             == CloudMixingModel<MixingPopeCloud<CloudType>>::
+                    dictionaryConstructorTablePtr_->end()
+            )
             {
                 FatalErrorInFunction
                     << "Unknown secondCondMixingModel type "
@@ -74,7 +79,7 @@ void Foam::MixingPopeCloud<CloudType>::setModels(const mmcVarSet& Xi)
 
             secondCondMixingModel_.reset
             (
-                (*ctorPtr)(this->subModelProperties(), *this, Xi)
+                cstrIter()(this->subModelProperties(), *this, Xi)
             );
 
             Info << "Second-conditioning mixing model: "
