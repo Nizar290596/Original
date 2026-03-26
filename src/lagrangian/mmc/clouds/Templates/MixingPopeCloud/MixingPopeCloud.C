@@ -41,6 +41,46 @@ void Foam::MixingPopeCloud<CloudType>::setModels(const mmcVarSet& Xi)
             Xi //Since reference variables are inside submodel!!!
         ).ptr()
     );
+
+    // Conditionally construct the second-conditioning mixing model.
+    // The secondConditioning sub-dictionary must be present in cloudProperties
+    // and have   enabled true;   for the model to be activated.
+    if (this->cloudProperties().found("secondConditioning"))
+    {
+        const dictionary& scDict =
+            this->cloudProperties().subDict("secondConditioning");
+
+        if (scDict.lookupOrDefault("enabled", false))
+        {
+            const word scModelType
+            (
+                this->subModelProperties().lookup("secondCondMixingModel")
+            );
+
+            auto* ctorPtr =
+                CloudMixingModel<MixingPopeCloud<CloudType>>::
+                    dictionaryConstructorTablePtr_->find(scModelType);
+
+            if (!ctorPtr)
+            {
+                FatalErrorInFunction
+                    << "Unknown secondCondMixingModel type "
+                    << scModelType << nl
+                    << "Valid types are:" << nl
+                    << CloudMixingModel<MixingPopeCloud<CloudType>>::
+                           dictionaryConstructorTablePtr_->sortedToc()
+                    << exit(FatalError);
+            }
+
+            secondCondMixingModel_.reset
+            (
+                (*ctorPtr)(this->subModelProperties(), *this, Xi)
+            );
+
+            Info << "Second-conditioning mixing model: "
+                 << scModelType << endl;
+        }
+    }
 }
 
 
@@ -48,9 +88,10 @@ template<class CloudType>
 void Foam::MixingPopeCloud<CloudType>::cloudReset(MixingPopeCloud<CloudType>& c)
 {
     CloudType::cloudReset(c);
-    
+
     mixingModel_.reset(c.mixingModel_.ptr());
-    
+
+    secondCondMixingModel_.reset(c.secondCondMixingModel_.ptr());
 }
 
 
@@ -88,6 +129,8 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     cloudCopyPtr_(nullptr),
 
     mixingModel_(nullptr),
+
+    secondCondMixingModel_(nullptr),
 
     secondCondR_
     (
@@ -180,6 +223,8 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     cloudCopyPtr_(nullptr),
 
     mixingModel_(nullptr),
+
+    secondCondMixingModel_(nullptr),
 
     secondCondR_
     (

@@ -93,8 +93,11 @@ class MixingPopeCloud
 
     // Protected data
 
-        //- Mixing model
+        //- Primary (first-conditioning) mixing model
         autoPtr<CloudMixingModel<MixingPopeCloud<CloudType> > >  mixingModel_;
+
+        //- Second-conditioning mixing model (optional; null when disabled)
+        autoPtr<CloudMixingModel<MixingPopeCloud<CloudType> > >  secondCondMixingModel_;
 
         // Second conditioning parameters (read from cloudProperties)
 
@@ -175,6 +178,16 @@ class MixingPopeCloud
 
         //- Return non-const access to mixing model
         inline CloudMixingModel<MixingPopeCloud<CloudType> >& mixing();
+
+        //- True if the second-conditioning mixing model has been constructed
+        inline bool secondCondMixingEnabled() const;
+
+        //- Return non-const access to second-conditioning mixing model
+        //  (only valid when secondCondMixingEnabled() == true)
+        inline CloudMixingModel<MixingPopeCloud<CloudType> >& secondCondMixing();
+
+        //- Return const access to second-conditioning mixing model
+        inline const CloudMixingModel<MixingPopeCloud<CloudType> >& secondCondMixing() const;
 
     // Second conditioning
 

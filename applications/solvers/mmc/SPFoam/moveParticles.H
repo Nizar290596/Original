@@ -32,7 +32,7 @@ if(pdfMethodOn)
         Info << "\tMove particle and solve reaction..." << endl;
         const scalar t0solve = runTime.elapsedCpuTime();
 
-        // In solve() the particle move() function is called 
+        // In solve() the particle move() function is called
         // if balanceReactionLoad is true, solve(td) does not calculate chemistry
         pSets[pSi].solve(pSets[pSi],td);
 
@@ -56,7 +56,22 @@ if(pdfMethodOn)
         }
         const scalar t1solve = runTime.elapsedCpuTime();
         Info << "\tFinish solve reaction and move in " << t1solve - t0solve<< "s" <<endl;
-        
+
+        // Second-conditioning mixing — only executed when the model is enabled.
+        // The OU state (omegaOU) and phiModified for each flagged particle are
+        // advanced inside solve() → setCellValues(), so by this point
+        // phiModified already reflects the current timestep's OU realisation.
+        if (pSets[pSi].secondCondMixingEnabled())
+        {
+            const scalar t0sc = runTime.elapsedCpuTime();
+
+            pSets[pSi].secondCondMixing().Smix();
+
+            const scalar t1sc = runTime.elapsedCpuTime();
+            Info << "\tFinish second-conditioning mixing in "
+                 << t1sc - t0sc << "s" << endl;
+        }
+
         pSets[pSi].composition().correctMassFractions();
         
         // Sample particle statistics for this cloud 

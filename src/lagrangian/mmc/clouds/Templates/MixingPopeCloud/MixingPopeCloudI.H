@@ -42,6 +42,29 @@ Foam::MixingPopeCloud<CloudType>::mixing()
 }
 
 
+template<class CloudType>
+inline bool Foam::MixingPopeCloud<CloudType>::secondCondMixingEnabled() const
+{
+    return secondCondMixingModel_.valid();
+}
+
+
+template<class CloudType>
+inline Foam::CloudMixingModel<Foam::MixingPopeCloud<CloudType> >&
+Foam::MixingPopeCloud<CloudType>::secondCondMixing()
+{
+    return secondCondMixingModel_();
+}
+
+
+template<class CloudType>
+inline const Foam::CloudMixingModel<Foam::MixingPopeCloud<CloudType> >&
+Foam::MixingPopeCloud<CloudType>::secondCondMixing() const
+{
+    return secondCondMixingModel_();
+}
+
+
 // Second conditioning accessors
 
 template<class CloudType>
