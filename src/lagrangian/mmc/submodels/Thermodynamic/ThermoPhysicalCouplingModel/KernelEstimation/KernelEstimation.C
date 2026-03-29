@@ -79,6 +79,11 @@ void Foam::KernelEstimation<CloudType>::buildParticleList()
 
     forAllIters(this->owner(), iter)
     {
+        // When second conditioning is active, exclude non-subset particles —
+        // their Y and T are stale and must not bias the Eulerian target fields.
+        if (this->owner().secondCondMixingEnabled() && iter().secondCondFlag() != 1)
+            continue;
+
         densParticle p(numP_);
 
         p[nI_] = 0.;

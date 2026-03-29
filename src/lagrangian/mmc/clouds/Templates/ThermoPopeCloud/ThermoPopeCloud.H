@@ -223,7 +223,11 @@ class ThermoPopeCloud
 
         //- Return const access to density coupling model
         inline const ThermoPhysicalCouplingModel<ThermoPopeCloudType>& coupling() const;
-        
+
+        //- Second-conditioning query: always false at this level.
+        //  MixingPopeCloud overrides this with the real check.
+        inline bool secondCondMixingEnabled() const { return false; }
+
         //- Return non-const access to composition model
         inline CompositionModel<ThermoPopeCloudType>& composition() ;
 
