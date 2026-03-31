@@ -58,7 +58,9 @@ void Foam::ReactingPopeParticle<ParticleType>::calc
 
     // Non-subset particles skip chemistry integration.
     // Transport (position SDE) and XiR evolution are handled by ParticleType::calc() above.
-    if (this->secondCondFlag() == 0)
+    // Guard with secondCondMixingEnabled() so the original solver is unaffected
+    // (secondCondFlag_ defaults to 0, which would otherwise skip chemistry for all particles).
+    if (cloud.secondCondMixingEnabled() && this->secondCondFlag() == 0)
         return;
 
 //    Info << "calc reaction" << endl;

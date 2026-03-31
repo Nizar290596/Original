@@ -66,8 +66,10 @@ Foam::BalanceReactModel<CloudType>::buildReactPaticleList
 
     forAllIters(this->owner(), iter)
     {
-        // Only include second-conditioning subset particles in the reaction list
-        if (iter().secondCondFlag() != 1)
+        // Only include second-conditioning subset particles in the reaction list.
+        // Guard with secondCondMixingEnabled() so the original solver is unaffected
+        // (secondCondFlag_ defaults to 0, which would otherwise empty the list).
+        if (this->owner().secondCondMixingEnabled() && iter().secondCondFlag() != 1)
             continue;
 
         scalar MixtureFrac = iter().XiC("z");
@@ -166,7 +168,7 @@ void Foam::BalanceReactModel<CloudType>::SreactBalance()
         label k=0;
         forAllIters(this->owner(), iter)
         {
-            if (iter().secondCondFlag() != 1)
+            if (this->owner().secondCondMixingEnabled() && iter().secondCondFlag() != 1)
                 continue;
 
             iter().T() = reactParList[k].T();
@@ -307,7 +309,7 @@ void Foam::BalanceReactModel<CloudType>::SreactBalance()
     label k =0;
     forAllIters(this->owner(), iter)
     {
-        if (iter().secondCondFlag() != 1)
+        if (this->owner().secondCondMixingEnabled() && iter().secondCondFlag() != 1)
             continue;
 
         iter().T() = reactParList[k].T();
