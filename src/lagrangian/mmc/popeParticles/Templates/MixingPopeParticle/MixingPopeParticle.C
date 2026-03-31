@@ -111,11 +111,12 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 
-    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
-    if (p.secondCondFlag() == 1)
-        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    if (q.secondCondFlag() == 1)
-        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    // Recompute φ°. For subset particles (flag==1) omegaOU is non-zero;
+    // for all others omegaOU==0 so exp(...)=1 and phiModified==phi.
+    // No flag guard needed — this keeps phiModified in sync with phi for
+    // all particles, including when second conditioning is disabled.
+    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
@@ -136,11 +137,8 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 
-    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
-    if (p.secondCondFlag() == 1)
-        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    if (q.secondCondFlag() == 1)
-        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
@@ -161,11 +159,8 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
     q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
 
-    // Recompute φ° for flagged particles: phi has changed, ω_OU has not
-    if (p.secondCondFlag() == 1)
-        p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    if (q.secondCondFlag() == 1)
-        q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
+    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
 }
 
 
