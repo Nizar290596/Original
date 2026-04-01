@@ -325,11 +325,11 @@ void Foam::MixingPopeCloud<CloudType>::updatePhiReaction(const scalar deltaT)
         phi += deltaT * A * (1.0 - phi) * Foam::exp(Z * (phi - 1.0));
         phi  = max(0.0, min(1.0, phi));
 
-        // Keep phiModified in sync with phi for all particles.
-        // For non-subset particles (omegaOU==0) this is the final value.
-        // For subset particles, updateOUProcess() will overwrite it with
-        // phi * exp(beta * omegaOU) immediately afterwards.
-        iter().phiModified() = phi;
+        // For non-subset particles (omegaOU==0 always), phiModified = phi.
+        // For subset particles, updateOUProcess() recomputes phiModified
+        // as phi * exp(beta * omegaOU) immediately after this call.
+        if (iter().secondCondFlag() != 1)
+            iter().phiModified() = phi;
     }
 }
 
