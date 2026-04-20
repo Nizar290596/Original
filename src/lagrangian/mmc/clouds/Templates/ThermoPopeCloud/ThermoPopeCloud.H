@@ -226,7 +226,7 @@ class ThermoPopeCloud
 
         //- Second-conditioning query: always false at this level.
         //  MixingPopeCloud overrides this with the real check.
-        inline bool secondCondMixingEnabled() const { return false; }
+        virtual bool secondCondMixingEnabled() const { return false; }
 
         //- Return non-const access to composition model
         inline CompositionModel<ThermoPopeCloudType>& composition() ;

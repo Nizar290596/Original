@@ -65,12 +65,22 @@ void Foam::ParticleInCell<CloudType>::EqvETargetValues
     // Reference to the particleNumber manager and super mesh
     const particleNumberController& pManager = this->owner().pManager();
 
+    // When second-conditioning is active, restrict coupling to flagged
+    // (subset) particles only. Cells without any flagged particle get
+    // Indicator = 0 so the relaxation source is switched off there.
+    const bool filterFlagged = this->owner().secondCondMixingEnabled();
+
+    if (filterFlagged)
+    {
+        this->Indicator() = 0.0;
+    }
+
     forAll(mesh_.cells(),celli)
     {
 
         label superCelli = pManager.getSuperCellID(celli);
 
-        DynamicList<particleType*> cellParticles = 
+        DynamicList<particleType*> cellParticles =
             pManager.getParticlesInSuperCell(this->owner(),superCelli);
 
         if (cellParticles.size() == 0)
@@ -86,9 +96,21 @@ void Foam::ParticleInCell<CloudType>::EqvETargetValues
 
             forAll(cellParticles,iter)
             {
-                const particleType& p = *cellParticles[iter];       
+                const particleType& p = *cellParticles[iter];
+                if (filterFlagged && p.secondCondFlag() != 1) continue;
                 totWt += p.wt();
-                totT += p.T() * p.wt(); 
+                totT += p.T() * p.wt();
+            }
+
+            if (filterFlagged && totWt <= SMALL)
+            {
+                // No flagged particle in this cell - leave Indicator at 0
+                continue;
+            }
+
+            if (filterFlagged)
+            {
+                this->Indicator()[celli] = 1.0;
             }
 
             TEqvETarget[celli] = totT/max(totWt,1e-15);
@@ -99,14 +121,15 @@ void Foam::ParticleInCell<CloudType>::EqvETargetValues
                 if (!this->solveEqvSpecie()[specieI])
                 {
                     YEqvETarget[specieI].primitiveFieldRef() = 0;
-                } 
+                }
                 else
                 {
                     scalar totY = 0;
-                    
+
                     forAll(cellParticles,iter)
                     {
                         const particleType& p = *cellParticles[iter];
+                        if (filterFlagged && p.secondCondFlag() != 1) continue;
                         totY += p.Y()[specieI] * p.wt();
                     }
 
