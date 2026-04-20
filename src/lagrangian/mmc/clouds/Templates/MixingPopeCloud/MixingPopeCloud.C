@@ -408,9 +408,16 @@ void Foam::MixingPopeCloud<CloudType>::setParticleProperties
         }
     }
 
-    // phiModified = phi * exp(beta * omegaOU); omegaOU=0 at creation so
-    // phiModified = phi initially
-    particle.phiModified() = particle.phi();
+    // Initialise omegaOU from the OU stationary distribution N(0,1) for
+    // flagged (subset) particles only; non-subset particles never get
+    // OU-updated downstream so their omegaOU stays at 0.
+    if (particle.secondCondFlag() == 1)
+    {
+        particle.omegaOU() = this->rndGen_.Normal(0, 1);
+    }
+
+    particle.phiModified() =
+        particle.phi() * Foam::exp(secondCondBeta_ * particle.omegaOU());
 
     label numXiR = mixing().numXiR();
 
