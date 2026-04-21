@@ -75,69 +75,92 @@ void Foam::ParticleInCell<CloudType>::EqvETargetValues
         this->Indicator() = 0.0;
     }
 
-    forAll(mesh_.cells(),celli)
+    // Zero the target for species that are not solved (was done redundantly
+    // inside the per-cell loop before; hoisted here so the whole field is
+    // assigned once rather than N_cells times).
+    forAll(YEqvETarget, specieI)
     {
-
-        label superCelli = pManager.getSuperCellID(celli);
-
-        DynamicList<particleType*> cellParticles =
-            pManager.getParticlesInSuperCell(this->owner(),superCelli);
-
-        if (cellParticles.size() == 0)
+        if (!this->solveEqvSpecie()[specieI])
         {
-            // Do nothing. It will just use previous time-step value.
-            // This if loop has to be included; otherwise hEqvETarget will be zero when Npc=0
+            YEqvETarget[specieI].primitiveFieldRef() = 0;
         }
-        else
+    }
+
+    // Single O(N_p) pass over the cloud: particles bucketed by super-cell.
+    // Avoids the O(N_cells x N_p) scan that resulted from calling
+    // getParticlesInSuperCell() once per cell.
+    List<DynamicList<particleType*>> cellParticlesInSuperCell =
+        pManager.getParticlesInSuperCellList(this->owner());
+
+    const List<DynamicList<label>>& superCellCells =
+        pManager.cellsInSuperCell();
+
+    for
+    (
+        label superCelli = 0;
+        superCelli < pManager.nSuperCells();
+        ++superCelli
+    )
+    {
+        const DynamicList<particleType*>& cellParticles =
+            cellParticlesInSuperCell[superCelli];
+
+        if (cellParticles.empty())
         {
-            //- Find Average Temperature
-            scalar totT = 0;
-            scalar totWt = 0;
+            // Keep previous-time-step target values in the member cells
+            // (matches the original "Npc == 0" branch).
+            continue;
+        }
 
-            forAll(cellParticles,iter)
+        // Single pass: accumulate T and solved species mean simultaneously.
+        scalar totT  = 0;
+        scalar totWt = 0;
+        scalarField totY(YEqvETarget.size(), 0.0);
+
+        for (particleType* pPtr : cellParticles)
+        {
+            if (filterFlagged && pPtr->secondCondFlag() != 1) continue;
+
+            const scalar w = pPtr->wt();
+            totWt += w;
+            totT  += pPtr->T() * w;
+
+            forAll(YEqvETarget, specieI)
             {
-                const particleType& p = *cellParticles[iter];
-                if (filterFlagged && p.secondCondFlag() != 1) continue;
-                totWt += p.wt();
-                totT += p.T() * p.wt();
+                if (this->solveEqvSpecie()[specieI])
+                {
+                    totY[specieI] += pPtr->Y()[specieI] * w;
+                }
             }
+        }
 
-            if (filterFlagged && totWt <= SMALL)
-            {
-                // No flagged particle in this cell - leave Indicator at 0
-                continue;
-            }
+        if (filterFlagged && totWt <= SMALL)
+        {
+            // No flagged particle in this super-cell - leave Indicator at 0
+            continue;
+        }
 
+        const scalar invWt = 1.0/max(totWt, 1e-15);
+        const scalar Tavg  = totT * invWt;
+
+        const DynamicList<label>& memberCells = superCellCells[superCelli];
+        for (const label celli : memberCells)
+        {
             if (filterFlagged)
             {
                 this->Indicator()[celli] = 1.0;
             }
 
-            TEqvETarget[celli] = totT/max(totWt,1e-15);
+            TEqvETarget[celli] = Tavg;
 
-
-            forAll(YEqvETarget,specieI)
+            forAll(YEqvETarget, specieI)
             {
-                if (!this->solveEqvSpecie()[specieI])
+                if (this->solveEqvSpecie()[specieI])
                 {
-                    YEqvETarget[specieI].primitiveFieldRef() = 0;
-                }
-                else
-                {
-                    scalar totY = 0;
-
-                    forAll(cellParticles,iter)
-                    {
-                        const particleType& p = *cellParticles[iter];
-                        if (filterFlagged && p.secondCondFlag() != 1) continue;
-                        totY += p.Y()[specieI] * p.wt();
-                    }
-
-                    YEqvETarget[specieI][celli] = totY/max(totWt,1e-15);
+                    YEqvETarget[specieI][celli] = totY[specieI] * invWt;
                 }
             }
         }
-
     }
    
 }
