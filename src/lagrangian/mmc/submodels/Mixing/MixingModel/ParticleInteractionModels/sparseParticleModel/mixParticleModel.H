@@ -200,8 +200,13 @@ class mixParticleModel
             const label numXiR_;      
 
             //- Normalisation factors
+            //  Default size matches numXiR_ (one per first-conditioning
+            //  reference variable). Derived models that use a different
+            //  reference space (e.g. secondCondMMCcurl with 4D
+            //  (phiModified, xi_x, xi_y, xi_z)) overwrite this list in
+            //  their constructor.
+            List<scalar> Xii_;
             const scalar ri_;
-            const List<scalar> Xii_;
 
         // (Optional) Discard particles for parallel mixing if their reference 
         // variable, XiR(), is below fLow or above fMax

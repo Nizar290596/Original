@@ -45,6 +45,19 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
 
     meanTimeScale_(this->coeffDict().lookup("meanTimeScale"))
 {
+    // Override the base-class Xii_ with the 4D second-conditioning
+    // normalisation. The base populates Xii_ from the first-conditioning
+    // XiRNames_ (shadow positions only), which leaves phiModified without
+    // its own normaliser and excludes xi_z from the k-d tree splitting.
+    // Here we read the 4 explicit keys for the
+    // (phiModified, xi_x, xi_y, xi_z) reference space.
+    const dictionary& Xim = this->coeffDict().subDict("Xim_i");
+    this->Xii_.setSize(4);
+    this->Xii_[0] = readScalar(Xim.lookup("phiMod_m"));
+    this->Xii_[1] = readScalar(Xim.lookup("sPx_m"));
+    this->Xii_[2] = readScalar(Xim.lookup("sPy_m"));
+    this->Xii_[3] = readScalar(Xim.lookup("sPz_m"));
+
     printInfo();
 }
 
@@ -60,6 +73,17 @@ Foam::secondCondMMCcurl<CloudType>::secondCondMMCcurl
     CE_(cm.CE_),
     meanTimeScale_(cm.meanTimeScale_)
 {
+    // Mirror the primary-constructor override of the base-class Xii_ so
+    // a cloned model also carries the 4D normalisation. The base copy
+    // constructor re-runs getXiNormalisation() which yields only the 3
+    // first-conditioning entries.
+    const dictionary& Xim = this->coeffDict().subDict("Xim_i");
+    this->Xii_.setSize(4);
+    this->Xii_[0] = readScalar(Xim.lookup("phiMod_m"));
+    this->Xii_[1] = readScalar(Xim.lookup("sPx_m"));
+    this->Xii_[2] = readScalar(Xim.lookup("sPy_m"));
+    this->Xii_[3] = readScalar(Xim.lookup("sPz_m"));
+
     printInfo();
 }
 
