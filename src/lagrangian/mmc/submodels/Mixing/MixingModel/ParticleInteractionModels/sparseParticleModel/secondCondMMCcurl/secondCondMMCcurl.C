@@ -136,6 +136,73 @@ void Foam::secondCondMMCcurl<CloudType>::buildParticleList()
     // Pair the flagged particles locally (no parallel exchange for second
     // conditioning — consistent with the local-pairing-only design note)
     this->findPairs(this->eulerianFieldDataList_, this->particlePairs_);
+
+    // -- Diagnostics ---------------------------------------------------------
+    // Particle counts: per-process and global flagged-particle totals,
+    //                  plus the number of pairs / triples produced.
+    // Split-axis usage: how many times each XiR axis was selected as the
+    //                   k-d tree split axis during findPairs(). Reveals
+    //                   whether the tree is dominated by phi or by the
+    //                   shadow-position coordinates.
+    {
+        const label nLocal = this->particleList_.size();
+        label nGlobal = nLocal;
+        reduce(nGlobal, sumOp<label>());
+
+        label nPairs   = 0;
+        label nTriples = 0;
+        for (const List<label>& pr : this->particlePairs_)
+        {
+            if (pr.size() == 2) ++nPairs;
+            else if (pr.size() == 3) ++nTriples;
+        }
+        label nPairsGlobal   = nPairs;
+        label nTriplesGlobal = nTriples;
+        reduce(nPairsGlobal,   sumOp<label>());
+        reduce(nTriplesGlobal, sumOp<label>());
+
+        // Sum the per-axis split counts across processors so the histogram
+        // reflects the global picture.
+        List<label> hist = this->splitAxisHistogram();
+        forAll(hist, i)
+        {
+            label v = hist[i];
+            reduce(v, sumOp<label>());
+            hist[i] = v;
+        }
+
+        label totalSplits = 0;
+        forAll(hist, i) totalSplits += hist[i];
+
+        Info<< "[secondCondMMCcurl] flagged particles: "
+            << nGlobal << " global"
+            << " (local rank0 = " << nLocal << ");"
+            << " pairs = " << nPairsGlobal
+            << ", triples = " << nTriplesGlobal << nl;
+
+        Info<< "[secondCondMMCcurl] split-axis histogram (global):"
+            << " total splits = " << totalSplits << nl;
+
+        forAll(hist, i)
+        {
+            const word axisName =
+                (i == 0) ? word("phiModified")
+              : (i == 1) ? word("xi_x")
+              : (i == 2) ? word("xi_y")
+              : (i == 3) ? word("xi_z")
+              :            word("XiR[" + Foam::name(i) + "]");
+
+            const scalar pct =
+                (totalSplits > 0)
+                  ? 100.0*scalar(hist[i])/scalar(totalSplits)
+                  : 0.0;
+
+            Info<< "    axis " << i << " (" << axisName << "): "
+                << hist[i] << "  ("
+                << pct << " %)" << nl;
+        }
+        Info<< endl;
+    }
 }
 
 

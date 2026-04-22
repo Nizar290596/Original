@@ -813,6 +813,10 @@ void Foam::mixParticleModel<CloudType>::findPairs
     // Clear particle pairs first
     pairs.clear();
 
+    // Reset the per-axis split-counter (one slot per XiR axis)
+    splitAxisHistogram_.setSize(Xii_.size());
+    splitAxisHistogram_ = 0;
+
     // Keeping track of indices for premixedkdTreeLikeSearch
     std::vector<label> L;
     std::vector<label> U;
@@ -961,6 +965,12 @@ void Foam::mixParticleModel<CloudType>::KkdTreeLikeSearch
             //ncond = particleList[*it].XiR()[i];
             //Info << "i: " << i << endl;
         }
+    }
+
+    // Tally which XiR axis won this split for the diagnostic histogram
+    if (ncond >= 3 && (ncond - 3) < splitAxisHistogram_.size())
+    {
+        splitAxisHistogram_[ncond - 3]++;
     }
 
 

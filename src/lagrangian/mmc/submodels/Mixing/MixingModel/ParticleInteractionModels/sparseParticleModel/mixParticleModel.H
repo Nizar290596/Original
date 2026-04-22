@@ -266,6 +266,13 @@ class mixParticleModel
             //- List of starting indices for the particle data of each processor
             List<label> startIndexOfParticle_;
 
+            //- Diagnostic counter: number of times each XiR axis was selected
+            //  as the split axis in KkdTreeLikeSearch during the most recent
+            //  findPairs() call. Indexed 0..numXiR_-1 (per process).
+            //  Reset at the start of findPairs(). Mutable so it can be written
+            //  from the const k-d tree routine.
+            mutable List<label> splitAxisHistogram_;
+
         // Private Member Functions
         
             //- Build particle list and correct for parallel runs
@@ -363,6 +370,25 @@ class mixParticleModel
             inline label numXiR() const
             {
                 return numXiR_;
+            };
+
+            //- Per-process histogram of split-axis selections from the most
+            //  recent findPairs() invocation. Index i corresponds to XiR[i].
+            inline const List<label>& splitAxisHistogram() const
+            {
+                return splitAxisHistogram_;
+            };
+
+            //- Read-only access to the assembled particle list and the pair
+            //  list (useful for derived-class diagnostics).
+            inline const particlePtrList<particleType>& particleList() const
+            {
+                return particleList_;
+            };
+
+            inline const DynamicList<List<label>>& particlePairs() const
+            {
+                return particlePairs_;
             };
             
             // inside mmcVarSet
