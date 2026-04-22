@@ -27,6 +27,9 @@ License
 // Note: this file is included by secondCondMMCcurl.H via NoRepository.
 // interpolationCellPoint is available through the mixParticleModel.H include chain.
 
+#include "OSspecific.H"
+#include <fstream>
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class CloudType>
@@ -226,6 +229,48 @@ void Foam::secondCondMMCcurl<CloudType>::buildParticleList()
                 << pct << " %)" << nl;
         }
         Info<< endl;
+
+        // Also append one tab-separated row per call to
+        //   <case>/postProcessing/secondCondMMCcurl.log
+        // so the diagnostics can be plotted / grepped without trawling
+        // through the solver's main log. Only the master process writes.
+        if (Pstream::master())
+        {
+            const Time& runTime = this->owner().mesh().time();
+
+            const fileName logDir  = runTime.path()/"postProcessing";
+            const fileName logPath = logDir/"secondCondMMCcurl.log";
+
+            mkDir(logDir);
+
+            // Header on first write only (empty / missing file)
+            const bool writeHeader = !Foam::isFile(logPath);
+
+            std::ofstream os
+            (
+                logPath.c_str(),
+                std::ios::out | std::ios::app
+            );
+
+            if (os.is_open())
+            {
+                if (writeHeader)
+                {
+                    os << "# time\tnFlagged\tnPairs\tnTriples"
+                       << "\tphiMod\txi_x\txi_y\txi_z"
+                       << "\ttotalSplits\n";
+                }
+
+                os << runTime.value()
+                   << '\t' << nGlobal
+                   << '\t' << nPairsGlobal
+                   << '\t' << nTriplesGlobal;
+
+                forAll(hist, i) os << '\t' << hist[i];
+
+                os << '\t' << totalSplits << '\n';
+            }
+        }
     }
 }
 
