@@ -336,8 +336,31 @@ void Foam::secondCondMMCcurl<CloudType>::mixpair
         q.dXiR()[i] = p.dXiR()[i];
     }
 
-    // Mix species-only: Y, T, hA — NOT phi, XiR, XiC, or secondCondFlag
+    // Mix species-only: Y, T, hA — NOT XiR, XiC, or secondCondFlag
     mixSpeciesOnly(p, q, mixExtent);
+
+    // IEM mixing of φ between the flagged pair. This is the only φ-mixing
+    // channel for flagged particles — they are skipped in step 2 of
+    // moveParticles (MMCcurl), and MixingPopeParticle::mixProperties no
+    // longer mixes φ. Pair partners are already close in (φ°, sP), so
+    // mixing here preserves the second-conditioning structure.
+    {
+        const scalar wtSum = p.wt() + q.wt();
+        if (wtSum > VSMALL)
+        {
+            const scalar phiAv =
+                (p.wt()*p.phi() + q.wt()*q.phi()) / wtSum;
+
+            p.phi() += mixExtent * (phiAv - p.phi());
+            q.phi() += mixExtent * (phiAv - q.phi());
+
+            // Refresh φ° = φ · exp(β · ω_OU) to keep the conditioning
+            // variable consistent with the new φ.
+            const scalar beta = this->owner().secondCondBeta();
+            p.phiModified() = p.phi() * Foam::exp(beta * p.omegaOU());
+            q.phiModified() = q.phi() * Foam::exp(beta * q.omegaOU());
+        }
+    }
 }
 
 
@@ -412,7 +435,7 @@ void Foam::secondCondMMCcurl<CloudType>::printInfo()
         << token::TAB << "CL:              " << CL_           << nl
         << token::TAB << "CE:              " << CE_           << nl
         << token::TAB << "meanTimeScale:   " << meanTimeScale_ << nl
-        << token::TAB << "Mixes:           Y, T, hA  (NOT phi, XiR, XiC, secondCondFlag)"
+        << token::TAB << "Mixes:           Y, T, hA, phi (NOT XiR, XiC, secondCondFlag)"
         << endl;
 }
 

@@ -49,9 +49,11 @@ Description
     lower priority.  Physical coordinates are NOT used as split dimensions
     (the ncond = 3 + i offset in KkdTreeLikeSearch ensures this).
 
-    The aISO timescale is computed identically to MMCcurl.  Only Y, T, and
-    hA are mixed between the paired particles; phi, XiR, XiC, and
-    secondCondFlag are NOT mixed.
+    The aISO timescale is computed identically to MMCcurl.  Y, T, hA, and
+    phi are mixed between the paired flagged particles; XiR, XiC, and
+    secondCondFlag are NOT mixed. phi mixing here is the only channel for
+    flagged particles, since they are skipped in step 2 (MMCcurl) and
+    MixingPopeParticle::mixProperties no longer touches phi.
 
     Parallel pairing is not implemented; local pairing only.
 
@@ -124,7 +126,8 @@ class secondCondMMCcurl
     // Private member functions
 
         //- Mix only Y, T, and hA between paired particles.
-        //  Deliberately does NOT mix phi, XiR, XiC, or secondCondFlag.
+        //  φ is mixed separately in mixpair() so β can be looked up
+        //  from the cloud (this routine is static).
         static void mixSpeciesOnly
         (
             particleType& p,

@@ -41,9 +41,6 @@ template<class ParticleType>
 Foam::List<Foam::word> Foam::MixingPopeParticle<ParticleType>::XiRNames_=
     Foam::List<Foam::word>(0);
 
-template<class ParticleType>
-Foam::scalar Foam::MixingPopeParticle<ParticleType>::secondCondBeta_s_ = 1.0;
-    
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class ParticleType>

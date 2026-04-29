@@ -105,18 +105,9 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
 {
     ParticleType::mixProperties(p, q, mixExtent);
 
-    // S(φ): mix progress variable between the pair (same as other reactive
-    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
-    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
-    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
-    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
-
-    // Recompute φ°. For subset particles (flag==1) omegaOU is non-zero;
-    // for all others omegaOU==0 so exp(...)=1 and phiModified==phi.
-    // No flag guard needed — this keeps phiModified in sync with phi for
-    // all particles, including when second conditioning is disabled.
-    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    // φ is intentionally NOT mixed here. φ-mixing happens only between
+    // flagged particles in secondCondMMCcurl::mixpair (4-D pairing on
+    // (φ°, sP)). Non-flagged particles' φ evolves only via W(φ).
 }
 
 
@@ -129,16 +120,8 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     const scalar& mixExtentSoot
 )
 {
-    ParticleType::mixProperties(p, q, mixExtent,mixExtentSoot);
-
-    // S(φ): mix progress variable between the pair (same as other reactive
-    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
-    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
-    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
-    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
-
-    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    ParticleType::mixProperties(p, q, mixExtent, mixExtentSoot);
+    // φ not mixed here; see overload above.
 }
 
 
@@ -151,16 +134,8 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalarList ScaledExtent
 )
 {
-    ParticleType::mixProperties(p, q, mixExtent,ScaledExtent);
-
-    // S(φ): mix progress variable between the pair (same as other reactive
-    // scalars in MMCcurl — weighted pair mean with mixExtent relaxation)
-    scalar phiAv = (p.wt() * p.phi() + q.wt() * q.phi()) / (p.wt() + q.wt());
-    p.phi() = p.phi() + mixExtent * (phiAv - p.phi());
-    q.phi() = q.phi() + mixExtent * (phiAv - q.phi());
-
-    p.phiModified() = p.phi() * Foam::exp(secondCondBeta_s_ * p.omegaOU());
-    q.phiModified() = q.phi() * Foam::exp(secondCondBeta_s_ * q.omegaOU());
+    ParticleType::mixProperties(p, q, mixExtent, ScaledExtent);
+    // φ not mixed here; see overload above.
 }
 
 
@@ -169,9 +144,6 @@ template<class CloudType>
 void Foam::MixingPopeParticle<ParticleType>::setStaticProperties(CloudType& c)
 {
     ParticleType::setStaticProperties(c);
-
-    // Cache β so mixProperties (which has no cloud ref) can recompute φ°
-    secondCondBeta_s_ = c.secondCondBeta();
 
     if (c.mixing().numXiR())
     {
