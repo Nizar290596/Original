@@ -103,11 +103,30 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalar mixExtent
 )
 {
-    ParticleType::mixProperties(p, q, mixExtent);
+    const label fp = p.secondCondFlag();
+    const label fq = q.secondCondFlag();
 
-    // φ is intentionally NOT mixed here. φ-mixing happens only between
-    // flagged particles in secondCondMMCcurl::mixpair (4-D pairing on
-    // (φ°, sP)). Non-flagged particles' φ evolves only via W(φ).
+    if (fp == 0 && fq == 0)
+    {
+        // Non-flagged pair: mix Y, T, hA via the parent chain.
+        // φ is left untouched (evolves only via W(φ) for these particles).
+        ParticleType::mixProperties(p, q, mixExtent);
+    }
+    else if (fp == 1 && fq == 1)
+    {
+        // Flagged pair: mix only φ here. Y, T, hA are mixed in step 5
+        // by secondCondMMCcurl on the 4-D (φ°, sP) reference space, so
+        // not mixing them here avoids double mixing of those scalars.
+        const scalar wtSum = p.wt() + q.wt();
+        if (wtSum > VSMALL)
+        {
+            const scalar phiAv = (p.wt()*p.phi() + q.wt()*q.phi())/wtSum;
+            p.phi() += mixExtent * (phiAv - p.phi());
+            q.phi() += mixExtent * (phiAv - q.phi());
+            // phiModified is refreshed at step 4 (updateOUProcess).
+        }
+    }
+    // Mixed pair (one flagged, one non-flagged): no-op by design.
 }
 
 
@@ -120,8 +139,24 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     const scalar& mixExtentSoot
 )
 {
-    ParticleType::mixProperties(p, q, mixExtent, mixExtentSoot);
-    // φ not mixed here; see overload above.
+    const label fp = p.secondCondFlag();
+    const label fq = q.secondCondFlag();
+
+    if (fp == 0 && fq == 0)
+    {
+        ParticleType::mixProperties(p, q, mixExtent, mixExtentSoot);
+    }
+    else if (fp == 1 && fq == 1)
+    {
+        const scalar wtSum = p.wt() + q.wt();
+        if (wtSum > VSMALL)
+        {
+            const scalar phiAv = (p.wt()*p.phi() + q.wt()*q.phi())/wtSum;
+            p.phi() += mixExtent * (phiAv - p.phi());
+            q.phi() += mixExtent * (phiAv - q.phi());
+        }
+    }
+    // mixed pair: no-op
 }
 
 
@@ -134,8 +169,24 @@ void Foam::MixingPopeParticle<ParticleType>::mixProperties
     scalarList ScaledExtent
 )
 {
-    ParticleType::mixProperties(p, q, mixExtent, ScaledExtent);
-    // φ not mixed here; see overload above.
+    const label fp = p.secondCondFlag();
+    const label fq = q.secondCondFlag();
+
+    if (fp == 0 && fq == 0)
+    {
+        ParticleType::mixProperties(p, q, mixExtent, ScaledExtent);
+    }
+    else if (fp == 1 && fq == 1)
+    {
+        const scalar wtSum = p.wt() + q.wt();
+        if (wtSum > VSMALL)
+        {
+            const scalar phiAv = (p.wt()*p.phi() + q.wt()*q.phi())/wtSum;
+            p.phi() += mixExtent * (phiAv - p.phi());
+            q.phi() += mixExtent * (phiAv - q.phi());
+        }
+    }
+    // mixed pair: no-op
 }
 
 

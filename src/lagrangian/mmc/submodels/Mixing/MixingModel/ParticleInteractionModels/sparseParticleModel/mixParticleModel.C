@@ -221,18 +221,8 @@ void Foam::mixParticleModel<CloudType>::buildParticleList
     // running index for particle position
     label particleInd=0;
 
-    // When second-conditioning is active, the flagged subset is mixed
-    // exclusively by the second-conditioning model on the 4-D
-    // (phiModified, sPx, sPy, sPz) reference space. Skipping flagged
-    // particles here prevents double mixing of Y, T, hA per time step
-    // (first stage on shadow positions + second stage on phi+shadow).
-    const bool skipFlagged = this->owner().secondCondMixingEnabled();
-
     forAllIters(this->owner(), iter)
     {
-        if (skipFlagged && iter().secondCondFlag() == 1)
-            continue;
-
         // Only add particle to the list if it is in the range of
         // flow to fMax
         //if (iter().XiC().first() < fLow || iter().XiC().first() > fHigh)
