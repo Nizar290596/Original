@@ -123,6 +123,12 @@ class MixingPopeCloud
             //- Activation parameter in the progress-variable reaction term
             scalar secondCondZPhi_;
 
+            //- One-shot trigger time for the particle-pair diagnostic dump [s]
+            scalar pairDumpTime_;
+
+            //- Master switch for the pair-dump diagnostic (default: false)
+            Switch pairDumpEnabled_;
+
     // Protected Member Functions
 
         //- Set cloud sub-models
@@ -212,6 +218,12 @@ class MixingPopeCloud
 
         //- Activation parameter Z_phi
         inline scalar secondCondZPhi() const;
+
+        //- Trigger time for the one-shot pair-dump diagnostic [s]
+        inline scalar pairDumpTime() const;
+
+        //- Whether the pair-dump diagnostic is enabled
+        inline bool   pairDumpEnabled() const;
 
     // Second-conditioning cloud-level operations
     // (called from moveParticles.H in the correct timestep sequence)

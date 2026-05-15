@@ -116,4 +116,20 @@ inline Foam::scalar Foam::MixingPopeCloud<CloudType>::secondCondZPhi() const
 }
 
 
+// Pair-dump diagnostic accessors
+
+template<class CloudType>
+inline Foam::scalar Foam::MixingPopeCloud<CloudType>::pairDumpTime() const
+{
+    return pairDumpTime_;
+}
+
+
+template<class CloudType>
+inline bool Foam::MixingPopeCloud<CloudType>::pairDumpEnabled() const
+{
+    return pairDumpEnabled_;
+}
+
+
 // ************************************************************************* //

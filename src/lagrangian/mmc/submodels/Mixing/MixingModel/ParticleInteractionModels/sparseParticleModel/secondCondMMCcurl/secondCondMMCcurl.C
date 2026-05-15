@@ -164,6 +164,10 @@ void Foam::secondCondMMCcurl<CloudType>::buildParticleList()
     // conditioning — consistent with the local-pairing-only design note)
     this->findPairs(this->eulerianFieldDataList_, this->particlePairs_);
 
+    // One-shot diagnostic dump of the second-conditioning pair list,
+    // gated on (cloud.pairDumpEnabled && time >= cloud.pairDumpTime).
+    this->dumpParticlePairs("secondCond");
+
     // -- Diagnostics ---------------------------------------------------------
     // Particle counts: per-process and global flagged-particle totals,
     //                  plus the number of pairs / triples produced.

@@ -278,6 +278,10 @@ class mixParticleModel
             //  from the const k-d tree routine.
             mutable List<label> splitAxisHistogram_;
 
+            //- One-shot guard: flipped true after dumpParticlePairs has
+            //  fired once for this model instance.
+            mutable bool pairDumped_;
+
         // Private Member Functions
         
             //- Build particle list and correct for parallel runs
@@ -315,6 +319,12 @@ class mixParticleModel
                 const DynamicList<eulerianFieldData>& eulerianFieldList,
                 DynamicList<List<label>>& pairs
             ) const;
+
+            //- Write a one-shot snapshot of particlePairs_ to
+            //  <case>/postProcessing/pairs_<stage>_proc<N>.log when enabled.
+            //  No-op when pairDumpEnabled_=false, pairDumped_=true, or
+            //  current time < pairDumpTime_.
+            void dumpParticlePairs(const word& stage) const;
             
             void KkdTreeLikeSearch
             (

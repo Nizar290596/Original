@@ -31,6 +31,8 @@ Author
 \*---------------------------------------------------------------------------*/
 
 #include "mixParticleModel.H"
+#include "OSspecific.H"
+#include <fstream>
 #include <unordered_set>
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
@@ -81,7 +83,9 @@ Foam::mixParticleModel<CloudType>::mixParticleModel
     
     pairingMethod_(this->coeffDict()),
 
-    mixSubVolumes_(owner.mesh(),this->coeffDict(),ri_,Xii_[0])
+    mixSubVolumes_(owner.mesh(),this->coeffDict(),ri_,Xii_[0]),
+
+    pairDumped_(false)
 
     //particlePairAlgorithm_
     //(
@@ -148,8 +152,10 @@ Foam::mixParticleModel<CloudType>::mixParticleModel
     
 
     pairingMethod_(cm.pairingMethod_),
-    
-    mixSubVolumes_(cm.mixSubVolumes_)
+
+    mixSubVolumes_(cm.mixSubVolumes_),
+
+    pairDumped_(false)
 
     //particlePairAlgorithm_(cm.particlePairAlgorithm_)
 {}
@@ -306,7 +312,8 @@ void Foam::mixParticleModel<CloudType>::buildParticleList
     }
     else
     {
-        findPairs(eulerianFieldDataList_,particlePairs_);   
+        findPairs(eulerianFieldDataList_,particlePairs_);
+        this->dumpParticlePairs("firstCond");
     }
 }
 
@@ -459,7 +466,8 @@ void Foam::mixParticleModel<CloudType>::correctParticleListParallel()
     // Find the particle pairs to mix
     //Info << "Start FindingPairs " << endl;
     findPairs(eulerianFieldDataList_,particlePairs_);
-    //Info << "End FindingPairs " << endl;  
+    this->dumpParticlePairs("firstCond");
+    //Info << "End FindingPairs " << endl;
     collectParticleData();
 
     // Important note: The particle pointers cannot all be stored in 
@@ -802,6 +810,61 @@ List<scalar> Foam::mixParticleModel<CloudType>::getXiNormalisation()
 	//Info << "Xii" << Xii << endl;
     return Xii;
 }
+
+template<class CloudType>
+void Foam::mixParticleModel<CloudType>::dumpParticlePairs
+(
+    const word& stage
+) const
+{
+    const auto& cloud = this->owner();
+    if (!cloud.pairDumpEnabled()) return;
+    if (pairDumped_) return;
+
+    const scalar t = cloud.mesh().time().value();
+    if (t < cloud.pairDumpTime()) return;
+
+    const fileName logDir = cloud.mesh().time().path()/"postProcessing";
+    mkDir(logDir);
+
+    const label myProc = Pstream::myProcNo();
+    const fileName logPath =
+        logDir/("pairs_" + stage + "_proc" + Foam::name(myProc) + ".log");
+
+    std::ofstream os(logPath.c_str(), std::ios::out | std::ios::trunc);
+    if (!os.is_open())
+    {
+        pairDumped_ = true;
+        return;
+    }
+
+    os << "# stage=" << stage
+       << "  proc=" << myProc
+       << "  time=" << t
+       << "  nPairs=" << particlePairs_.size() << '\n'
+       << "# pairId\tpairSize\tposInPair"
+          "\tsPx\tsPy\tsPz\tphiModified\tsecondCondFlag\n";
+
+    forAll(particlePairs_, pairIdx)
+    {
+        const List<label>& pr = particlePairs_[pairIdx];
+        if (pr.size() < 2) continue;
+        forAll(pr, j)
+        {
+            const auto& e = eulerianFieldDataList_[pr[j]];
+            const auto& p = *particleList_[e.particleIndex()];
+            os << pairIdx << '\t' << pr.size() << '\t' << j
+               << '\t' << p.XiR()[0]
+               << '\t' << p.XiR()[1]
+               << '\t' << p.XiR()[2]
+               << '\t' << p.phiModified()
+               << '\t' << p.secondCondFlag() << '\n';
+        }
+    }
+
+    pairDumped_ = true;
+}
+
 
 template<class CloudType>
 void Foam::mixParticleModel<CloudType>::findPairs

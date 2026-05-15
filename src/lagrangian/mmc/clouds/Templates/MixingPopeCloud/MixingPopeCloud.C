@@ -171,6 +171,16 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
             .template lookupOrDefault<scalar>("Z_phi", 0.0)
+    ),
+    pairDumpTime_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("pairDumpTime", GREAT)
+    ),
+    pairDumpEnabled_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<Switch>("pairDumpEnabled", false)
     )
 
 {
@@ -265,6 +275,16 @@ Foam::MixingPopeCloud<CloudType>::MixingPopeCloud
     (
         this->cloudProperties_.subOrEmptyDict("secondConditioning")
             .template lookupOrDefault<scalar>("Z_phi", 0.0)
+    ),
+    pairDumpTime_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<scalar>("pairDumpTime", GREAT)
+    ),
+    pairDumpEnabled_
+    (
+        this->cloudProperties_.subOrEmptyDict("secondConditioning")
+            .template lookupOrDefault<Switch>("pairDumpEnabled", false)
     )
 
 {
