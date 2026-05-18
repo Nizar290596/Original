@@ -63,7 +63,11 @@ if(pdfMethodOn)
         Info << "\tMove particle and solve reaction..." << endl;
         const scalar t0solve = runTime.elapsedCpuTime();
 
+        Pout<< "\t  [solve] entering, local nParticles = "
+            << pSets[pSi].size() << endl;
         pSets[pSi].solve(pSets[pSi], td);
+        Pout<< "\t  [solve] exited,   local nParticles = "
+            << pSets[pSi].size() << endl;
 
         // 7. Load-balanced chemistry
         if(pSets[pSi].balanceReactionLoad())
@@ -72,7 +76,9 @@ if(pdfMethodOn)
 
             pSets[pSi].reaction().resetCPUTimeAnalysis();
 
+            Pout<< "\t  [Sreact] entering" << endl;
             pSets[pSi].reaction().Sreact();
+            Pout<< "\t  [Sreact] exited" << endl;
 
             pSets[pSi].reaction().writeCPUTimeAnalysis();
 
