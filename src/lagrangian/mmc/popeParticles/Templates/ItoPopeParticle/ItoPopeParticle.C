@@ -219,23 +219,7 @@ bool Foam::ItoPopeParticle<ParticleType>::move
                 p.hitFace(s, cloud, ttd);
             }
         }
-
-        // Fix for particles which coincide with a processor boundary.
-        // Floating-point rounding can otherwise leave a particle exactly on
-        // a processor face that two ranks both claim (or both refuse),
-        // producing PstreamBuffers send/receive count asymmetry inside
-        // Cloud::move()'s end-of-track exchange and a silent MPI collective
-        // deadlock at scale. Port of the OF 4.x workaround that was at
-        // ItoPopeParticle::move() line 205 in the pre-2406 baseline and
-        // got dropped during the port.
-        if (ttd.switchProcessor && this->cell() >= 0)
-        {
-            const polyMesh& mesh = cloud.pMesh();
-            const point centre = mesh.cellCentres()[this->cell()];
-            const vector nudge = 1.0e-3*(centre - this->position());
-            this->track(nudge, 1.0);
-        }
-
+        
     return ttd.keepParticle;
 }
 
