@@ -219,7 +219,60 @@ bool Foam::ItoPopeParticle<ParticleType>::move
                 p.hitFace(s, cloud, ttd);
             }
         }
-        
+
+        // Fix for particles which coincide with a processor boundary.
+        //
+        // When trackToFace lands a particle exactly on a processor face, two
+        // ranks can disagree about cell ownership, producing PstreamBuffers
+        // send/receive count asymmetry at Cloud::move()'s end-of-track
+        // exchange and a silent MPI collective deadlock at scale.
+        //
+        // OF 4.x ItoPopeParticle::move() (line 205 of the OF 4.x baseline)
+        // did   p.position() += 1.0e-3*(centre - p.position())   directly.
+        // OF 2406's barycentric tracking has no settable Cartesian position
+        // member: position is derived from (cell, tetFace, tetPt, barycentric
+        // coords). A previous attempt to use track(nudge, 1.0) cleared face_
+        // and crashed downstream code at boundaryMesh().at(-1).
+        //
+        // Equivalent here: nudge the barycentric coordinate that's zero
+        // (the one normal to the face we're on) slightly positive, then
+        // rebalance the other three so the sum stays 1. This moves the
+        // Cartesian position slightly off the face into the cell interior
+        // while leaving cell_, face_, tetFace_, tetPt_ intact, so
+        // Cloud::move()'s exchange still ships the particle to the right
+        // neighbor based on face_.
+        if (ttd.switchProcessor && this->cell() >= 0)
+        {
+            Foam::barycentric& coords =
+                const_cast<Foam::barycentric&>(this->coordinates());
+
+            // Find the smallest (should be near-zero) coordinate
+            label zeroIdx = -1;
+            scalar minVal = GREAT;
+            for (label i = 0; i < 4; ++i)
+            {
+                if (coords[i] < minVal)
+                {
+                    minVal = coords[i];
+                    zeroIdx = i;
+                }
+            }
+
+            // Only nudge if a coord is actually near-zero (particle truly
+            // on a face). Skip if all coords are >> 0 (particle is in
+            // cell interior somehow, in which case the deadlock root cause
+            // is something else and we shouldn't perturb).
+            if (zeroIdx >= 0 && minVal < 1.0e-6)
+            {
+                const scalar nudge = 1.0e-3;
+                coords[zeroIdx] = nudge;
+                for (label i = 0; i < 4; ++i)
+                {
+                    if (i != zeroIdx) coords[i] -= nudge / 3.0;
+                }
+            }
+        }
+
     return ttd.keepParticle;
 }
 
